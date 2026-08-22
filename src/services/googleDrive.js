@@ -3,6 +3,7 @@
 
 const FOLDER_NAME = "Samagra_Farm_Manager_Cloud_DB";
 const FILE_NAME = "samagra_farm_database.json";
+export const DEFAULT_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "875088260458-2gjuitrthcm3eu38oc49sje449ehahh6.apps.googleusercontent.com";
 
 // Initialize Google OAuth Token Client
 export const initGoogleOAuth = (clientId, onTokenReceived, onError) => {
@@ -11,9 +12,11 @@ export const initGoogleOAuth = (clientId, onTokenReceived, onError) => {
     return null;
   }
 
+  const activeClientId = clientId || DEFAULT_CLIENT_ID;
+
   try {
     const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: clientId,
+      client_id: activeClientId,
       scope: 'https://www.googleapis.com/auth/drive.file',
       callback: (response) => {
         if (response.access_token) {

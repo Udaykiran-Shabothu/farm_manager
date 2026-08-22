@@ -16,14 +16,14 @@ import {
   AlertCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { initGoogleOAuth, saveToGoogleDrive, loadFromGoogleDrive } from '../services/googleDrive';
+import { initGoogleOAuth, saveToGoogleDrive, loadFromGoogleDrive, DEFAULT_CLIENT_ID } from '../services/googleDrive';
 
 export default function BackupModule() {
   const { data, resetToSampleData, clearAllData, importData } = useFarm();
   const fileInputRef = useRef(null);
 
-  // Google OAuth & Client ID state
-  const [clientId, setClientId] = useState(() => localStorage.getItem('google_oauth_client_id') || '');
+  // Google OAuth & Client ID state pre-filled with user's Client ID
+  const [clientId, setClientId] = useState(() => localStorage.getItem('google_oauth_client_id') || DEFAULT_CLIENT_ID);
   const [showSettings, setShowSettings] = useState(false);
   const [syncStatus, setSyncStatus] = useState('');
   const [isSyncing, setIsSyncing] = useState(false);
@@ -38,12 +38,7 @@ export default function BackupModule() {
 
   // 1-Click Backup to Google Drive
   const handleGoogleDriveBackup = () => {
-    const savedId = localStorage.getItem('google_oauth_client_id') || clientId;
-    if (!savedId) {
-      setShowSettings(true);
-      alert('Please enter your Google OAuth Client ID in Settings first to enable Google Drive Sync!');
-      return;
-    }
+    const savedId = localStorage.getItem('google_oauth_client_id') || clientId || DEFAULT_CLIENT_ID;
 
     setIsSyncing(true);
     setSyncStatus('Connecting to Google Account...');
@@ -78,7 +73,7 @@ export default function BackupModule() {
 
   // 1-Click Restore from Google Drive
   const handleGoogleDriveRestore = () => {
-    const savedId = localStorage.getItem('google_oauth_client_id') || clientId;
+    const savedId = localStorage.getItem('google_oauth_client_id') || clientId || DEFAULT_CLIENT_ID;
     if (!savedId) {
       setShowSettings(true);
       alert('Please enter your Google OAuth Client ID in Settings first to enable Google Drive Sync!');
