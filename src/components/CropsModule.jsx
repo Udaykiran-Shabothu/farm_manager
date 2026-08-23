@@ -312,7 +312,7 @@ export default function CropsModule() {
     <div className="space-y-8 pb-12">
       
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-panel-glow rounded-3xl border border-emerald-500/30 card-3d">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-emerald-500/30 card-3d">
         <div>
           <div className="flex items-center space-x-2">
             <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
@@ -320,7 +320,7 @@ export default function CropsModule() {
             </div>
             <h2 className="text-2xl font-extrabold text-white">Crops & Field Financial Hub</h2>
           </div>
-          <p className="text-xs text-slate-300 mt-1">Detailed labor/machine count & unit cost inputs with auto-calculated total amounts and WhatsApp report sharing.</p>
+          <p className="text-xs text-slate-400 mt-1 truncate">Track crop field expenditures, harvest revenues, unit costs, and net farm profits.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">

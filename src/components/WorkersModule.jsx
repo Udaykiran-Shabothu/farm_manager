@@ -262,7 +262,7 @@ export default function WorkersModule() {
     <div className="space-y-8 pb-12">
       
       {/* Module Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-panel-glow rounded-3xl border border-amber-500/30 card-3d">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-amber-500/30 card-3d">
         <div>
           <div className="flex items-center space-x-2">
             <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
@@ -270,7 +270,7 @@ export default function WorkersModule() {
             </div>
             <h2 className="text-2xl font-extrabold text-white">Workers & Wage Management (Labor Expenses)</h2>
           </div>
-          <p className="text-xs text-slate-300 mt-1">Record farm laborers, contract work gangs, daily attendance registers, wage liabilities owed by farm owner to workers for field work, advance payouts & salary receipts.</p>
+          <p className="text-xs text-slate-400 mt-1 truncate">Track farm labor field work, daily attendance, wage liabilities, and advance payouts.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">

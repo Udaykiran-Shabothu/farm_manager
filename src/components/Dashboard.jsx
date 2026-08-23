@@ -133,28 +133,25 @@ export default function Dashboard({ setActiveTab }) {
     <div className="space-y-8 pb-12">
       
       {/* Top Banner */}
-      <div className="relative overflow-hidden rounded-3xl glass-panel-glow border border-emerald-500/20 p-6 sm:p-8 card-3d">
+      <div className="relative overflow-hidden rounded-3xl glass-panel-glow border border-emerald-500/20 p-5 sm:p-7 card-3d">
         <div className="absolute top-0 right-0 -mt-12 -mr-12 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl animate-glow pointer-events-none" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-3">
               <span className="px-3 py-1 text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Live Analytics
+                <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Live Operations
               </span>
-              <span className="text-xs text-slate-400 font-medium flex items-center gap-1">
+              <span className="text-xs text-slate-400 font-medium flex items-center gap-1 truncate">
                 <Activity className="w-3.5 h-3.5 text-emerald-400" /> Real-time Financial Ledger
               </span>
             </div>
-            <h1 className="text-3xl sm:text-4xl font-extrabold text-white mt-2 tracking-tight flex items-center gap-2">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2 tracking-tight flex items-center gap-2 truncate">
               <span className="text-emerald-400">🌱</span> Samagra Jeeva Vyavasayam & Farms
             </h1>
-            <p className="text-slate-300 text-sm mt-1 max-w-2xl">
-              Comprehensive Organic Farm Operations Hub: Field Crops, Workers & Wages, Machinery Repairs, Milk Register, and Poultry Analytics.
-            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="px-4 py-2 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-bold text-slate-300 flex items-center gap-2">
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <span className="px-3.5 py-1.5 rounded-2xl bg-slate-900/90 border border-slate-800 text-xs font-bold text-slate-300 flex items-center gap-2">
               <Calendar className="w-4 h-4 text-emerald-400" /> {new Date().toLocaleDateString('en-IN', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
             </span>
           </div>

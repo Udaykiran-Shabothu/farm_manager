@@ -69,7 +69,7 @@ export default function PoultryModule() {
     <div className="space-y-8 pb-12">
       
       {/* Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-panel-glow rounded-3xl border border-rose-500/30 card-3d">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-rose-500/30 card-3d">
         <div>
           <div className="flex items-center space-x-2">
             <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400">
@@ -77,7 +77,7 @@ export default function PoultryModule() {
             </div>
             <h2 className="text-2xl font-extrabold text-white">Poultry & Flock Management</h2>
           </div>
-          <p className="text-xs text-slate-300 mt-1">Monitor bird mortality (alive vs dead count), feed consumption, disease symptoms, vaccination logs, and egg/chicken sales.</p>
+          <p className="text-xs text-slate-400 mt-1 truncate">Monitor bird mortality, daily feed, vaccination logs, and egg/bird sales.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">

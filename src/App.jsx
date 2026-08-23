@@ -8,8 +8,7 @@ import EquipmentModule from './components/EquipmentModule';
 import DairyModule from './components/DairyModule';
 import PoultryModule from './components/PoultryModule';
 import BackupModule from './components/BackupModule';
-import DeploymentGuide from './components/DeploymentGuide';
-import { HardDrive, Globe, Heart } from 'lucide-react';
+import { HardDrive } from 'lucide-react';
 
 function MainApp() {
   const { data } = useFarm();
@@ -34,7 +33,7 @@ function MainApp() {
           currency={data.farmInfo.currency}
         />
 
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 animate-fadeIn">
           {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === 'crops' && <CropsModule />}
           {activeTab === 'workers' && <WorkersModule />}
@@ -42,35 +41,27 @@ function MainApp() {
           {activeTab === 'dairy' && <DairyModule />}
           {activeTab === 'poultry' && <PoultryModule />}
           {activeTab === 'backup' && <BackupModule />}
-          {activeTab === 'deploy' && <DeploymentGuide />}
         </main>
       </div>
 
       {/* Footer */}
-      <footer className="relative z-10 glass-panel-glow border-t border-slate-800/80 py-6 mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+      <footer className="relative z-10 glass-panel-glow border-t border-slate-800/80 py-5 mt-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
           <div className="flex items-center space-x-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold text-slate-300">Daily Farm Manager 3D</span>
+            <span className="font-bold text-slate-200">Daily Farm Manager</span>
             <span className="text-slate-600">•</span>
-            <span className="flex items-center gap-1 text-slate-400">
-              <HardDrive className="w-3.5 h-3.5 text-emerald-400" /> Stored locally in <code className="text-emerald-300 font-mono">D:\farm_manager</code>
+            <span className="flex items-center gap-1 text-slate-400 truncate">
+              <HardDrive className="w-3.5 h-3.5 text-emerald-400" /> Stored locally & synced to Cloud
             </span>
           </div>
 
           <div className="flex items-center space-x-4">
             <button 
               onClick={() => setActiveTab('backup')} 
-              className="hover:text-emerald-400 transition-colors"
+              className="hover:text-emerald-400 transition-colors font-medium text-slate-300"
             >
-              Backup & Export
-            </button>
-            <span className="text-slate-700">|</span>
-            <button 
-              onClick={() => setActiveTab('deploy')} 
-              className="hover:text-cyan-400 transition-colors flex items-center gap-1 font-semibold text-cyan-300"
-            >
-              <Globe className="w-3.5 h-3.5" /> Deploy Online
+              Backup & Data Sync
             </button>
           </div>
         </div>

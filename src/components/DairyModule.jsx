@@ -649,7 +649,7 @@ export default function DairyModule() {
     <div className="space-y-8 pb-12">
       
       {/* Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d">
         <div>
           <div className="flex items-center space-x-2">
             <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400">
@@ -657,7 +657,7 @@ export default function DairyModule() {
             </div>
             <h2 className="text-2xl font-extrabold text-white">Dairy Farm & Milk Register</h2>
           </div>
-          <p className="text-xs text-slate-300 mt-1">Automatic financial ledger carryovers (Last Month Due / Extra Paid Advance Credit), 1-click payment settlements & WhatsApp bills.</p>
+          <p className="text-xs text-slate-400 mt-1 truncate">Monthly milk customer billing cycles, daily delivery registers & bill settlements.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
