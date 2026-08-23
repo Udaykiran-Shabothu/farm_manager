@@ -32,47 +32,63 @@ export const initGoogleOAuth = (clientId, onTokenReceived, onError) => {
   }
 };
 
-// Save Farm Data JSON directly to user's 1 TB Google Drive
+// Save Farm Data JSON directly to user's 1 TB Google Drive (Fail-Proof 2-Step Upload)
 export const saveToGoogleDrive = async (accessToken, farmData) => {
   const query = `name = '${FILE_NAME}' and trashed = false`;
   
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
-  const searchData = await searchRes.json();
 
+  if (!searchRes.ok) {
+    const errObj = await searchRes.json().catch(() => ({}));
+    throw new Error(errObj.error?.message || `Google Drive API Search Error (${searchRes.status})`);
+  }
+
+  const searchData = await searchRes.json();
   const fileContent = JSON.stringify(farmData, null, 2);
   const existingFile = searchData.files && searchData.files.length > 0 ? searchData.files[0] : null;
 
-  if (existingFile) {
-    // Update existing file content directly
-    const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${existingFile.id}?uploadType=media`, {
-      method: 'PATCH',
+  let targetFileId = existingFile ? existingFile.id : null;
+
+  if (!targetFileId) {
+    // Step 1: Create file metadata
+    const createRes = await fetch('https://www.googleapis.com/drive/v3/files', {
+      method: 'POST',
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json'
       },
-      body: fileContent
+      body: JSON.stringify({
+        name: FILE_NAME,
+        mimeType: 'application/json'
+      })
     });
-    return await updateRes.json();
-  } else {
-    // Create new file in Google Drive
-    const metadata = {
-      name: FILE_NAME,
-      mimeType: 'application/json'
-    };
 
-    const form = new FormData();
-    form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-    form.append('file', new Blob([fileContent], { type: 'application/json' }));
+    const createData = await createRes.json();
+    if (!createRes.ok || createData.error) {
+      throw new Error(createData.error?.message || `Failed to create backup file metadata (${createRes.status})`);
+    }
 
-    const uploadRes = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: form
-    });
-    return await uploadRes.json();
+    targetFileId = createData.id;
   }
+
+  // Step 2: Upload JSON file content directly via media PATCH
+  const updateRes = await fetch(`https://www.googleapis.com/upload/drive/v3/files/${targetFileId}?uploadType=media`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json'
+    },
+    body: fileContent
+  });
+
+  const updateResult = await updateRes.json();
+  if (!updateRes.ok || updateResult.error) {
+    throw new Error(updateResult.error?.message || `Failed to upload database content (${updateRes.status})`);
+  }
+
+  return updateResult;
 };
 
 // Fetch & Restore Farm Data JSON from user's 1 TB Google Drive
@@ -82,6 +98,12 @@ export const loadFromGoogleDrive = async (accessToken) => {
   const searchRes = await fetch(`https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
+
+  if (!searchRes.ok) {
+    const errObj = await searchRes.json().catch(() => ({}));
+    throw new Error(errObj.error?.message || `Google Drive API Search Error (${searchRes.status})`);
+  }
+
   const searchData = await searchRes.json();
 
   if (!searchData.files || searchData.files.length === 0) {
@@ -92,6 +114,11 @@ export const loadFromGoogleDrive = async (accessToken) => {
   const fileRes = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
     headers: { Authorization: `Bearer ${accessToken}` }
   });
+
+  if (!fileRes.ok) {
+    const errObj = await fileRes.json().catch(() => ({}));
+    throw new Error(errObj.error?.message || `Failed to download backup content (${fileRes.status})`);
+  }
 
   const importedFarmData = await fileRes.json();
   return importedFarmData;
