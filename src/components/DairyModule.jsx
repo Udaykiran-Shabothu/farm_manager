@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { generateDairyBillPDF } from '../services/pdfGenerator';
 import { 
   Milk, 
   Plus, 
@@ -615,6 +616,13 @@ export default function DairyModule() {
 
     const encoded = encodeURIComponent(text);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  };
+
+  // Download PDF Bill Statement
+  const downloadPDFRangeBill = (customerId, startDateStr, endDateStr) => {
+    const summary = getCustomRangeData(customerId, startDateStr, endDateStr);
+    if (!summary) return;
+    generateDairyBillPDF(summary, data.farmInfo);
   };
 
   // Build All Completed Monthly Cycles List for "Completed" Tab
@@ -1402,6 +1410,13 @@ export default function DairyModule() {
                   className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs font-bold flex items-center justify-center gap-2"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-cyan-400" /> CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadPDFRangeBill(customer.id, startDateStr, endDateStr)}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                  <FileText className="w-4 h-4 text-rose-400" /> Download PDF
                 </button>
                 <button
                   type="button"

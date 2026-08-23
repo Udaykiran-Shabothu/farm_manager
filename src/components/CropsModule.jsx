@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { generateCropReportPDF } from '../services/pdfGenerator';
 import { 
   Sprout, 
   Plus, 
@@ -306,6 +307,13 @@ export default function CropsModule() {
 
     const encoded = encodeURIComponent(text);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  };
+
+  // Download PDF Crop Report
+  const downloadPDFCropReport = (crop) => {
+    const cropExpenses = data.cropExpenses.filter(e => e.cropId === crop.id);
+    const cropIncomes = data.cropIncomes.filter(i => i.cropId === crop.id);
+    generateCropReportPDF(crop, cropExpenses, cropIncomes, data.farmInfo);
   };
 
   return (
@@ -728,6 +736,13 @@ export default function CropsModule() {
                   className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-700 text-xs font-bold flex items-center justify-center gap-2 transition-all"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Download CSV File
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadPDFCropReport(previewReportCrop)}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                  <Download className="w-4 h-4 text-rose-400" /> Download PDF Report
                 </button>
                 <button
                   type="button"

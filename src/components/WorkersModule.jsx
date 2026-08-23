@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { generateWorkerWagePDF } from '../services/pdfGenerator';
 import { 
   Users, 
   Plus, 
@@ -245,6 +246,13 @@ export default function WorkersModule() {
 
     const encoded = encodeURIComponent(text);
     window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+  };
+
+  // Download PDF Worker Wage Voucher
+  const downloadPDFWorkerVoucher = (worker) => {
+    const workerAttendance = data.attendance.filter(a => a.workerId === worker.id);
+    const workerPayments = data.workerPayments.filter(p => p.workerId === worker.id);
+    generateWorkerWagePDF(worker, workerAttendance, workerPayments, data.farmInfo);
   };
 
   // Filtered Workers list
@@ -669,6 +677,13 @@ export default function WorkersModule() {
                   className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold flex items-center justify-center gap-2"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-amber-400" /> Download CSV Voucher
+                </button>
+                <button
+                  type="button"
+                  onClick={() => downloadPDFWorkerVoucher(selectedStatementWorker)}
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                >
+                  <FileText className="w-4 h-4 text-rose-400" /> Download PDF Voucher
                 </button>
                 <button
                   type="button"
