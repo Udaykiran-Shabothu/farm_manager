@@ -566,14 +566,25 @@ export default function DairyModule() {
     return getCustomRangeData(customerId, start, end);
   };
 
-  // Helper Engine: Calculate All Completed & Active Monthly Cycles from Customer Start Date
+  // Helper Engine: Calculate All Completed & Active Monthly Cycles for a Customer
   const getCustomerAllCycles = (customer) => {
-    const customerStartStr = customer.startDate || '2026-08-01';
-    const activeStartStr = customer.cycleStartDate || customerStartStr;
-    const today = new Date();
+    const activeStartStr = customer.cycleStartDate || customer.startDate || todayStr;
+    const activeEndStr = customer.cycleEndDate || getDefaultCycleEndDate(activeStartStr);
     
+    // Find earliest start date from customer.startDate or earliest recorded milk log date
+    const logDates = (data.dairyMilkLogs || [])
+      .filter(l => l.customerId === customer.id)
+      .map(l => l.date);
+    
+    let earliestDateStr = customer.startDate || '2026-08-01';
+    if (logDates.length > 0) {
+      const minLogDate = [...logDates].sort()[0];
+      if (minLogDate < earliestDateStr) earliestDateStr = minLogDate;
+    }
+
     const cycles = [];
-    let currStartObj = new Date(customerStartStr);
+    let currStartObj = new Date(earliestDateStr);
+    const today = new Date();
 
     while (currStartObj <= today || currStartObj <= new Date(activeStartStr)) {
       const nextStartObj = new Date(currStartObj);
