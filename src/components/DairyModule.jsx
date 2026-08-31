@@ -699,6 +699,7 @@ export default function DairyModule() {
   });
 
   const paidCompletedCount = visibleCompletedCycles.filter(c => c.isPaidInFull).length;
+  const pendingCompletedCycles = visibleCompletedCycles.filter(c => !c.isPaidInFull);
 
   // Filtered Customers list
   const filteredCustomers = data.dairyCustomers.filter(customer => {
@@ -786,40 +787,40 @@ export default function DairyModule() {
 
       {/* Customer Category Filter Tabs */}
       <div className="flex items-center justify-between p-4 glass-panel rounded-2xl border border-slate-800">
-        <div className="flex flex-wrap items-center gap-1 glass-panel p-1 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center gap-1.5 glass-panel p-1 rounded-xl border border-slate-800">
           <button
             onClick={() => setCustomerTab('Active')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              customerTab === 'Active' ? 'bg-cyan-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+              customerTab === 'Active' ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Milk className="w-3.5 h-3.5" /> Active Buyers ({activeCount})
+            <Milk className="w-4 h-4" /> 🟢 Active Buyers ({activeCount})
           </button>
           
           <button
             onClick={() => setCustomerTab('Completed')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              customerTab === 'Completed' ? 'bg-emerald-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+              customerTab === 'Completed' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md' : 'text-slate-400 hover:text-white'
             }`}
           >
-            <FolderCheck className="w-3.5 h-3.5" /> 📁 Completed Statements ({visibleCompletedCycles.length})
+            <FolderCheck className="w-4 h-4" /> 📁 Completed Statements ({visibleCompletedCycles.length})
           </button>
 
           <button
             onClick={() => setCustomerTab('Stopped')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-              customerTab === 'Stopped' ? 'bg-rose-500 text-white font-bold' : 'text-slate-400 hover:text-white'
+            className={`px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
+              customerTab === 'Stopped' ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-white'
             }`}
           >
-            <Octagon className="w-3.5 h-3.5" /> 🛑 Stopped & Pending Bills ({stoppedCount})
+            <Octagon className="w-4 h-4" /> 🛑 Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
           </button>
           <button
             onClick={() => setCustomerTab('All')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-              customerTab === 'All' ? 'bg-slate-700 text-white font-bold' : 'text-slate-400 hover:text-white'
+            className={`px-3 py-2 rounded-xl text-xs font-bold transition-all ${
+              customerTab === 'All' ? 'bg-slate-700 text-white' : 'text-slate-400 hover:text-white'
             }`}
           >
-            All Buyers ({data.dairyCustomers.length})
+            All Customers ({data.dairyCustomers.length})
           </button>
         </div>
       </div>
@@ -971,6 +972,73 @@ export default function DairyModule() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* RENDER VIEW TAB 3 SUB-SECTION: UNPAID COMPLETED MONTHS IN STOPPED & PENDING BILLS */}
+      {customerTab === 'Stopped' && pendingCompletedCycles.length > 0 && (
+        <div className="space-y-4 pt-4 border-t border-slate-800">
+          <div className="flex items-center space-x-2">
+            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            <div>
+              <h3 className="text-lg font-bold text-white">Unpaid Pending Bills from Completed Months</h3>
+              <p className="text-xs text-slate-400">Completed month statements with unpaid pending balances carried forward.</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingCompletedCycles.map((cycle, idx) => (
+              <div key={idx} className="p-5 rounded-2xl bg-slate-900 border border-rose-500/40 space-y-3 shadow-lg shadow-rose-950/20 card-3d">
+                <div className="flex items-start justify-between">
+                  <div>
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      Completed Month Bill Pending
+                    </span>
+                    <h4 className="text-lg font-bold text-white mt-1">{cycle.customer.name}</h4>
+                  </div>
+                  <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    ⚠️ NET DUE: {currency}{cycle.pendingBalanceDue}
+                  </span>
+                </div>
+
+                <div className="text-xs space-y-1 text-slate-300">
+                  <p><span className="text-slate-400">Cycle Period:</span> <strong className="text-white">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
+                  <p><span className="text-slate-400">Milk Delivered:</span> <strong className="text-cyan-300">{cycle.totalLitersTaken} Liters</strong></p>
+                  <p><span className="text-slate-400">Month Bill:</span> <strong className="text-white">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
+                  <p><span className="text-slate-400">Payments Paid:</span> <strong className="text-emerald-400">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
+                </div>
+
+                <div className="pt-2 border-t border-slate-800 space-y-2">
+                  <button
+                    onClick={() => handleOpenPaymentForCustomer(cycle.customer.id, cycle.pendingBalanceDue)}
+                    className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                  >
+                    <Wallet className="w-4 h-4 fill-slate-950" /> Record & Save Payment ({currency}{cycle.pendingBalanceDue})
+                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
+                      className="flex-1 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1 border border-slate-700"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> Statement
+                    </button>
+                    <button
+                      onClick={() => downloadPDFRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
+                      className="flex-1 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1"
+                    >
+                      <FileText className="w-3.5 h-3.5 text-rose-400" /> PDF
+                    </button>
+                    <button
+                      onClick={() => sendWhatsAppRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
+                      className="flex-1 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1"
+                    >
+                      <MessageCircle className="w-3.5 h-3.5 fill-slate-950" /> WhatsApp
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
