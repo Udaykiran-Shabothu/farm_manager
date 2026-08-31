@@ -249,7 +249,7 @@ export default function DairyModule() {
     }));
   };
 
-  // Save ALL Customer Milk Logs at once
+  // Save ALL Customer Milk Logs at once (with automatic deduplication)
   const handleSaveBulkMilkLogs = (e) => {
     e.preventDefault();
     const date = bulkMilkForm.date;
@@ -265,7 +265,7 @@ export default function DairyModule() {
       const rate = customer.ratePerLiter;
       const totalAmount = isTaken ? liters * rate : 0;
 
-      addRecord('dairyMilkLogs', {
+      const payload = {
         customerId,
         date,
         shift,
@@ -274,8 +274,18 @@ export default function DairyModule() {
         fatPercent: fat,
         ratePerLiter: rate,
         totalAmount,
-        notes: isTaken ? (entry.notes || 'Bulk Daily Entry') : (entry.notes || 'Milk Not Taken (Off Day)')
-      });
+        notes: isTaken ? (entry.notes || '') : (entry.notes || 'Milk Not Taken (Off Day)')
+      };
+
+      const existingLog = (data.dairyMilkLogs || []).find(
+        l => l.customerId === customerId && l.date === date && (l.shift || 'Morning') === shift
+      );
+
+      if (existingLog) {
+        updateRecord('dairyMilkLogs', { id: existingLog.id, ...payload });
+      } else {
+        addRecord('dairyMilkLogs', payload);
+      }
     });
 
     setShowBulkMilkModal(false);
@@ -365,7 +375,7 @@ export default function DairyModule() {
     setShowCustomerModal(false);
   };
 
-  // Save Single Milk Log
+  // Save Single Milk Log (with automatic deduplication)
   const handleSaveMilkLog = (e) => {
     e.preventDefault();
     if (!milkForm.customerId) return;
@@ -391,7 +401,14 @@ export default function DairyModule() {
     if (editingMilkLog) {
       updateRecord('dairyMilkLogs', { id: editingMilkLog.id, ...payload });
     } else {
-      addRecord('dairyMilkLogs', payload);
+      const existingLog = (data.dairyMilkLogs || []).find(
+        l => l.customerId === milkForm.customerId && l.date === milkForm.date && (l.shift || 'Morning') === (milkForm.shift || 'Morning')
+      );
+      if (existingLog) {
+        updateRecord('dairyMilkLogs', { id: existingLog.id, ...payload });
+      } else {
+        addRecord('dairyMilkLogs', payload);
+      }
     }
 
     setEditingMilkLog(null);
@@ -437,20 +454,28 @@ export default function DairyModule() {
     setShowCattleModal(false);
   };
 
-  // Helper: Financial Ledger Breakdown with Prior Month Carryover (Last Month Due / Extra Paid Advance)
   // Helper: Financial Ledger Breakdown with Prior Cycle Carryover (Last Month Due / Extra Paid Advance)
   const getCustomRangeData = (customerId, startDateStr, endDateStr) => {
     const customer = data.dairyCustomers.find(c => c.id === customerId);
     if (!customer) return null;
 
-    const startObj = new Date(startDateStr);
-    const endObj = new Date(endDateStr);
+    const [sY, sM, sD] = startDateStr.split('-').map(Number);
+    const [eY, eM, eD] = endDateStr.split('-').map(Number);
+    const startObj = new Date(sY, sM - 1, sD);
+    const endObj = new Date(eY, eM - 1, eD);
 
-    // 1. Prior Cycle Carryover Calculation (all logs & payments strictly before startDateStr)
-    const priorLogs = (data.dairyMilkLogs || []).filter(l => {
+    // 1. Prior Cycle Carryover Calculation (deduplicated logs & payments strictly before startDateStr)
+    const rawPriorLogs = (data.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
       return l.date < startDateStr;
     });
+
+    const uniquePriorLogsMap = {};
+    rawPriorLogs.forEach(l => {
+      const key = `${l.date}_${l.shift || 'Morning'}`;
+      uniquePriorLogsMap[key] = l;
+    });
+    const priorLogs = Object.values(uniquePriorLogsMap);
 
     const priorPayments = (data.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
@@ -466,11 +491,18 @@ export default function DairyModule() {
     const priorDueAmount = priorBalance > 0 ? priorBalance : 0;
     const priorExtraPaidAdvance = priorBalance < 0 ? Math.abs(priorBalance) : 0;
 
-    // 2. Current Custom Cycle Date Range Calculation
-    const logsInRange = (data.dairyMilkLogs || []).filter(l => {
+    // 2. Current Custom Cycle Date Range Calculation (deduplicated by date + shift)
+    const rawLogsInRange = (data.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
       return l.date >= startDateStr && l.date <= endDateStr;
     });
+
+    const uniqueLogsMap = {};
+    rawLogsInRange.forEach(l => {
+      const key = `${l.date}_${l.shift || 'Morning'}`;
+      uniqueLogsMap[key] = l;
+    });
+    const logsInRange = Object.values(uniqueLogsMap);
 
     const paymentsInRange = (data.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
@@ -478,8 +510,15 @@ export default function DairyModule() {
     });
 
     const dayMap = {};
-    for (let d = new Date(startObj); d <= endObj; d.setDate(d.getDate() + 1)) {
-      const dateKey = d.toISOString().split('T')[0];
+    const curr = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate());
+    const endLimit = new Date(endObj.getFullYear(), endObj.getMonth(), endObj.getDate());
+
+    while (curr <= endLimit) {
+      const y = curr.getFullYear();
+      const m = String(curr.getMonth() + 1).padStart(2, '0');
+      const d = String(curr.getDate()).padStart(2, '0');
+      const dateKey = `${y}-${m}-${d}`;
+
       dayMap[dateKey] = {
         date: dateKey,
         status: 'Not Taken',
@@ -489,6 +528,7 @@ export default function DairyModule() {
         totalAmount: 0,
         notes: ''
       };
+      curr.setDate(curr.getDate() + 1);
     }
 
     logsInRange.forEach(log => {
@@ -517,7 +557,7 @@ export default function DairyModule() {
       }
     });
 
-    const dayList = Object.values(dayMap).sort((a, b) => new Date(a.date) - new Date(b.date));
+    const dayList = Object.values(dayMap).sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0));
 
     const totalDaysInCycle = dayList.length;
     const daysTakenCount = dayList.filter(d => d.status === 'Taken').length;
@@ -1195,47 +1235,55 @@ export default function DairyModule() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800">
-                {data.dairyMilkLogs.map((log) => {
-                  const customer = data.dairyCustomers.find(c => c.id === log.customerId);
-                  const isTaken = log.status === 'Taken' || Number(log.liters) > 0;
-                  return (
-                    <tr key={log.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 whitespace-nowrap">{log.date}</td>
-                      <td className="p-3 font-medium text-white whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
-                      <td className="p-3 whitespace-nowrap">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                          isTaken ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
-                        }`}>
-                          {isTaken ? `Taken (${log.shift})` : '❌ Not Taken (Off Day)'}
-                        </span>
-                        {log.notes && <div className="text-[10px] text-slate-400 mt-0.5">{log.notes}</div>}
-                      </td>
-                      <td className="p-3 font-semibold whitespace-nowrap">
-                        {isTaken ? (
-                          <span className="text-cyan-300">{log.liters} L ({currency}{log.totalAmount})</span>
-                        ) : (
-                          <span className="text-slate-500">0 L ({currency}0)</span>
-                        )}
-                      </td>
-                      <td className="p-3 whitespace-nowrap">
-                        <div className="flex items-center space-x-1.5">
-                          <button 
-                            onClick={() => handleEditMilkLog(log)} 
-                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
-                          >
-                            <Edit3 className="w-3 h-3" /> Edit
-                          </button>
-                          <button 
-                            onClick={() => deleteRecord('dairyMilkLogs', log.id)} 
-                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                {(() => {
+                  const uniqueMilkLogsMap = {};
+                  (data.dairyMilkLogs || []).forEach(log => {
+                    const key = `${log.customerId}_${log.date}_${log.shift || 'Morning'}`;
+                    uniqueMilkLogsMap[key] = log;
+                  });
+                  const displayLogs = Object.values(uniqueMilkLogsMap).sort((a, b) => (b.date < a.date ? -1 : b.date > a.date ? 1 : 0));
+                  return displayLogs.map((log) => {
+                    const customer = data.dairyCustomers.find(c => c.id === log.customerId);
+                    const isTaken = log.status === 'Taken' || Number(log.liters) > 0;
+                    return (
+                      <tr key={log.id} className="hover:bg-slate-800/40">
+                        <td className="p-3 whitespace-nowrap">{log.date}</td>
+                        <td className="p-3 font-medium text-white whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
+                        <td className="p-3 whitespace-nowrap">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            isTaken ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                          }`}>
+                            {isTaken ? `Taken (${log.shift})` : '❌ Not Taken (Off Day)'}
+                          </span>
+                          {log.notes && <div className="text-[10px] text-slate-400 mt-0.5">{log.notes}</div>}
+                        </td>
+                        <td className="p-3 font-semibold whitespace-nowrap">
+                          {isTaken ? (
+                            <span className="text-cyan-300">{log.liters} L ({currency}{log.totalAmount})</span>
+                          ) : (
+                            <span className="text-slate-500">0 L ({currency}0)</span>
+                          )}
+                        </td>
+                        <td className="p-3 whitespace-nowrap">
+                          <div className="flex items-center space-x-1.5">
+                            <button 
+                              onClick={() => handleEditMilkLog(log)} 
+                              className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                            >
+                              <Edit3 className="w-3 h-3" /> Edit
+                            </button>
+                            <button 
+                              onClick={() => deleteRecord('dairyMilkLogs', log.id)} 
+                              className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  });
+                })()}
               </tbody>
             </table>
           </div>
