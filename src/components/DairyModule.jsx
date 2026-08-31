@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { generateDairyBillPDF } from '../services/pdfGenerator';
 import { 
@@ -99,8 +99,57 @@ export default function DairyModule() {
     return end.toISOString().split('T')[0];
   };
 
+  // Helper: Next Day Date String
+  const getNextDayStr = (dateStr) => {
+    if (!dateStr) return todayStr;
+    const d = new Date(dateStr);
+    d.setDate(d.getDate() + 1);
+    return d.toISOString().split('T')[0];
+  };
+
   // Form states
   const todayStr = new Date().toISOString().split('T')[0];
+
+  // AUTOMATED MONTHLY BILLING CYCLE ROLLOVER ENGINE:
+  // Automatically archives completed cycles to "Completed" tab and advances active cycle to next month
+  useEffect(() => {
+    if (!data.dairyCustomers || data.dairyCustomers.length === 0) return;
+
+    data.dairyCustomers.forEach(customer => {
+      let start = customer.cycleStartDate || customer.startDate || todayStr;
+      let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
+
+      let updated = false;
+      while (end && end < todayStr) {
+        start = getNextDayStr(end);
+        end = getDefaultCycleEndDate(start);
+        updated = true;
+      }
+
+      if (updated) {
+        updateRecord('dairyCustomers', {
+          ...customer,
+          cycleStartDate: start,
+          cycleEndDate: end
+        });
+      }
+    });
+  }, [data.dairyCustomers, todayStr]);
+
+  // 1-Click Action: Manually Close & Complete Current Cycle & Advance to Next Month
+  const handleAdvanceCustomerCycle = (customer) => {
+    const currentStart = customer.cycleStartDate || customer.startDate || todayStr;
+    const currentEnd = customer.cycleEndDate || getDefaultCycleEndDate(currentStart);
+
+    const nextStart = getNextDayStr(currentEnd);
+    const nextEnd = getDefaultCycleEndDate(nextStart);
+
+    updateRecord('dairyCustomers', {
+      ...customer,
+      cycleStartDate: nextStart,
+      cycleEndDate: nextEnd
+    });
+  };
   const [customerForm, setCustomerForm] = useState({ 
     name: '', 
     phone: '', 
@@ -497,20 +546,27 @@ export default function DairyModule() {
     const customer = data.dairyCustomers.find(c => c.id === customerId);
     if (!customer) return null;
 
-    const start = customer.cycleStartDate || customer.startDate || todayStr;
-    const end = customer.cycleEndDate || getDefaultCycleEndDate(start);
+    let start = customer.cycleStartDate || customer.startDate || todayStr;
+    let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
+
+    while (end && end < todayStr) {
+      start = getNextDayStr(end);
+      end = getDefaultCycleEndDate(start);
+    }
+
     return getCustomRangeData(customerId, start, end);
   };
 
   // Helper Engine: Calculate All Completed & Active Monthly Cycles from Customer Start Date
   const getCustomerAllCycles = (customer) => {
-    const customerStart = new Date(customer.startDate || '2026-08-01');
+    const customerStartStr = customer.startDate || '2026-08-01';
+    const activeStartStr = customer.cycleStartDate || customerStartStr;
     const today = new Date();
     
     const cycles = [];
-    let currStart = new Date(customerStart);
+    let currStart = new Date(customerStartStr);
 
-    while (currStart <= today) {
+    while (currStart <= today || currStart < new Date(activeStartStr)) {
       const nextStart = new Date(currStart);
       nextStart.setMonth(nextStart.getMonth() + 1);
 
@@ -519,7 +575,9 @@ export default function DairyModule() {
 
       const startDateStr = currStart.toISOString().split('T')[0];
       const endDateStr = currEnd.toISOString().split('T')[0];
-      const isCompleted = currEnd < today;
+      
+      // Cycle is completed if its end date is before current active cycle start date OR before today
+      const isCompleted = endDateStr < activeStartStr || endDateStr < todayStr;
 
       const summary = getCustomRangeData(customer.id, startDateStr, endDateStr);
       
@@ -528,7 +586,7 @@ export default function DairyModule() {
         startDateStr,
         endDateStr,
         isCompleted,
-        isCurrentActive: !isCompleted && currStart <= today,
+        isCurrentActive: !isCompleted,
         ...summary
       });
 
@@ -878,6 +936,18 @@ export default function DairyModule() {
                     }`}
                   >
                     <FileText className="w-4 h-4" /> {isStopped ? 'View & Send Final Collection Bill' : 'View & Send Itemized Bill'}
+                  </button>
+
+                  {/* 1-Click Action: Manually Complete Current Month & Start Next Cycle */}
+                  <button
+                    onClick={() => {
+                      if (window.confirm(`Complete current month cycle (${startDateStr} to ${endDateStr}) for ${customer.name} and advance to next month?`)) {
+                        handleAdvanceCustomerCycle(customer);
+                      }
+                    }}
+                    className="w-full mt-1 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" /> 🔄 Complete Month & Start Next Cycle
                   </button>
 
                   {/* 1-Click Status Toggle Button (Stop Milk vs Reactivate) */}
