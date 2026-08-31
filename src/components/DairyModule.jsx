@@ -297,6 +297,7 @@ export default function DairyModule() {
       cycleEndDate: end
     });
     setShowCustomerModal(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Open Edit Single Milk Log Modal
@@ -312,6 +313,7 @@ export default function DairyModule() {
       notes: log.notes || ''
     });
     setShowMilkModal(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Open Edit Customer Payment Modal
@@ -324,6 +326,7 @@ export default function DairyModule() {
       notes: pay.notes || ''
     });
     setShowPaymentModal(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Save Customer Profile

@@ -251,8 +251,8 @@ export default function EquipmentModule() {
 
       {/* Add Equipment Modal */}
       {showEquipmentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">Add Equipment / Machinery</h3>
             <form onSubmit={handleAddEquipment} className="space-y-3 text-xs">
               <div>
@@ -303,8 +303,8 @@ export default function EquipmentModule() {
 
       {/* Log Fuel Modal */}
       {showFuelModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">Log Diesel / Fuel Fill</h3>
             <form onSubmit={handleAddFuel} className="space-y-3 text-xs">
               <div>
@@ -355,8 +355,8 @@ export default function EquipmentModule() {
 
       {/* Log Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">Log Service & Repairs</h3>
             <form onSubmit={handleAddMaintenance} className="space-y-3 text-xs">
               <div>
@@ -429,8 +429,8 @@ export default function EquipmentModule() {
 
       {/* Log Rental Income Modal */}
       {showRentalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">Log Rental Income (Hired Out)</h3>
             <form onSubmit={handleAddRental} className="space-y-3 text-xs">
               <div>
