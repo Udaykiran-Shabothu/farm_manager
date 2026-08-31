@@ -187,14 +187,16 @@ export default function DairyModule() {
 
   // Open Direct Bill Payment Settlement Modal for specific customer & suggested amount
   const handleOpenPaymentForCustomer = (customerId, suggestedAmount = '') => {
+    const targetCustId = customerId || (data.dairyCustomers[0]?.id || '');
     setPaymentForm({
-      customerId: customerId,
+      customerId: targetCustId,
       date: todayStr,
       amount: suggestedAmount > 0 ? suggestedAmount : '',
       notes: `Bill Payment Settlement`
     });
     setEditingDairyPayment(null);
     setShowPaymentModal(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // 1-Click Action: Stop Milk Delivery & Move to Stopped & Pending Bills Section
@@ -396,10 +398,18 @@ export default function DairyModule() {
   // Save Customer Payment Payout Received
   const handleSaveDairyPayment = (e) => {
     e.preventDefault();
-    if (!paymentForm.customerId || !paymentForm.amount) return;
+    const targetCustId = paymentForm.customerId || (data.dairyCustomers[0]?.id || '');
+    const amountVal = Number(paymentForm.amount) || 0;
+
+    if (!targetCustId || amountVal <= 0) {
+      alert('Please select a customer and enter a valid payment amount!');
+      return;
+    }
+
     const payload = {
       ...paymentForm,
-      amount: Number(paymentForm.amount) || 0
+      customerId: targetCustId,
+      amount: amountVal
     };
 
     if (editingDairyPayment) {
@@ -1276,8 +1286,8 @@ export default function DairyModule() {
 
       {/* BULK MILK LOG MODAL FOR ALL ACTIVE CUSTOMERS AT ONCE */}
       {showBulkMilkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-cyan-500/40 max-w-3xl w-full space-y-4 max-h-[90vh] overflow-y-auto card-3d">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-cyan-500/40 max-w-3xl w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <div className="flex items-center space-x-2">
                 <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
@@ -1421,8 +1431,8 @@ export default function DairyModule() {
         const { customer, startDateStr, endDateStr, totalDaysInCycle, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull, dayList } = summary;
 
         return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
-            <div className="glass-panel-glow p-6 sm:p-8 rounded-3xl border border-slate-700 max-w-2xl w-full space-y-6 max-h-[90vh] overflow-y-auto card-3d">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+            <div className="glass-panel-glow p-5 sm:p-8 rounded-3xl border border-slate-700 max-w-2xl w-full my-auto space-y-6 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
               
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -1574,8 +1584,8 @@ export default function DairyModule() {
 
       {/* Add / Edit Customer Modal with Active Cycle Date Range Configuration */}
       {showCustomerModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-lg w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-lg w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-lg font-bold text-white">{editingCustomer ? 'Edit Customer Profile & Active Cycle' : 'Add New Milk Buyer'}</h3>
               <button onClick={() => setShowCustomerModal(false)} className="p-1 rounded text-slate-400 hover:text-white">
@@ -1686,8 +1696,8 @@ export default function DairyModule() {
 
       {/* Log / Edit Single Milk Entry Modal */}
       {showMilkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">{editingMilkLog ? 'Edit Daily Milk Entry' : 'Log Single Customer Milk Entry'}</h3>
             <form onSubmit={handleSaveMilkLog} className="space-y-3 text-xs">
               <div>
@@ -1806,8 +1816,8 @@ export default function DairyModule() {
 
       {/* Record Customer Bill Payment Received Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">{editingDairyPayment ? 'Edit Payment Record' : 'Record Customer Payment Received'}</h3>
             <form onSubmit={handleSaveDairyPayment} className="space-y-3 text-xs">
               <div>
@@ -1873,8 +1883,8 @@ export default function DairyModule() {
 
       {/* Add Cattle Modal */}
       {showCattleModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
-          <div className="glass-panel-glow p-6 rounded-3xl border border-slate-700 max-w-md w-full space-y-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
+          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white">Add New Cattle to Herd</h3>
             <form onSubmit={handleAddCattle} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
