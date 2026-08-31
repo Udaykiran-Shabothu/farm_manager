@@ -73,13 +73,27 @@ export const generateDairyBillPDF = (summary, farmInfo = {}) => {
     columnStyles: { 2: { fontStyle: 'bold', halign: 'right' } }
   });
 
+  const cleanNotes = (note) => {
+    if (!note) return '';
+    const trimmed = String(note).trim();
+    if (
+      trimmed === 'Milk Not Taken (Off Day)' || 
+      trimmed === 'Bulk Daily Entry' || 
+      trimmed === 'Not Taken' || 
+      trimmed === '-'
+    ) {
+      return '';
+    }
+    return trimmed;
+  };
+
   // Day-by-Day Itemized Milk Delivery Table
   const dayRows = dayList.map(d => [
     d.date,
-    d.status === 'Taken' ? 'Taken' : '❌ NOT Taken (Off)',
+    d.status === 'Taken' ? 'Taken' : 'Off Day',
     d.status === 'Taken' ? `${d.totalLiters} L` : '0 L',
     d.status === 'Taken' ? `${currency}${d.totalAmount}` : `${currency}0`,
-    d.notes || '-'
+    cleanNotes(d.notes)
   ]);
 
   doc.setTextColor(15, 23, 42);

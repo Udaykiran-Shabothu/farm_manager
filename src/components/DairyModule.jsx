@@ -484,7 +484,7 @@ export default function DairyModule() {
         eveningLiters: 0,
         totalLiters: 0,
         totalAmount: 0,
-        notes: 'Milk Not Taken (Off Day)'
+        notes: ''
       };
     }
 
