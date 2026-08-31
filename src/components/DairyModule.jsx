@@ -558,7 +558,7 @@ export default function DairyModule() {
     let start = customer.cycleStartDate || customer.startDate || todayStr;
     let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
 
-    while (end && end <= todayStr) {
+    while (end && end < todayStr) {
       start = getNextDayStr(end);
       end = getDefaultCycleEndDate(start);
     }
@@ -596,8 +596,8 @@ export default function DairyModule() {
       const startDateStr = currStartObj.toISOString().split('T')[0];
       const endDateStr = currEndObj.toISOString().split('T')[0];
       
-      // Cycle is completed if its end date is before current active cycle start date OR on/before today
-      const isCompleted = endDateStr < activeStartStr || endDateStr <= todayStr;
+      // Cycle is completed if its end date is before current active cycle start date OR strictly before today
+      const isCompleted = endDateStr < activeStartStr || endDateStr < todayStr;
 
       const summary = getCustomRangeData(customer.id, startDateStr, endDateStr);
       
