@@ -33,7 +33,7 @@ function MainApp() {
           currency={data.farmInfo.currency}
         />
 
-        <main className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 animate-fadeIn">
+        <main className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 lg:pb-8 animate-fadeIn">
           {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === 'crops' && <CropsModule />}
           {activeTab === 'workers' && <WorkersModule />}
