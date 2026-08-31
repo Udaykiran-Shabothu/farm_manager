@@ -425,6 +425,7 @@ export default function DairyModule() {
   };
 
   // Helper: Financial Ledger Breakdown with Prior Month Carryover (Last Month Due / Extra Paid Advance)
+  // Helper: Financial Ledger Breakdown with Prior Cycle Carryover (Last Month Due / Extra Paid Advance)
   const getCustomRangeData = (customerId, startDateStr, endDateStr) => {
     const customer = data.dairyCustomers.find(c => c.id === customerId);
     if (!customer) return null;
@@ -432,37 +433,35 @@ export default function DairyModule() {
     const startObj = new Date(startDateStr);
     const endObj = new Date(endDateStr);
 
-    // 1. Prior Month Carryover Calculation (all logs & payments before startDateStr)
+    // 1. Prior Cycle Carryover Calculation (all logs & payments strictly before startDateStr)
     const priorLogs = (data.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
-      return new Date(l.date) < startObj;
+      return l.date < startDateStr;
     });
 
     const priorPayments = (data.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
-      return new Date(p.date) < startObj;
+      return p.date < startDateStr;
     });
 
     const priorMilkBillsTotal = priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (l.liters * customer.ratePerLiter) || 0), 0);
     const priorPaymentsTotal = priorPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
     
-    // priorBalance > 0 means Pending Due from last month
-    // priorBalance < 0 means Extra Paid Advance Credit from last month!
+    // priorBalance > 0 means Pending Due from prior cycles
+    // priorBalance < 0 means Extra Paid Advance Credit from prior cycles!
     const priorBalance = priorMilkBillsTotal - priorPaymentsTotal;
     const priorDueAmount = priorBalance > 0 ? priorBalance : 0;
     const priorExtraPaidAdvance = priorBalance < 0 ? Math.abs(priorBalance) : 0;
 
-    // 2. Current Cycle Date Range Calculation
+    // 2. Current Custom Cycle Date Range Calculation
     const logsInRange = (data.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
-      const logDate = new Date(l.date);
-      return logDate >= startObj && logDate <= endObj;
+      return l.date >= startDateStr && l.date <= endDateStr;
     });
 
     const paymentsInRange = (data.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
-      const payDate = new Date(p.date);
-      return payDate >= startObj && payDate <= endObj;
+      return p.date >= startDateStr && p.date <= endDateStr;
     });
 
     const dayMap = {};
@@ -515,7 +514,7 @@ export default function DairyModule() {
     const totalPaymentsReceived = paymentsInRange.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
     // Net Financial Settlement Equation:
-    // Net Due = (Current Month Bill + Last Month Due - Last Month Extra Paid) - Current Month Payments
+    // Net Due = (Current Cycle Bill + Last Cycle Due - Last Cycle Extra Paid) - Current Cycle Payments
     const grossTotalPayable = totalMonthBill + priorDueAmount - priorExtraPaidAdvance;
     const pendingBalanceDue = grossTotalPayable - totalPaymentsReceived;
     const isPaidInFull = pendingBalanceDue <= 0;
@@ -549,7 +548,7 @@ export default function DairyModule() {
     let start = customer.cycleStartDate || customer.startDate || todayStr;
     let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
 
-    while (end && end < todayStr) {
+    while (end && end <= todayStr) {
       start = getNextDayStr(end);
       end = getDefaultCycleEndDate(start);
     }
@@ -564,33 +563,35 @@ export default function DairyModule() {
     const today = new Date();
     
     const cycles = [];
-    let currStart = new Date(customerStartStr);
+    let currStartObj = new Date(customerStartStr);
 
-    while (currStart <= today || currStart < new Date(activeStartStr)) {
-      const nextStart = new Date(currStart);
-      nextStart.setMonth(nextStart.getMonth() + 1);
+    while (currStartObj <= today || currStartObj <= new Date(activeStartStr)) {
+      const nextStartObj = new Date(currStartObj);
+      nextStartObj.setMonth(nextStartObj.getMonth() + 1);
 
-      const currEnd = new Date(nextStart);
-      currEnd.setDate(currEnd.getDate() - 1);
+      const currEndObj = new Date(nextStartObj);
+      currEndObj.setDate(currEndObj.getDate() - 1);
 
-      const startDateStr = currStart.toISOString().split('T')[0];
-      const endDateStr = currEnd.toISOString().split('T')[0];
+      const startDateStr = currStartObj.toISOString().split('T')[0];
+      const endDateStr = currEndObj.toISOString().split('T')[0];
       
-      // Cycle is completed if its end date is before current active cycle start date OR before today
-      const isCompleted = endDateStr < activeStartStr || endDateStr < todayStr;
+      // Cycle is completed if its end date is before current active cycle start date OR on/before today
+      const isCompleted = endDateStr < activeStartStr || endDateStr <= todayStr;
 
       const summary = getCustomRangeData(customer.id, startDateStr, endDateStr);
       
-      cycles.push({
-        customer,
-        startDateStr,
-        endDateStr,
-        isCompleted,
-        isCurrentActive: !isCompleted,
-        ...summary
-      });
+      if (summary) {
+        cycles.push({
+          customer,
+          startDateStr,
+          endDateStr,
+          isCompleted,
+          isCurrentActive: !isCompleted,
+          ...summary
+        });
+      }
 
-      currStart = nextStart;
+      currStartObj = nextStartObj;
     }
 
     return cycles.sort((a, b) => new Date(b.startDateStr) - new Date(a.startDateStr));
