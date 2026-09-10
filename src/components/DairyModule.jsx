@@ -504,6 +504,11 @@ export default function DairyModule() {
     });
     const logsInRange = Object.values(uniqueLogsMap);
 
+    const paymentsInRange = (data.dairyPayments || []).filter(p => {
+      if (p.customerId !== customerId) return false;
+      return p.date >= startDateStr && p.date <= endDateStr;
+    });
+
     const dayMap = {};
     const curr = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate());
     const endLimit = new Date(endObj.getFullYear(), endObj.getMonth(), endObj.getDate());
