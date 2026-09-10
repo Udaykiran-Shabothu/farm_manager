@@ -783,28 +783,40 @@ export default function DairyModule() {
   const stoppedCount = data.dairyCustomers.filter(c => c.status === 'Stopped & Bill Pending').length;
   const activeCount = data.dairyCustomers.length - stoppedCount;
 
+  // Header Executive Summary Metrics
+  const todayLitersTotal = (data.dairyMilkLogs || [])
+    .filter(l => l.date === todayStr && (l.status === 'Taken' || Number(l.liters) > 0))
+    .reduce((acc, curr) => acc + Number(curr.liters || 0), 0);
+
+  const totalPendingDuesSum = data.dairyCustomers.reduce((acc, c) => {
+    const summary = getCustomerMonthlyData(c.id);
+    return acc + (summary ? Number(summary.pendingBalanceDue || 0) : 0);
+  }, 0);
+
   return (
-    <div className="space-y-8 pb-12">
+    <div className="space-y-8 pb-12 animate-fadeIn">
       
-      {/* Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d">
-        <div>
-          <div className="flex items-center space-x-2">
-            <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400">
-              <Milk className="w-6 h-6" />
+      {/* Top Banner & Main Quick Action Toolbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-6 sm:p-7 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d shadow-2xl relative overflow-hidden">
+        <div className="space-y-1 z-10">
+          <div className="flex items-center space-x-3">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500/30 to-teal-500/20 text-cyan-300 border border-cyan-500/40 shadow-inner">
+              <Milk className="w-7 h-7" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white">Dairy Farm & Milk Register</h2>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Dairy Farm & Milk Register</h2>
+              <p className="text-xs sm:text-sm text-slate-300/90 font-medium">Monthly billing cycles, daily quotas, & 1-click ledger settlements.</p>
+            </div>
           </div>
-          <p className="text-xs text-slate-400 mt-1 truncate">Monthly milk customer billing cycles, daily delivery registers & bill settlements.</p>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 w-full sm:w-auto">
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 w-full lg:w-auto z-10">
           {/* BULK ENTRY BUTTON FOR ALL ACTIVE CUSTOMERS AT ONCE */}
           <button
             onClick={handleOpenBulkMilkModal}
-            className="col-span-2 sm:col-auto px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 transition-all transform hover:scale-105"
+            className="col-span-2 sm:col-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-105 active:scale-95"
           >
-            <Zap className="w-4 h-4 fill-slate-950 text-slate-950" /> Log ALL Customers Milk (Bulk Entry)
+            <Zap className="w-4 h-4 fill-slate-950 text-slate-950" /> Log ALL Customers (Bulk Entry)
           </button>
           
           {/* SEPARATE SINGLE CUSTOMER MILK LOG BUTTON */}
@@ -814,7 +826,7 @@ export default function DairyModule() {
               setEditingMilkLog(null);
               setShowMilkModal(true);
             }}
-            className="px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            className="px-3.5 py-2.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Milk className="w-4 h-4" /> Log Single Milk
           </button>
@@ -833,7 +845,7 @@ export default function DairyModule() {
               });
               setShowCustomerModal(true);
             }}
-            className="px-3 py-2 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            className="px-3.5 py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4" /> Add Customer
           </button>
@@ -842,27 +854,70 @@ export default function DairyModule() {
             onClick={() => {
               if (data.dairyCustomers.length > 0) handleOpenPaymentForCustomer(data.dairyCustomers[0].id);
             }}
-            className="px-3 py-2 rounded-xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg shadow-blue-500/20 transition-all"
+            className="px-3.5 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
           >
             <Wallet className="w-4 h-4" /> Record Payment
           </button>
 
           <button
             onClick={() => setShowCattleModal(true)}
-            className="px-3 py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all"
+            className="px-3.5 py-2.5 rounded-2xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Award className="w-4 h-4" /> Add Cattle
           </button>
         </div>
       </div>
 
-      {/* Customer Category Filter Sub-Tabs */}
-      <div className="p-2 sm:p-3 glass-panel rounded-2xl border border-slate-800/80">
+      {/* Dairy Executive Summary KPI Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-cyan-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-cyan-950/20">
+          <div className="p-3 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+            <Users className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Active Buyers</span>
+            <span className="text-xl sm:text-2xl font-black text-white">{activeCount} Buyers</span>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-emerald-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-emerald-950/20">
+          <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+            <Milk className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Today's Milk</span>
+            <span className="text-xl sm:text-2xl font-black text-emerald-300">{todayLitersTotal} Liters</span>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-amber-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-amber-950/20">
+          <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+            <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Total Net Dues</span>
+            <span className="text-xl sm:text-2xl font-black text-amber-300">{currency}{totalPendingDuesSum.toLocaleString('en-IN')}</span>
+          </div>
+        </div>
+
+        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-purple-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-purple-950/20">
+          <div className="p-3 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+            <FolderCheck className="w-5 h-5 sm:w-6 sm:h-6" />
+          </div>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Completed Cycles</span>
+            <span className="text-xl sm:text-2xl font-black text-purple-300">{visibleCompletedCycles.length} Statements</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Customer Category Filter Sub-Tabs Pill Bar */}
+      <div className="p-2 sm:p-2.5 glass-panel rounded-2xl border border-slate-800 backdrop-blur-2xl shadow-xl">
         <div className="overflow-x-auto no-scrollbar flex items-center space-x-2 text-nowrap snap-x py-0.5 max-w-full">
           <button
             onClick={() => setCustomerTab('Active')}
-            className={`flex-shrink-0 snap-start px-3.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-              customerTab === 'Active' ? 'bg-gradient-to-r from-cyan-500 to-teal-500 text-slate-950 shadow-md shadow-cyan-950/50 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              customerTab === 'Active' ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-lg shadow-cyan-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
             }`}
           >
             <Milk className="w-4 h-4" /> 🟢 Active Buyers ({activeCount})
@@ -870,25 +925,25 @@ export default function DairyModule() {
           
           <button
             onClick={() => setCustomerTab('Completed')}
-            className={`flex-shrink-0 snap-start px-3.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-              customerTab === 'Completed' ? 'bg-gradient-to-r from-emerald-500 to-green-600 text-slate-950 shadow-md shadow-emerald-950/50 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              customerTab === 'Completed' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-slate-950 shadow-lg shadow-emerald-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
             }`}
           >
-            <FolderCheck className="w-4 h-4" /> 📁 Completed Statements ({visibleCompletedCycles.length})
+            <FolderCheck className="w-4 h-4" /> ✅ Paid Bills / Completed ({visibleCompletedCycles.length})
           </button>
 
           <button
             onClick={() => setCustomerTab('Stopped')}
-            className={`flex-shrink-0 snap-start px-3.5 sm:px-4 py-2 rounded-xl text-xs font-extrabold transition-all flex items-center gap-2 ${
-              customerTab === 'Stopped' ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-md shadow-rose-950/50 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
+              customerTab === 'Stopped' ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
             }`}
           >
-            <Octagon className="w-4 h-4" /> 🛑 Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
+            <Octagon className="w-4 h-4" /> ⚠️ Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
           </button>
 
           <button
             onClick={() => setCustomerTab('All')}
-            className={`flex-shrink-0 snap-start px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all ${
               customerTab === 'All' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
             }`}
           >
