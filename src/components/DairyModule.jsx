@@ -21,6 +21,7 @@ import {
   Clock, 
   Wallet, 
   Phone, 
+  ChevronLeft,
   ChevronRight,
   Sliders,
   DollarSign,
@@ -45,6 +46,40 @@ export default function DairyModule() {
 
   // Customer Filter Tab state: "Active", "Completed", "Stopped", "All"
   const [customerTab, setCustomerTab] = useState('Active');
+
+  // Interactive Nature Organic Dairy Visual Carousel State
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const carouselSlides = [
+    {
+      id: 1,
+      title: "Fresh Pure Organic Dairy Harvest",
+      subtitle: "Daily Morning & Evening Quotas track live yield and fat percentage.",
+      badge: "🌿 Pure Organic Quality",
+      image: "https://images.unsplash.com/photo-1527153857715-3904f1205e23?q=80&w=1200&auto=format&fit=crop"
+    },
+    {
+      id: 2,
+      title: "High-Yield Milking Herd & Pasture Care",
+      subtitle: "Monitor milking cattle health, daily yield liters, and breed records.",
+      badge: "🐄 Healthy Cattle Herd",
+      image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1200&auto=format&fit=crop"
+    },
+    {
+      id: 3,
+      title: "Automated Monthly Billing & WhatsApp Receipts",
+      subtitle: "1-Click PDF Bill generation, payment settlement, and instant messaging.",
+      badge: "⚡ Instant Digital Ledger",
+      image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?q=80&w=1200&auto=format&fit=crop"
+    }
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % carouselSlides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [carouselSlides.length]);
 
   // Track cleared/deleted paid cycle keys ("customerId_startDateStr")
   const [clearedCycleKeys, setClearedCycleKeys] = useState(() => {
@@ -794,18 +829,18 @@ export default function DairyModule() {
   }, 0);
 
   return (
-    <div className="space-y-8 pb-12 animate-fadeIn">
+    <div className="space-y-8 pb-12 animate-fadeIn text-slate-100">
       
-      {/* Top Banner & Main Quick Action Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-6 sm:p-7 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d shadow-2xl relative overflow-hidden">
+      {/* Top Nature Farm Banner & Main Quick Action Toolbar */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-6 sm:p-7 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 rounded-3xl border border-emerald-500/40 card-3d shadow-2xl relative overflow-hidden">
         <div className="space-y-1 z-10">
           <div className="flex items-center space-x-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500/30 to-teal-500/20 text-cyan-300 border border-cyan-500/40 shadow-inner">
+            <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-300 border border-emerald-500/40 shadow-inner">
               <Milk className="w-7 h-7" />
             </div>
             <div>
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Dairy Farm & Milk Register</h2>
-              <p className="text-xs sm:text-sm text-slate-300/90 font-medium">Monthly billing cycles, daily quotas, & 1-click ledger settlements.</p>
+              <p className="text-xs sm:text-sm text-emerald-200/90 font-medium">Monthly billing cycles, daily quotas, & 1-click ledger settlements.</p>
             </div>
           </div>
         </div>
@@ -814,7 +849,7 @@ export default function DairyModule() {
           {/* BULK ENTRY BUTTON FOR ALL ACTIVE CUSTOMERS AT ONCE */}
           <button
             onClick={handleOpenBulkMilkModal}
-            className="col-span-2 sm:col-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 hover:from-cyan-400 hover:to-emerald-300 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/25 transition-all transform hover:scale-105 active:scale-95"
+            className="col-span-2 sm:col-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 hover:from-emerald-300 hover:to-amber-200 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-105 active:scale-95"
           >
             <Zap className="w-4 h-4 fill-slate-950 text-slate-950" /> Log ALL Customers (Bulk Entry)
           </button>
@@ -826,7 +861,7 @@ export default function DairyModule() {
               setEditingMilkLog(null);
               setShowMilkModal(true);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Milk className="w-4 h-4" /> Log Single Milk
           </button>
@@ -845,7 +880,7 @@ export default function DairyModule() {
               });
               setShowCustomerModal(true);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-2xl bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Plus className="w-4 h-4" /> Add Customer
           </button>
@@ -854,17 +889,79 @@ export default function DairyModule() {
             onClick={() => {
               if (data.dairyCustomers.length > 0) handleOpenPaymentForCustomer(data.dairyCustomers[0].id);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-blue-500 hover:bg-blue-400 text-white text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-blue-500/20 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all transform hover:-translate-y-0.5"
           >
             <Wallet className="w-4 h-4" /> Record Payment
           </button>
 
           <button
             onClick={() => setShowCattleModal(true)}
-            className="px-3.5 py-2.5 rounded-2xl bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-2xl bg-emerald-700/30 hover:bg-emerald-700/40 text-emerald-200 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
           >
             <Award className="w-4 h-4" /> Add Cattle
           </button>
+        </div>
+      </div>
+
+      {/* 🌟 Rich Nature Interactive Dairy Carousel */}
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-emerald-500/30 group card-3d h-64 sm:h-80">
+        {carouselSlides.map((slide, idx) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+              idx === currentSlide ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
+            }`}
+          >
+            <img
+              src={slide.image}
+              alt={slide.title}
+              className="w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-700"
+            />
+            {/* Organic Nature Gradient Overlays */}
+            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/70 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/90 via-emerald-900/40 to-transparent" />
+
+            {/* Slide Content */}
+            <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 space-y-2 max-w-2xl">
+              <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 backdrop-blur-md inline-block shadow-md">
+                {slide.badge}
+              </span>
+              <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">
+                {slide.title}
+              </h3>
+              <p className="text-xs sm:text-sm text-emerald-100/90 font-medium drop-shadow-sm">
+                {slide.subtitle}
+              </p>
+            </div>
+          </div>
+        ))}
+
+        {/* Carousel Controls */}
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev === 0 ? carouselSlides.length - 1 : prev - 1))}
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-emerald-950/70 hover:bg-emerald-900/90 text-white border border-emerald-500/40 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+
+        <button
+          onClick={() => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length)}
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-emerald-950/70 hover:bg-emerald-900/90 text-white border border-emerald-500/40 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+
+        {/* Indicators */}
+        <div className="absolute bottom-4 right-6 z-20 flex items-center space-x-2">
+          {carouselSlides.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setCurrentSlide(idx)}
+              className={`h-2 rounded-full transition-all ${
+                idx === currentSlide ? 'w-8 bg-emerald-400 shadow-md shadow-emerald-400/50' : 'w-2 bg-white/40 hover:bg-white/70'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
