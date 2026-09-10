@@ -504,11 +504,6 @@ export default function DairyModule() {
     });
     const logsInRange = Object.values(uniqueLogsMap);
 
-    const paymentsInRange = (data.dairyPayments || []).filter(p => {
-      if (p.customerId !== customerId) return false;
-      return p.date >= startDateStr && p.date <= endDateStr;
-    });
-
     const dayMap = {};
     const curr = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate());
     const endLimit = new Date(endObj.getFullYear(), endObj.getMonth(), endObj.getDate());
@@ -564,12 +559,18 @@ export default function DairyModule() {
     const daysNotTakenCount = totalDaysInCycle - daysTakenCount;
     const totalLitersTaken = dayList.reduce((acc, curr) => acc + curr.totalLiters, 0);
     const totalMonthBill = dayList.reduce((acc, curr) => acc + curr.totalAmount, 0);
+
+    const allCustomerPayments = (data.dairyPayments || []).filter(p => p.customerId === customerId);
+    const paymentsAfterEnd = allCustomerPayments.filter(p => p.date > endDateStr);
+
     const totalPaymentsReceived = paymentsInRange.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    const totalPaymentsAfterEnd = paymentsAfterEnd.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
+    const totalAppliedPayments = totalPaymentsReceived + totalPaymentsAfterEnd;
 
     // Net Financial Settlement Equation:
-    // Net Due = (Current Cycle Bill + Last Cycle Due - Last Cycle Extra Paid) - Current Cycle Payments
+    // Net Due = (Current Cycle Bill + Last Cycle Due - Last Cycle Extra Paid) - Applicable Payments
     const grossTotalPayable = totalMonthBill + priorDueAmount - priorExtraPaidAdvance;
-    const pendingBalanceDue = grossTotalPayable - totalPaymentsReceived;
+    const pendingBalanceDue = Math.max(0, grossTotalPayable - totalAppliedPayments);
     const isPaidInFull = pendingBalanceDue <= 0;
 
     return {
