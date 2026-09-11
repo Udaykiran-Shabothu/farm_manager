@@ -46,7 +46,8 @@ const INITIAL_DATA = {
   poultryBatches: [],
   poultryDailyLogs: [],
   poultryHealthLogs: [],
-  poultrySales: []
+  poultrySales: [],
+  poultryHenTrades: []
 };
 
 export const FarmProvider = ({ children }) => {
@@ -109,7 +110,8 @@ export const FarmProvider = ({ children }) => {
       workers: [], attendance: [], workerPayments: [],
       equipment: [], equipmentMaintenance: [], equipmentFuel: [], equipmentUsage: [],
       dairyCustomers: [], dairyMilkLogs: [], dairyPayments: [], cattleHerd: [], dairyExpenses: [],
-      poultryBatches: [], poultryDailyLogs: [], poultryHealthLogs: [], poultrySales: []
+      poultryBatches: [], poultryDailyLogs: [], poultryHealthLogs: [], poultrySales: [],
+      poultryHenTrades: []
     };
     setData(emptyData);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(emptyData));

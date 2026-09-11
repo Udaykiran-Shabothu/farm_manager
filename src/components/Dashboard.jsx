@@ -74,8 +74,11 @@ export default function Dashboard({ setActiveTab }) {
   // 5. Calculate Poultry Totals
   const poultryDailyFeedCostTotal = data.poultryDailyLogs.reduce((acc, curr) => acc + Number(curr.feedCost || 0), 0);
   const poultryHealthCostTotal = data.poultryHealthLogs.reduce((acc, curr) => acc + Number(curr.medicineCost || 0) + Number(curr.doctorFee || 0), 0);
-  const poultryExpenseTotal = poultryDailyFeedCostTotal + poultryHealthCostTotal;
-  const poultryIncomeTotal = data.poultrySales.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
+  const henTrades = data.poultryHenTrades || [];
+  const henTradeSalesIncome = henTrades.filter(t => t.type === 'Sale').reduce((acc, t) => acc + Number(t.totalAmount || 0), 0);
+  const henTradePurchaseExpense = henTrades.filter(t => t.type === 'Purchase').reduce((acc, t) => acc + Number(t.totalAmount || 0), 0);
+  const poultryExpenseTotal = poultryDailyFeedCostTotal + poultryHealthCostTotal + henTradePurchaseExpense;
+  const poultryIncomeTotal = data.poultrySales.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0) + henTradeSalesIncome;
 
   const totalPoultryInitial = data.poultryBatches.reduce((acc, curr) => acc + Number(curr.initialBirdCount || 0), 0);
   const totalPoultryDead = data.poultryDailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
@@ -126,7 +129,9 @@ export default function Dashboard({ setActiveTab }) {
     ...data.workerPayments.map(p => ({ type: 'Worker Payout', title: `Worker Payout (${p.type})`, date: p.date, amount: p.amount, isExpense: true, sector: 'workers' })),
     ...data.equipmentFuel.map(f => ({ type: 'Diesel Fill', title: `Diesel Fill (${f.liters}L)`, date: f.date, amount: f.totalCost, isExpense: true, sector: 'equipment' })),
     ...data.dairyMilkLogs.map(m => ({ type: 'Milk Entry', title: `Milk Delivered (${m.liters}L)`, date: m.date, amount: m.totalAmount, isExpense: false, sector: 'dairy' })),
-    ...data.poultrySales.map(s => ({ type: 'Poultry Sale', title: `Poultry Sale (${s.category})`, date: s.date, amount: s.totalIncome, isExpense: false, sector: 'poultry' }))
+    ...data.poultrySales.map(s => ({ type: 'Poultry Sale', title: `Poultry Sale (${s.category})`, date: s.date, amount: s.totalIncome, isExpense: false, sector: 'poultry' })),
+    ...henTrades.filter(t => t.type === 'Sale').map(t => ({ type: 'Hen Sale', title: `Hen Sale to ${t.customerName} (${t.henCount} hens)`, date: t.date, amount: t.totalAmount, isExpense: false, sector: 'poultry' })),
+    ...henTrades.filter(t => t.type === 'Purchase').map(t => ({ type: 'Hen Purchase', title: `Hen Purchase from ${t.customerName} (${t.henCount} hens)`, date: t.date, amount: t.totalAmount, isExpense: true, sector: 'poultry' }))
   ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
 
   return (
