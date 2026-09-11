@@ -1,8 +1,8 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-// Helper: Format Currency
-const formatCurrency = (val, symbol = '₹') => `${symbol}${Number(val || 0).toLocaleString('en-IN')}`;
+// Helper: Format Currency (Strict Whole Number Rounding)
+const formatCurrency = (val, symbol = '₹') => `${symbol}${Math.round(Number(val || 0)).toLocaleString('en-IN')}`;
 
 // 1. DAIRY MONTHLY MILK BILL PDF GENERATOR
 export const generateDairyBillPDF = (summary, farmInfo = {}) => {
@@ -224,9 +224,9 @@ export const generateCropReportPDF = (crop, cropExpenses, cropIncomes, farmInfo 
   const currency = farmInfo.currency || '₹';
   const farmName = farmInfo.name || 'Samagra Jeeva Vyavasayam & Farms';
 
-  const totalExp = cropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-  const totalInc = cropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
-  const netProfit = totalInc - totalExp;
+  const totalExp = Math.round(cropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+  const totalInc = Math.round(cropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0));
+  const netProfit = Math.round(totalInc - totalExp);
 
   const doc = new jsPDF();
 

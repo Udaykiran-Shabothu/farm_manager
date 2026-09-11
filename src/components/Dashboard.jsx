@@ -83,14 +83,14 @@ export default function Dashboard({ setActiveTab }) {
   const totalPoultryInitial = data.poultryBatches.reduce((acc, curr) => acc + Number(curr.initialBirdCount || 0), 0);
   const totalPoultryDead = data.poultryDailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
   const totalPoultryAlive = Math.max(0, totalPoultryInitial - totalPoultryDead);
-  const poultrySurvivalRate = totalPoultryInitial > 0 ? ((totalPoultryAlive / totalPoultryInitial) * 100).toFixed(1) : 100;
+  const poultrySurvivalRate = totalPoultryInitial > 0 ? Math.round((totalPoultryAlive / totalPoultryInitial) * 100) : 100;
   const totalEggsCollected = data.poultryDailyLogs.reduce((acc, curr) => acc + Number(curr.eggCount || 0), 0);
 
   // Overall Financial Totals
-  const grandTotalIncome = cropIncomeTotal + equipmentRentalIncome + dairyMilkIncomeTotal + poultryIncomeTotal;
-  const grandTotalExpenses = cropExpenseTotal + totalWagesEarned + equipmentTotalExpenses + dairyExpenseTotal + poultryExpenseTotal;
-  const netProfit = grandTotalIncome - grandTotalExpenses;
-  const profitMargin = grandTotalIncome > 0 ? ((netProfit / grandTotalIncome) * 100).toFixed(1) : '0.0';
+  const grandTotalIncome = Math.round(cropIncomeTotal + equipmentRentalIncome + dairyMilkIncomeTotal + poultryIncomeTotal);
+  const grandTotalExpenses = Math.round(cropExpenseTotal + totalWagesEarned + equipmentTotalExpenses + dairyExpenseTotal + poultryExpenseTotal);
+  const netProfit = Math.round(grandTotalIncome - grandTotalExpenses);
+  const profitMargin = grandTotalIncome > 0 ? Math.round((netProfit / grandTotalIncome) * 100) : 0;
 
   // ----------------------------------------------------
   // Recharts Visual Analytics Data

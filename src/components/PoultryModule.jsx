@@ -308,7 +308,7 @@ export default function PoultryModule() {
 
               const totalDead = dailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
               const totalAlive = Math.max(0, batch.initialBirdCount - totalDead);
-              const mortalityRate = ((totalDead / (batch.initialBirdCount || 1)) * 100).toFixed(1);
+              const mortalityRate = Math.round((totalDead / (batch.initialBirdCount || 1)) * 100);
 
               const totalFeedCost = dailyLogs.reduce((acc, curr) => acc + Number(curr.feedCost || 0), 0);
               const totalHealthCost = healthLogs.reduce((acc, curr) => acc + Number(curr.medicineCost || 0) + Number(curr.doctorFee || 0), 0);

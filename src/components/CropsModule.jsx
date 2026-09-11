@@ -109,7 +109,7 @@ export default function CropsModule() {
 
       if (field === 'quantityCount' || field === 'unitCost') {
         if (q > 0 && c > 0) {
-          updated.amount = q * c;
+          updated.amount = Math.round(q * c);
         }
       }
       return updated;
@@ -188,7 +188,7 @@ export default function CropsModule() {
     if (!expenseForm.cropId || !expenseForm.amount) return;
     const qty = Number(expenseForm.quantityCount) || 1;
     const cost = Number(expenseForm.unitCost) || 0;
-    const totalAmt = Number(expenseForm.amount) || (qty * cost);
+    const totalAmt = Math.round(Number(expenseForm.amount) || (qty * cost));
 
     const payload = {
       ...expenseForm,
@@ -227,7 +227,7 @@ export default function CropsModule() {
       ...incomeForm,
       quantityQuintals: qty,
       ratePerQuintal: rate,
-      totalIncome: qty * rate
+      totalIncome: Math.round(qty * rate)
     };
 
     if (editingIncome) {

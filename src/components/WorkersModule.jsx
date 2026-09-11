@@ -145,12 +145,12 @@ export default function WorkersModule() {
     if (attendanceForm.status === 'Half Day') baseRate = baseRate * 0.5;
 
     const overtimePay = (Number(attendanceForm.overtimeHours) || 0) * (baseRate / 8);
-    const calculatedWage = baseRate + overtimePay;
+    const calculatedWage = Math.round(baseRate + overtimePay);
 
     const payload = {
       ...attendanceForm,
       overtimeHours: Number(attendanceForm.overtimeHours) || 0,
-      wageEarned: Number(attendanceForm.wageEarned) || calculatedWage
+      wageEarned: Math.round(Number(attendanceForm.wageEarned) || calculatedWage)
     };
 
     if (editingAttendance) {
@@ -170,7 +170,7 @@ export default function WorkersModule() {
 
     const payload = {
       ...paymentForm,
-      amount: Number(paymentForm.amount) || 0
+      amount: Math.round(Number(paymentForm.amount) || 0)
     };
 
     if (editingPayment) {

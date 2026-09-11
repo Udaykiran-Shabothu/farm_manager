@@ -298,7 +298,7 @@ export default function DairyModule() {
       const liters = isTaken ? Number(entry.liters) || 0 : 0;
       const fat = isTaken ? Number(entry.fatPercent) || 0 : 0;
       const rate = customer.ratePerLiter;
-      const totalAmount = isTaken ? liters * rate : 0;
+      const totalAmount = isTaken ? Math.round(liters * rate) : 0;
 
       const payload = {
         customerId,
@@ -421,7 +421,7 @@ export default function DairyModule() {
     const liters = isTaken ? Number(milkForm.liters) || 0 : 0;
     const fat = isTaken ? Number(milkForm.fatPercent) || 0 : 0;
     const rate = customer.ratePerLiter;
-    const totalAmount = isTaken ? liters * rate : 0;
+    const totalAmount = isTaken ? Math.round(liters * rate) : 0;
 
     const payload = {
       ...milkForm,
@@ -464,7 +464,7 @@ export default function DairyModule() {
     const payload = {
       ...paymentForm,
       customerId: targetCustId,
-      amount: amountVal
+      amount: Math.round(amountVal)
     };
 
     if (editingDairyPayment) {
@@ -517,12 +517,12 @@ export default function DairyModule() {
       return p.date < startDateStr;
     });
 
-    const priorMilkBillsTotal = priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (l.liters * customer.ratePerLiter) || 0), 0);
-    const priorPaymentsTotal = priorPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0);
+    const priorMilkBillsTotal = Math.round(priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (l.liters * customer.ratePerLiter) || 0), 0));
+    const priorPaymentsTotal = Math.round(priorPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0));
     
     // priorBalance > 0 means Pending Due from prior cycles
     // priorBalance < 0 means Extra Paid Advance Credit from prior cycles!
-    const priorBalance = priorMilkBillsTotal - priorPaymentsTotal;
+    const priorBalance = Math.round(priorMilkBillsTotal - priorPaymentsTotal);
     const priorDueAmount = priorBalance > 0 ? priorBalance : 0;
     const priorExtraPaidAdvance = priorBalance < 0 ? Math.abs(priorBalance) : 0;
 
@@ -584,7 +584,7 @@ export default function DairyModule() {
         if (log.shift === 'Morning') dayMap[log.date].morningLiters += Number(log.liters || 0);
         if (log.shift === 'Evening') dayMap[log.date].eveningLiters += Number(log.liters || 0);
         dayMap[log.date].totalLiters += Number(log.liters || 0);
-        dayMap[log.date].totalAmount += Number(log.totalAmount || (log.liters * customer.ratePerLiter) || 0);
+        dayMap[log.date].totalAmount += Math.round(Number(log.totalAmount || (log.liters * customer.ratePerLiter) || 0));
         if (log.notes) dayMap[log.date].notes = log.notes;
       } else {
         dayMap[log.date].status = 'Not Taken';
@@ -597,20 +597,20 @@ export default function DairyModule() {
     const totalDaysInCycle = dayList.length;
     const daysTakenCount = dayList.filter(d => d.status === 'Taken').length;
     const daysNotTakenCount = totalDaysInCycle - daysTakenCount;
-    const totalLitersTaken = dayList.reduce((acc, curr) => acc + curr.totalLiters, 0);
-    const totalMonthBill = dayList.reduce((acc, curr) => acc + curr.totalAmount, 0);
+    const totalLitersTaken = Math.round(dayList.reduce((acc, curr) => acc + curr.totalLiters, 0));
+    const totalMonthBill = Math.round(dayList.reduce((acc, curr) => acc + curr.totalAmount, 0));
 
     const allCustomerPayments = (data.dairyPayments || []).filter(p => p.customerId === customerId);
     const paymentsAfterEnd = allCustomerPayments.filter(p => p.date > endDateStr);
 
-    const totalPaymentsReceived = paymentsInRange.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-    const totalPaymentsAfterEnd = paymentsAfterEnd.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
-    const totalAppliedPayments = totalPaymentsReceived + totalPaymentsAfterEnd;
+    const totalPaymentsReceived = Math.round(paymentsInRange.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+    const totalPaymentsAfterEnd = Math.round(paymentsAfterEnd.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+    const totalAppliedPayments = Math.round(totalPaymentsReceived + totalPaymentsAfterEnd);
 
     // Net Financial Settlement Equation:
     // Net Due = (Current Cycle Bill + Last Cycle Due - Last Cycle Extra Paid) - Applicable Payments
-    const grossTotalPayable = totalMonthBill + priorDueAmount - priorExtraPaidAdvance;
-    const pendingBalanceDue = Math.max(0, grossTotalPayable - totalAppliedPayments);
+    const grossTotalPayable = Math.round(totalMonthBill + priorDueAmount - priorExtraPaidAdvance);
+    const pendingBalanceDue = Math.round(Math.max(0, grossTotalPayable - totalAppliedPayments));
     const isPaidInFull = pendingBalanceDue <= 0;
 
     return {

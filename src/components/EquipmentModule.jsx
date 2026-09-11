@@ -34,7 +34,7 @@ export default function EquipmentModule() {
       ...fuelForm,
       liters,
       ratePerLiter: rate,
-      totalCost: liters * rate
+      totalCost: Math.round(liters * rate)
     });
     setShowFuelModal(false);
   };
