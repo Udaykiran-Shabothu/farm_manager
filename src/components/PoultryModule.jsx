@@ -20,12 +20,13 @@ export default function PoultryModule() {
   const [healthForm, setHealthForm] = useState({ batchId: '', date: new Date().toISOString().split('T')[0], vaccineName: '', diseaseSymptoms: '', medicineCost: '', doctorFee: '' });
   const [salesForm, setSalesForm] = useState({ batchId: '', date: new Date().toISOString().split('T')[0], category: 'Birds', quantity: '', unit: 'Kg', ratePerUnit: '', totalIncome: '' });
 
-  // === HEN TRADING STATE ===
+  // === HEN TRADING & GENERAL POULTRY LEDGER STATE ===
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [editingTrade, setEditingTrade] = useState(null);
   const [tradeForm, setTradeForm] = useState({
     date: new Date().toISOString().split('T')[0],
     type: 'Sale',
+    category: 'Hen Sale',
     customerName: '',
     henCount: '',
     weightKg: '',
@@ -34,7 +35,7 @@ export default function PoultryModule() {
     breed: '',
     notes: ''
   });
-  const [tradeFilter, setTradeFilter] = useState('All'); // All, Sale, Purchase
+  const [tradeFilter, setTradeFilter] = useState('All'); // All, Sale, Purchase, or specific Category
   const [tradeSearch, setTradeSearch] = useState('');
 
   // === FLOCK HANDLERS ===
@@ -86,11 +87,12 @@ export default function PoultryModule() {
     setShowSalesModal(false);
   };
 
-  // === HEN TRADING HANDLERS ===
+  // === HEN TRADING & EXPENSES HANDLERS ===
   const resetTradeForm = () => {
     setTradeForm({
       date: new Date().toISOString().split('T')[0],
       type: 'Sale',
+      category: 'Hen Sale',
       customerName: '',
       henCount: '',
       weightKg: '',
@@ -102,22 +104,25 @@ export default function PoultryModule() {
     setEditingTrade(null);
   };
 
-  const handleOpenTradeModal = (type = 'Sale') => {
+  const handleOpenTradeModal = (type = 'Sale', defaultCat = null) => {
     resetTradeForm();
-    setTradeForm(prev => ({ ...prev, type }));
+    const cat = defaultCat || (type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase');
+    setTradeForm(prev => ({ ...prev, type, category: cat }));
     setShowTradeModal(true);
   };
 
   const handleEditTrade = (trade) => {
     setEditingTrade(trade);
+    const cat = trade.category || (trade.type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase');
     setTradeForm({
       date: trade.date,
       type: trade.type,
+      category: cat,
       customerName: trade.customerName,
-      henCount: trade.henCount,
+      henCount: trade.henCount || '',
       weightKg: trade.weightKg || '',
-      ratePerKg: trade.ratePerKg,
-      totalAmount: trade.totalAmount,
+      ratePerKg: trade.ratePerKg || '',
+      totalAmount: trade.totalAmount || '',
       breed: trade.breed || '',
       notes: trade.notes || ''
     });
@@ -126,15 +131,16 @@ export default function PoultryModule() {
 
   const handleSaveTrade = (e) => {
     e.preventDefault();
-    if (!tradeForm.customerName || !tradeForm.henCount) return;
+    if (!tradeForm.customerName || !tradeForm.totalAmount) return;
 
     const henCount = Number(tradeForm.henCount) || 0;
     const weightKg = Number(tradeForm.weightKg) || 0;
     const ratePerKg = Number(tradeForm.ratePerKg) || 0;
-    const totalAmount = Number(tradeForm.totalAmount) || (weightKg * ratePerKg);
+    const totalAmount = Math.round(Number(tradeForm.totalAmount) || (weightKg > 0 ? weightKg * ratePerKg : 0));
 
     const record = {
       ...tradeForm,
+      category: tradeForm.category || (tradeForm.type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase'),
       henCount,
       weightKg,
       ratePerKg,
@@ -158,11 +164,21 @@ export default function PoultryModule() {
         const weight = Number(field === 'weightKg' ? value : prev.weightKg) || 0;
         const rate = Number(field === 'ratePerKg' ? value : prev.ratePerKg) || 0;
         if (weight && rate) {
-          updated.totalAmount = weight * rate;
+          updated.totalAmount = Math.round(weight * rate);
         }
       }
       return updated;
     });
+  };
+
+  // Category Change Handler - Auto sets Type (Income vs Expense)
+  const handleCategorySelectChange = (catName) => {
+    let isIncome = catName === 'Hen Sale' || catName === 'Other Income';
+    setTradeForm(prev => ({
+      ...prev,
+      category: catName,
+      type: isIncome ? 'Sale' : 'Purchase'
+    }));
   };
 
   // === HEN TRADING COMPUTED DATA ===
@@ -171,12 +187,17 @@ export default function PoultryModule() {
   const filteredTrades = useMemo(() => {
     let trades = [...henTrades];
     if (tradeFilter !== 'All') {
-      trades = trades.filter(t => t.type === tradeFilter);
+      if (tradeFilter === 'Sale' || tradeFilter === 'Purchase') {
+        trades = trades.filter(t => t.type === tradeFilter);
+      } else {
+        trades = trades.filter(t => (t.category || (t.type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase')) === tradeFilter);
+      }
     }
     if (tradeSearch.trim()) {
       const q = tradeSearch.toLowerCase();
       trades = trades.filter(t =>
         (t.customerName || '').toLowerCase().includes(q) ||
+        (t.category || '').toLowerCase().includes(q) ||
         (t.breed || '').toLowerCase().includes(q) ||
         (t.notes || '').toLowerCase().includes(q)
       );
@@ -459,7 +480,7 @@ export default function PoultryModule() {
       )}
 
       {/* ============================================================== */}
-      {/* SECTION 2: HEN TRADING (New Individual Sales & Buying Section) */}
+      {/* SECTION 2: HEN TRADING & GENERAL POULTRY LEDGER               */}
       {/* ============================================================== */}
       {activeSection === 'trading' && (
         <>
@@ -498,21 +519,26 @@ export default function PoultryModule() {
               <p className="text-lg font-extrabold text-orange-400">{tradeSummary.uniqueCustomers}</p>
             </div>
           </div>
-
-          {/* Action Bar: Add Sale / Add Purchase + Search + Filter */}
+          {/* Action Bar: Record Sale / Record Expense + Category Filter */}
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <div className="flex flex-wrap gap-2">
               <button
-                onClick={() => handleOpenTradeModal('Sale')}
+                onClick={() => handleOpenTradeModal('Sale', 'Hen Sale')}
                 className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
               >
-                <ArrowUpRight className="w-4 h-4" /> Record Hen Sale
+                <ArrowUpRight className="w-4 h-4" /> Record Hen Sale / Income
               </button>
               <button
-                onClick={() => handleOpenTradeModal('Purchase')}
+                onClick={() => handleOpenTradeModal('Purchase', 'Hen Buy / Purchase')}
                 className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-violet-500/20 transition-all"
               >
                 <ArrowDownLeft className="w-4 h-4" /> Record Hen Purchase
+              </button>
+              <button
+                onClick={() => handleOpenTradeModal('Purchase', 'Incubator Expenses')}
+                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              >
+                <Plus className="w-4 h-4" /> Log Incubator / Feed / Expense
               </button>
             </div>
 
@@ -522,7 +548,7 @@ export default function PoultryModule() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Search customer..."
+                  placeholder="Search customer / item..."
                   value={tradeSearch}
                   onChange={(e) => setTradeSearch(e.target.value)}
                   className="w-full sm:w-48 pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-amber-500/50 focus:outline-none"
@@ -536,19 +562,26 @@ export default function PoultryModule() {
                   onChange={(e) => setTradeFilter(e.target.value)}
                   className="pl-9 pr-6 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs appearance-none cursor-pointer focus:border-amber-500/50 focus:outline-none"
                 >
-                  <option value="All">All Trades</option>
-                  <option value="Sale">Sales Only</option>
-                  <option value="Purchase">Purchases Only</option>
+                  <option value="All">All Categories</option>
+                  <option value="Sale">Sales / Income Only</option>
+                  <option value="Purchase">Purchases / Expenses Only</option>
+                  <option value="Hen Sale">Hen Sale</option>
+                  <option value="Hen Buy / Purchase">Hen Buy / Purchase</option>
+                  <option value="Incubator Expenses">Incubator Expenses</option>
+                  <option value="Feed Expenses">Feed Expenses</option>
+                  <option value="Medicine & Vaccine">Medicine & Vaccine</option>
+                  <option value="Other Income">Other Income</option>
+                  <option value="Other Expense">Other Expense</option>
                 </select>
               </div>
             </div>
           </div>
 
-          {/* Hen Trading Transaction Table */}
+          {/* Hen Trading & Poultry Financial Ledger Table */}
           <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800 card-3d">
             <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
               <ShoppingCart className="w-5 h-5 text-amber-400" />
-              Hen Trading Ledger
+              Poultry Financial Ledger & Trading
               <span className="ml-auto text-[10px] font-semibold text-slate-500 bg-slate-800 px-2.5 py-1 rounded-full">
                 {filteredTrades.length} records
               </span>
@@ -557,8 +590,8 @@ export default function PoultryModule() {
             {filteredTrades.length === 0 ? (
               <div className="text-center py-16">
                 <ShoppingCart className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">No hen trading records yet.</p>
-                <p className="text-slate-500 text-xs mt-1">Click "Record Hen Sale" or "Record Hen Purchase" to get started.</p>
+                <p className="text-slate-400 text-sm">No poultry transaction records found.</p>
+                <p className="text-slate-500 text-xs mt-1">Click "Record Hen Sale" or "Log Incubator / Feed / Expense" to get started.</p>
               </div>
             ) : (
               <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
@@ -566,9 +599,9 @@ export default function PoultryModule() {
                   <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
                     <tr>
                       <th className="p-3">Date</th>
-                      <th className="p-3">Type</th>
-                      <th className="p-3">Customer / Supplier</th>
-                      <th className="p-3">Breed</th>
+                      <th className="p-3">Category</th>
+                      <th className="p-3">Buyer / Supplier</th>
+                      <th className="p-3">Breed / Item</th>
                       <th className="p-3 text-right">Hens</th>
                       <th className="p-3 text-right">Weight (Kg)</th>
                       <th className="p-3 text-right">Rate/Kg</th>
@@ -578,48 +611,56 @@ export default function PoultryModule() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-800">
-                    {filteredTrades.map((trade) => (
-                      <tr key={trade.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="p-3 whitespace-nowrap">{trade.date}</td>
-                        <td className="p-3">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            trade.type === 'Sale'
-                              ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                              : 'bg-violet-500/20 text-violet-300 border border-violet-500/30'
-                          }`}>
-                            {trade.type === 'Sale' ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownLeft className="w-3 h-3" />}
-                            {trade.type}
-                          </span>
-                        </td>
-                        <td className="p-3 font-medium text-white">{trade.customerName}</td>
-                        <td className="p-3 text-slate-400">{trade.breed || '—'}</td>
-                        <td className="p-3 text-right font-bold text-white">{trade.henCount}</td>
-                        <td className="p-3 text-right font-semibold text-cyan-300">{trade.weightKg ? `${trade.weightKg} kg` : '—'}</td>
-                        <td className="p-3 text-right">{currency}{Number(trade.ratePerKg || 0).toLocaleString('en-IN')}</td>
-                        <td className={`p-3 text-right font-extrabold ${trade.type === 'Sale' ? 'text-emerald-400' : 'text-rose-400'}`}>
-                          {trade.type === 'Sale' ? '+' : '-'}{currency}{Number(trade.totalAmount || 0).toLocaleString('en-IN')}
-                        </td>
-                        <td className="p-3 text-slate-400 max-w-[120px] truncate">{trade.notes || '—'}</td>
-                        <td className="p-3">
-                          <div className="flex items-center justify-center gap-1.5">
-                            <button
-                              onClick={() => handleEditTrade(trade)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
-                              title="Edit"
-                            >
-                              <Edit2 className="w-3.5 h-3.5" />
-                            </button>
-                            <button
-                              onClick={() => deleteRecord('poultryHenTrades', trade.id)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {filteredTrades.map((trade) => {
+                      const catName = trade.category || (trade.type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase');
+                      let catColor = 'bg-slate-800 text-slate-300 border-slate-700';
+                      if (catName === 'Hen Sale') catColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
+                      else if (catName === 'Hen Buy / Purchase') catColor = 'bg-violet-500/20 text-violet-300 border-violet-500/30';
+                      else if (catName === 'Incubator Expenses') catColor = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
+                      else if (catName === 'Feed Expenses') catColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
+                      else if (catName === 'Medicine & Vaccine') catColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
+                      else if (catName === 'Other Income') catColor = 'bg-teal-500/20 text-teal-300 border-teal-500/30';
+                      else if (catName === 'Other Expense') catColor = 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+
+                      return (
+                        <tr key={trade.id} className="hover:bg-slate-800/40 transition-colors">
+                          <td className="p-3 whitespace-nowrap">{trade.date}</td>
+                          <td className="p-3">
+                            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${catColor}`}>
+                              {trade.type === 'Sale' ? <ArrowUpRight className="w-3 h-3 text-emerald-400" /> : <ArrowDownLeft className="w-3 h-3 text-rose-400" />}
+                              {catName}
+                            </span>
+                          </td>
+                          <td className="p-3 font-medium text-white">{trade.customerName}</td>
+                          <td className="p-3 text-slate-400">{trade.breed || '—'}</td>
+                          <td className="p-3 text-right font-bold text-white">{trade.henCount || '—'}</td>
+                          <td className="p-3 text-right font-semibold text-cyan-300">{trade.weightKg ? `${trade.weightKg} kg` : '—'}</td>
+                          <td className="p-3 text-right">{trade.ratePerKg ? `${currency}${Number(trade.ratePerKg || 0).toLocaleString('en-IN')}` : '—'}</td>
+                          <td className={`p-3 text-right font-extrabold ${trade.type === 'Sale' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                            {trade.type === 'Sale' ? '+' : '-'}{currency}{Number(trade.totalAmount || 0).toLocaleString('en-IN')}
+                          </td>
+                          <td className="p-3 text-slate-400 max-w-[120px] truncate">{trade.notes || '—'}</td>
+                          <td className="p-3">
+                            <div className="flex items-center justify-center gap-1.5">
+                              <button
+                                onClick={() => handleEditTrade(trade)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                                title="Edit"
+                              >
+                                <Edit2 className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                onClick={() => deleteRecord('poultryHenTrades', trade.id)}
+                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -631,7 +672,7 @@ export default function PoultryModule() {
             <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800 card-3d">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-orange-400" />
-                Customer-wise Summary
+                Customer / Vendor Summary
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                 {(() => {
@@ -658,13 +699,13 @@ export default function PoultryModule() {
                       </div>
                       {info.salesAmount > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Sold ({info.salesHens} hens):</span>
+                          <span className="text-slate-400">Received Income ({info.salesHens ? `${info.salesHens} hens` : 'Items'}):</span>
                           <span className="text-emerald-400 font-bold">+{currency}{info.salesAmount.toLocaleString('en-IN')}</span>
                         </div>
                       )}
                       {info.purchaseAmount > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Bought ({info.purchaseHens} hens):</span>
+                          <span className="text-slate-400">Paid Expense ({info.purchaseHens ? `${info.purchaseHens} hens` : 'Items'}):</span>
                           <span className="text-rose-400 font-bold">-{currency}{info.purchaseAmount.toLocaleString('en-IN')}</span>
                         </div>
                       )}
@@ -958,49 +999,79 @@ export default function PoultryModule() {
         </div>
       )}
 
-      {/* Hen Trade Modal (Add/Edit) */}
+      {/* Hen Trade & Poultry Expense Modal (Add/Edit) */}
       {showTradeModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
           <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               {tradeForm.type === 'Sale' ? (
-                <><ArrowUpRight className="w-5 h-5 text-emerald-400" /> {editingTrade ? 'Edit' : 'Record'} Hen Sale</>
+                <><ArrowUpRight className="w-5 h-5 text-emerald-400" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Sale'}</>
               ) : (
-                <><ArrowDownLeft className="w-5 h-5 text-violet-400" /> {editingTrade ? 'Edit' : 'Record'} Hen Purchase</>
+                <><ArrowDownLeft className="w-5 h-5 text-rose-400" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Expense'}</>
               )}
             </h3>
 
             <form onSubmit={handleSaveTrade} className="space-y-3 text-xs">
+              {/* Category Selection */}
+              <div>
+                <label className="block text-slate-400 mb-1 font-semibold text-amber-400">Select Category</label>
+                <select
+                  value={tradeForm.category || 'Hen Sale'}
+                  onChange={(e) => handleCategorySelectChange(e.target.value)}
+                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-white font-medium focus:outline-none focus:border-amber-400"
+                >
+                  <option value="Hen Sale">🐔 Hen Sale (Income)</option>
+                  <option value="Hen Buy / Purchase">🐣 Hen Buy / Purchase (Expense)</option>
+                  <option value="Incubator Expenses">💡 Incubator Expenses (Expense)</option>
+                  <option value="Feed Expenses">🌾 Feed Expenses (Expense)</option>
+                  <option value="Medicine & Vaccine">💉 Medicine & Vaccine (Expense)</option>
+                  <option value="Other Income">💰 Other Poultry Income</option>
+                  <option value="Other Expense">📦 Other Poultry Expense</option>
+                </select>
+              </div>
+
               {/* Type Toggle */}
               <div>
-                <label className="block text-slate-400 mb-1.5 font-semibold">Transaction Type</label>
+                <label className="block text-slate-400 mb-1.5 font-semibold">Ledger Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
-                    onClick={() => setTradeForm(prev => ({ ...prev, type: 'Sale' }))}
+                    onClick={() => {
+                      setTradeForm(prev => ({
+                        ...prev,
+                        type: 'Sale',
+                        category: prev.category === 'Hen Buy / Purchase' ? 'Hen Sale' : prev.category
+                      }));
+                    }}
                     className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       tradeForm.type === 'Sale'
                         ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
                         : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                     }`}
                   >
-                    <ArrowUpRight className="w-3.5 h-3.5" /> Sale (Income)
+                    <ArrowUpRight className="w-3.5 h-3.5" /> Income / Revenue
                   </button>
                   <button
                     type="button"
-                    onClick={() => setTradeForm(prev => ({ ...prev, type: 'Purchase' }))}
+                    onClick={() => {
+                      setTradeForm(prev => ({
+                        ...prev,
+                        type: 'Purchase',
+                        category: prev.category === 'Hen Sale' ? 'Hen Buy / Purchase' : prev.category
+                      }));
+                    }}
                     className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       tradeForm.type === 'Purchase'
-                        ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/30'
+                        ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'
                         : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                     }`}
                   >
-                    <ArrowDownLeft className="w-3.5 h-3.5" /> Purchase (Expense)
+                    <ArrowDownLeft className="w-3.5 h-3.5" /> Expense / Purchase
                   </button>
                 </div>
               </div>
 
-              {/* Date & Customer */}
+              {/* Date & Customer / Supplier */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
@@ -1016,12 +1087,12 @@ export default function PoultryModule() {
                 </div>
                 <div>
                   <label className="block text-slate-400 mb-1">
-                    {tradeForm.type === 'Sale' ? 'Customer Name' : 'Supplier Name'}
+                    {tradeForm.type === 'Sale' ? 'Buyer / Customer' : 'Supplier / Vendor'}
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder={tradeForm.type === 'Sale' ? 'e.g. Ramesh' : 'e.g. Sri Poultry Farm'}
+                    placeholder={tradeForm.type === 'Sale' ? 'e.g. Ramesh' : 'e.g. Vet Store / Supplier'}
                     value={tradeForm.customerName}
                     onChange={(e) => setTradeForm({ ...tradeForm, customerName: e.target.value })}
                     className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
@@ -1033,27 +1104,26 @@ export default function PoultryModule() {
                 </div>
               </div>
 
-              {/* Breed */}
+              {/* Breed / Item Details */}
               <div>
-                <label className="block text-slate-400 mb-1">Breed / Type (optional)</label>
+                <label className="block text-slate-400 mb-1">Breed / Item Details (optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Desi, Nati, Country Hen, Broiler"
+                  placeholder="e.g. Nati Hen, Egg Incubator 200 Cap, Layer Feed"
                   value={tradeForm.breed}
                   onChange={(e) => setTradeForm({ ...tradeForm, breed: e.target.value })}
                   className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
                 />
               </div>
 
-              {/* Count, Weight & Rate per Kg */}
+              {/* Count, Weight & Rate per Kg (Optional for general expenses) */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
                   <label className="block text-slate-400 mb-1">Hens Count</label>
                   <input
                     type="number"
-                    required
-                    min="1"
-                    placeholder="10"
+                    min="0"
+                    placeholder="10 (opt)"
                     value={tradeForm.henCount}
                     onChange={(e) => handleTradeFieldChange('henCount', e.target.value)}
                     className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
@@ -1064,8 +1134,7 @@ export default function PoultryModule() {
                   <input
                     type="number"
                     step="0.1"
-                    required
-                    placeholder="25.5"
+                    placeholder="25.5 (opt)"
                     value={tradeForm.weightKg}
                     onChange={(e) => handleTradeFieldChange('weightKg', e.target.value)}
                     className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-semibold"
@@ -1075,8 +1144,7 @@ export default function PoultryModule() {
                   <label className="block text-slate-400 mb-1">Rate/Kg ({currency})</label>
                   <input
                     type="number"
-                    required
-                    placeholder="180"
+                    placeholder="180 (opt)"
                     value={tradeForm.ratePerKg}
                     onChange={(e) => handleTradeFieldChange('ratePerKg', e.target.value)}
                     className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
@@ -1090,13 +1158,13 @@ export default function PoultryModule() {
                 <input
                   type="number"
                   required
-                  placeholder="Auto-calculated or enter manually"
+                  placeholder="Enter total amount or auto-calc from Weight x Rate"
                   value={tradeForm.totalAmount}
                   onChange={(e) => setTradeForm({ ...tradeForm, totalAmount: e.target.value })}
                   className={`w-full p-2.5 rounded-xl border text-white font-bold text-base ${
                     tradeForm.type === 'Sale'
                       ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                      : 'bg-violet-950/40 border-violet-500/40 text-violet-300'
+                      : 'bg-rose-950/40 border-rose-500/40 text-rose-300'
                   }`}
                 />
               </div>
@@ -1106,7 +1174,7 @@ export default function PoultryModule() {
                 <label className="block text-slate-400 mb-1">Notes (optional)</label>
                 <input
                   type="text"
-                  placeholder="e.g. Healthy country hens, 6 months old"
+                  placeholder="e.g. Incubator tray maintenance / Feed bag order"
                   value={tradeForm.notes}
                   onChange={(e) => setTradeForm({ ...tradeForm, notes: e.target.value })}
                   className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
@@ -1126,10 +1194,10 @@ export default function PoultryModule() {
                   className={`px-4 py-2 rounded-xl font-bold ${
                     tradeForm.type === 'Sale'
                       ? 'bg-emerald-500 text-white'
-                      : 'bg-violet-500 text-white'
+                      : 'bg-rose-500 text-white'
                   }`}
                 >
-                  {editingTrade ? 'Update' : 'Save'} {tradeForm.type}
+                  {editingTrade ? 'Update' : 'Save'} Record
                 </button>
               </div>
             </form>
