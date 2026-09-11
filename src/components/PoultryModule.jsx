@@ -28,7 +28,8 @@ export default function PoultryModule() {
     type: 'Sale',
     customerName: '',
     henCount: '',
-    ratePerHen: '',
+    weightKg: '',
+    ratePerKg: '',
     totalAmount: '',
     breed: '',
     notes: ''
@@ -92,7 +93,8 @@ export default function PoultryModule() {
       type: 'Sale',
       customerName: '',
       henCount: '',
-      ratePerHen: '',
+      weightKg: '',
+      ratePerKg: '',
       totalAmount: '',
       breed: '',
       notes: ''
@@ -113,7 +115,8 @@ export default function PoultryModule() {
       type: trade.type,
       customerName: trade.customerName,
       henCount: trade.henCount,
-      ratePerHen: trade.ratePerHen,
+      weightKg: trade.weightKg || '',
+      ratePerKg: trade.ratePerKg,
       totalAmount: trade.totalAmount,
       breed: trade.breed || '',
       notes: trade.notes || ''
@@ -126,13 +129,15 @@ export default function PoultryModule() {
     if (!tradeForm.customerName || !tradeForm.henCount) return;
 
     const henCount = Number(tradeForm.henCount) || 0;
-    const ratePerHen = Number(tradeForm.ratePerHen) || 0;
-    const totalAmount = Number(tradeForm.totalAmount) || (henCount * ratePerHen);
+    const weightKg = Number(tradeForm.weightKg) || 0;
+    const ratePerKg = Number(tradeForm.ratePerKg) || 0;
+    const totalAmount = Number(tradeForm.totalAmount) || (weightKg * ratePerKg);
 
     const record = {
       ...tradeForm,
       henCount,
-      ratePerHen,
+      weightKg,
+      ratePerKg,
       totalAmount
     };
 
@@ -145,15 +150,15 @@ export default function PoultryModule() {
     resetTradeForm();
   };
 
-  // Auto-calculate total when hen count or rate changes
+  // Auto-calculate total when weight or rate changes
   const handleTradeFieldChange = (field, value) => {
     setTradeForm(prev => {
       const updated = { ...prev, [field]: value };
-      if (field === 'henCount' || field === 'ratePerHen') {
-        const count = Number(field === 'henCount' ? value : prev.henCount) || 0;
-        const rate = Number(field === 'ratePerHen' ? value : prev.ratePerHen) || 0;
-        if (count && rate) {
-          updated.totalAmount = count * rate;
+      if (field === 'weightKg' || field === 'ratePerKg') {
+        const weight = Number(field === 'weightKg' ? value : prev.weightKg) || 0;
+        const rate = Number(field === 'ratePerKg' ? value : prev.ratePerKg) || 0;
+        if (weight && rate) {
+          updated.totalAmount = weight * rate;
         }
       }
       return updated;
@@ -565,7 +570,8 @@ export default function PoultryModule() {
                       <th className="p-3">Customer / Supplier</th>
                       <th className="p-3">Breed</th>
                       <th className="p-3 text-right">Hens</th>
-                      <th className="p-3 text-right">Rate/Hen</th>
+                      <th className="p-3 text-right">Weight (Kg)</th>
+                      <th className="p-3 text-right">Rate/Kg</th>
                       <th className="p-3 text-right">Total Amount</th>
                       <th className="p-3">Notes</th>
                       <th className="p-3 text-center">Actions</th>
@@ -588,7 +594,8 @@ export default function PoultryModule() {
                         <td className="p-3 font-medium text-white">{trade.customerName}</td>
                         <td className="p-3 text-slate-400">{trade.breed || '—'}</td>
                         <td className="p-3 text-right font-bold text-white">{trade.henCount}</td>
-                        <td className="p-3 text-right">{currency}{Number(trade.ratePerHen || 0).toLocaleString('en-IN')}</td>
+                        <td className="p-3 text-right font-semibold text-cyan-300">{trade.weightKg ? `${trade.weightKg} kg` : '—'}</td>
+                        <td className="p-3 text-right">{currency}{Number(trade.ratePerKg || 0).toLocaleString('en-IN')}</td>
                         <td className={`p-3 text-right font-extrabold ${trade.type === 'Sale' ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {trade.type === 'Sale' ? '+' : '-'}{currency}{Number(trade.totalAmount || 0).toLocaleString('en-IN')}
                         </td>
@@ -1038,10 +1045,10 @@ export default function PoultryModule() {
                 />
               </div>
 
-              {/* Count & Rate */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Count, Weight & Rate per Kg */}
+              <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Number of Hens</label>
+                  <label className="block text-slate-400 mb-1">Hens Count</label>
                   <input
                     type="number"
                     required
@@ -1053,12 +1060,25 @@ export default function PoultryModule() {
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Rate per Hen ({currency})</label>
+                  <label className="block text-slate-400 mb-1">Weight (Kg)</label>
                   <input
                     type="number"
-                    placeholder="250"
-                    value={tradeForm.ratePerHen}
-                    onChange={(e) => handleTradeFieldChange('ratePerHen', e.target.value)}
+                    step="0.1"
+                    required
+                    placeholder="25.5"
+                    value={tradeForm.weightKg}
+                    onChange={(e) => handleTradeFieldChange('weightKg', e.target.value)}
+                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-semibold"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-400 mb-1">Rate/Kg ({currency})</label>
+                  <input
+                    type="number"
+                    required
+                    placeholder="180"
+                    value={tradeForm.ratePerKg}
+                    onChange={(e) => handleTradeFieldChange('ratePerKg', e.target.value)}
                     className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
                   />
                 </div>
