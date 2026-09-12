@@ -22,7 +22,8 @@ import {
   X,
   Calculator,
   UserCheck,
-  Package
+  Package,
+  Hammer
 } from 'lucide-react';
 
 export const CROP_EXPENSE_TYPES = [
@@ -36,6 +37,7 @@ export const CROP_EXPENSE_TYPES = [
   'Harvesting & Threshing Charges',
   'Transport, Bagging & Mandi Fee',
   'Soil Testing & Equipment Rental',
+  'Self Work',
   'Other Field Expenses'
 ];
 
@@ -357,6 +359,16 @@ export default function CropsModule() {
           </button>
           <button
             onClick={() => {
+              if (data.crops.length > 0) setExpenseForm(prev => ({ ...prev, cropId: data.crops[0].id, category: 'Self Work' }));
+              setEditingExpense(null);
+              setShowExpenseModal(true);
+            }}
+            className="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+          >
+            <Hammer className="w-4 h-4" /> Log Self Work
+          </button>
+          <button
+            onClick={() => {
               if (data.crops.length > 0) setIncomeForm(prev => ({ ...prev, cropId: data.crops[0].id }));
               setEditingIncome(null);
               setShowIncomeModal(true);
@@ -377,6 +389,11 @@ export default function CropsModule() {
           const totalExp = cropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
           const totalInc = cropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
           const netProfit = totalInc - totalExp;
+
+          // Self Work total for this crop
+          const selfWorkTotal = cropExpenses
+            .filter(e => e.category === 'Self Work')
+            .reduce((acc, e) => acc + Number(e.amount || 0), 0);
 
           // Categorized expenses group
           const expCategoryMap = {};
@@ -433,6 +450,14 @@ export default function CropsModule() {
                   <span className="text-slate-400">Total Expenditures:</span>
                   <span className="text-rose-400 font-semibold">{currency}{totalExp.toLocaleString('en-IN')}</span>
                 </div>
+                {selfWorkTotal > 0 && (
+                  <div className="flex justify-between text-xs items-center">
+                    <span className="flex items-center gap-1 text-amber-300">
+                      <Hammer className="w-3 h-3" /> Self Work Amount:
+                    </span>
+                    <span className="text-amber-300 font-semibold">{currency}{selfWorkTotal.toLocaleString('en-IN')}</span>
+                  </div>
+                )}
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-400">Total Harvest Revenues:</span>
                   <span className="text-emerald-400 font-semibold">{currency}{totalInc.toLocaleString('en-IN')}</span>
@@ -458,9 +483,12 @@ export default function CropsModule() {
                     {isExpanded && (
                       <div className="mt-2 space-y-1 border-t border-slate-800/80 pt-2 text-[11px]">
                         {Object.entries(expCategoryMap).map(([cat, amt]) => (
-                          <div key={cat} className="flex justify-between text-slate-300">
-                            <span className="truncate pr-2">{cat}</span>
-                            <span className="font-mono text-rose-300">{currency}{amt.toLocaleString('en-IN')}</span>
+                          <div key={cat} className={`flex justify-between ${cat === 'Self Work' ? 'text-amber-300 font-semibold' : 'text-slate-300'}`}>
+                            <span className="truncate pr-2 flex items-center gap-1">
+                              {cat === 'Self Work' && <Hammer className="w-3 h-3" />}
+                              {cat}
+                            </span>
+                            <span className={`font-mono ${cat === 'Self Work' ? 'text-amber-300' : 'text-rose-300'}`}>{currency}{amt.toLocaleString('en-IN')}</span>
                           </div>
                         ))}
                       </div>
@@ -885,54 +913,64 @@ export default function CropsModule() {
                 </div>
               </div>
 
-              {/* Detailed Breakdown Inputs: Quantity, Unit Type & Unit Cost */}
-              <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
-                <div className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                  <UserCheck className="w-3.5 h-3.5 text-amber-400" /> Quantity / Labor & Unit Cost Calculator
-                </div>
+              {/* Detailed Breakdown Inputs: Quantity, Unit Type & Unit Cost — hidden for Self Work */}
+              {expenseForm.category !== 'Self Work' ? (
+                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
+                  <div className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-amber-400" /> Quantity / Labor & Unit Cost Calculator
+                  </div>
 
-                <div className="grid grid-cols-3 gap-2">
-                  <div>
-                    <label className="block text-slate-400 mb-1">Quantity / Count</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      placeholder="e.g. 5"
-                      value={expenseForm.quantityCount}
-                      onChange={(e) => handleExpenseCalcChange('quantityCount', e.target.value)}
-                      className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Unit Type</label>
-                    <select
-                      value={expenseForm.unitType}
-                      onChange={(e) => setExpenseForm({ ...expenseForm, unitType: e.target.value })}
-                      className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs"
-                    >
-                      {EXPENSE_UNITS.map(u => (
-                        <option key={u} value={u}>{u}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 mb-1">Unit Cost ({currency})</label>
-                    <input
-                      type="number"
-                      placeholder="e.g. 600"
-                      value={expenseForm.unitCost}
-                      onChange={(e) => handleExpenseCalcChange('unitCost', e.target.value)}
-                      className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
-                    />
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="block text-slate-400 mb-1">Quantity / Count</label>
+                      <input
+                        type="number"
+                        step="0.5"
+                        placeholder="e.g. 5"
+                        value={expenseForm.quantityCount}
+                        onChange={(e) => handleExpenseCalcChange('quantityCount', e.target.value)}
+                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 mb-1">Unit Type</label>
+                      <select
+                        value={expenseForm.unitType}
+                        onChange={(e) => setExpenseForm({ ...expenseForm, unitType: e.target.value })}
+                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs"
+                      >
+                        {EXPENSE_UNITS.map(u => (
+                          <option key={u} value={u}>{u}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 mb-1">Unit Cost ({currency})</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 600"
+                        value={expenseForm.unitCost}
+                        onChange={(e) => handleExpenseCalcChange('unitCost', e.target.value)}
+                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                /* Self Work: show banner instead of qty/rate calculator */
+                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
+                  <Hammer className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span className="text-[11px] text-amber-300 font-semibold">
+                    Self Work — Enter the total labor/work amount directly below. No quantity × rate calculation needed.
+                  </span>
+                </div>
+              )}
 
               <div>
                 <label className="block text-slate-400 mb-1">Description / Notes</label>
                 <input
                   type="text"
-                  placeholder="e.g. Hired weeders for North Field Block A"
+                  placeholder={expenseForm.category === 'Self Work' ? 'e.g. Own field ploughing, transplanting, harvesting' : 'e.g. Hired weeders for North Field Block A'}
                   value={expenseForm.description}
                   onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
                   className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
@@ -941,16 +979,24 @@ export default function CropsModule() {
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-slate-400">Total Amount ({currency})</label>
-                  <span className="text-[10px] text-amber-400 font-semibold">Auto-Calculated: Qty × Unit Cost</span>
+                  <label className="block text-slate-400">
+                    {expenseForm.category === 'Self Work' ? 'Self Work Amount' : 'Total Amount'} ({currency})
+                  </label>
+                  {expenseForm.category !== 'Self Work' && (
+                    <span className="text-[10px] text-amber-400 font-semibold">Auto-Calculated: Qty × Unit Cost</span>
+                  )}
                 </div>
                 <input
                   type="number"
                   required
-                  placeholder="e.g. 3000"
+                  placeholder={expenseForm.category === 'Self Work' ? 'e.g. 1500 (enter total labor amount)' : 'e.g. 3000'}
                   value={expenseForm.amount}
                   onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-rose-400 font-extrabold text-base"
+                  className={`w-full p-2.5 rounded-xl bg-slate-900 border font-extrabold text-base ${
+                    expenseForm.category === 'Self Work'
+                      ? 'border-amber-500/50 text-amber-400'
+                      : 'border-slate-700 text-rose-400'
+                  }`}
                 />
               </div>
 

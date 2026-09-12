@@ -27,7 +27,8 @@ import {
   Sparkles,
   Zap,
   Clock,
-  ChevronRight
+  ChevronRight,
+  Hammer
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -52,6 +53,11 @@ export default function Dashboard({ setActiveTab }) {
   const cropExpenseTotal = data.cropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
   const cropIncomeTotal = data.cropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
   const totalCropAcres = data.crops.reduce((acc, curr) => acc + Number(curr.areaAcres || 0), 0);
+  const totalSelfWorkAmount = Math.round(
+    data.cropExpenses
+      .filter(e => e.category === 'Self Work')
+      .reduce((acc, e) => acc + Number(e.amount || 0), 0)
+  );
 
   // 2. Calculate Worker Totals
   const totalWagesEarned = data.attendance.reduce((acc, curr) => acc + Number(curr.wageEarned || 0), 0);
@@ -308,7 +314,7 @@ export default function Dashboard({ setActiveTab }) {
       </div>
 
       {/* KPI Productivity Badges */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         
         <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 flex items-center space-x-3">
           <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
@@ -347,6 +353,17 @@ export default function Dashboard({ setActiveTab }) {
           <div>
             <p className="text-[10px] text-slate-400 uppercase font-bold">Flock Survival Rate</p>
             <p className="text-sm font-extrabold text-rose-300">{poultrySurvivalRate}% ({totalPoultryAlive} Alive)</p>
+          </div>
+        </div>
+
+        {/* Self Work Amount Badge */}
+        <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center space-x-3">
+          <div className="p-2.5 rounded-xl bg-amber-500/20 text-amber-400">
+            <Hammer className="w-5 h-5" />
+          </div>
+          <div>
+            <p className="text-[10px] text-amber-400 uppercase font-bold">Self Work Amount</p>
+            <p className="text-sm font-extrabold text-amber-300">{currency}{totalSelfWorkAmount.toLocaleString('en-IN')}</p>
           </div>
         </div>
 
