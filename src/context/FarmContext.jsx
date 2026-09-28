@@ -59,38 +59,43 @@ const INITIAL_DATA = {
   poultryHenTrades: []
 };
 
+const ensureDataIntegrity = (obj) => {
+  if (!obj || typeof obj !== 'object') return INITIAL_DATA;
+  const cleaned = removeDummyRecords(obj);
+  return {
+    ...INITIAL_DATA,
+    ...cleaned,
+    farmInfo: {
+      ...INITIAL_DATA.farmInfo,
+      ...(cleaned.farmInfo || {})
+    }
+  };
+};
+
 export const FarmProvider = ({ children }) => {
   const [data, setData] = useState(() => {
-    const saved = localStorage.getItem('agri_farm_manager_db');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('agri_farm_manager_db');
+      if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed && typeof parsed === 'object') {
-          if (parsed.farmInfo) {
-            parsed.farmInfo.name = "Samagra Jeeva Vyavasayam & Farms";
-          }
-          return removeDummyRecords(parsed);
-        }
-      } catch (e) {
-        console.error('Error loading saved farm data:', e);
+        return ensureDataIntegrity(parsed);
       }
+    } catch (e) {
+      console.error('Error loading saved farm data:', e);
     }
     return INITIAL_DATA;
   });
 
-  // Sync with Backend API on load
+  // Sync with Backend API on load if available
   useEffect(() => {
     let isMounted = true;
     fetchFarmData().then(serverData => {
       if (isMounted && serverData) {
-        if (serverData.farmInfo) {
-          serverData.farmInfo.name = "Samagra Jeeva Vyavasayam & Farms";
-        }
-        const cleaned = removeDummyRecords(serverData);
-        setData(cleaned);
+        const valid = ensureDataIntegrity(serverData);
+        setData(valid);
       }
     }).catch(err => {
-      console.warn('Backend API connection pending or unavailable, using local cache:', err);
+      console.warn('Backend API connection unavailable, using local data:', err);
     });
 
     return () => { isMounted = false; };
@@ -98,7 +103,9 @@ export const FarmProvider = ({ children }) => {
 
   // Update local storage cache
   useEffect(() => {
-    localStorage.setItem('agri_farm_manager_db', JSON.stringify(data));
+    if (data) {
+      localStorage.setItem('agri_farm_manager_db', JSON.stringify(data));
+    }
   }, [data]);
 
   // Generic API & State Helpers
@@ -106,36 +113,30 @@ export const FarmProvider = ({ children }) => {
     const newId = record.id || (key.substring(0, 3) + '_' + Date.now());
     const item = { id: newId, ...record };
 
-    // Optimistic UI Update
     setData(prev => ({
       ...prev,
       [key]: [item, ...(prev[key] || [])]
     }));
 
-    // Backend API sync
     await apiAddRecord(key, item);
     return item;
   };
 
   const deleteRecord = async (key, id) => {
-    // Optimistic UI Update
     setData(prev => ({
       ...prev,
-      [key]: (prev[key] || []).filter(item => item.id !== id)
+      [key]: (prev[key] || []).filter(item => item && item.id !== id)
     }));
 
-    // Backend API sync
     await apiDeleteRecord(key, id);
   };
 
   const updateRecord = async (key, updatedItem) => {
-    // Optimistic UI Update
     setData(prev => ({
       ...prev,
-      [key]: (prev[key] || []).map(item => item.id === updatedItem.id ? updatedItem : item)
+      [key]: (prev[key] || []).map(item => item && item.id === updatedItem.id ? updatedItem : item)
     }));
 
-    // Backend API sync
     await apiUpdateRecord(key, updatedItem);
   };
 
@@ -143,9 +144,8 @@ export const FarmProvider = ({ children }) => {
     setData(INITIAL_DATA);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(INITIAL_DATA));
 
-    // Backend API sync
     const res = await apiResetData();
-    if (res) setData(res);
+    if (res) setData(ensureDataIntegrity(res));
   };
 
   const clearAllData = async () => {
@@ -161,25 +161,24 @@ export const FarmProvider = ({ children }) => {
     setData(emptyData);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(emptyData));
 
-    // Backend API sync
     const res = await apiClearData();
-    if (res) setData(res);
+    if (res) setData(ensureDataIntegrity(res));
   };
 
   const importData = async (importedData) => {
     if (importedData && typeof importedData === 'object') {
-      setData(importedData);
-      localStorage.setItem('agri_farm_manager_db', JSON.stringify(importedData));
+      const valid = ensureDataIntegrity(importedData);
+      setData(valid);
+      localStorage.setItem('agri_farm_manager_db', JSON.stringify(valid));
 
-      // Backend API sync
-      const res = await apiImportData(importedData);
-      if (res) setData(res);
+      const res = await apiImportData(valid);
+      if (res) setData(ensureDataIntegrity(res));
     }
   };
 
   return (
     <FarmContext.Provider value={{
-      data,
+      data: data || INITIAL_DATA,
       addRecord,
       deleteRecord,
       updateRecord,
