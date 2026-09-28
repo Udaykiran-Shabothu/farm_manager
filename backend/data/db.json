@@ -1,0 +1,28 @@
+{
+  "farmInfo": {
+    "name": "Samagra Jeeva Vyavasayam & Farms",
+    "owner": "Uday Kiran",
+    "location": "Main Valley Organic Block A-D",
+    "currency": "₹"
+  },
+  "crops": [],
+  "cropExpenses": [],
+  "cropIncomes": [],
+  "workers": [],
+  "attendance": [],
+  "workerPayments": [],
+  "equipment": [],
+  "equipmentMaintenance": [],
+  "equipmentFuel": [],
+  "equipmentUsage": [],
+  "dairyCustomers": [],
+  "dairyMilkLogs": [],
+  "dairyPayments": [],
+  "cattleHerd": [],
+  "dairyExpenses": [],
+  "poultryBatches": [],
+  "poultryDailyLogs": [],
+  "poultryHealthLogs": [],
+  "poultrySales": [],
+  "poultryHenTrades": []
+}

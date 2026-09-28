@@ -1,4 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { 
+  fetchFarmData, 
+  apiAddRecord, 
+  apiUpdateRecord, 
+  apiDeleteRecord, 
+  apiResetData, 
+  apiClearData, 
+  apiImportData 
+} from '../services/api';
 
 const FarmContext = createContext();
 
@@ -69,41 +78,77 @@ export const FarmProvider = ({ children }) => {
     return INITIAL_DATA;
   });
 
+  // Sync with Backend API on load
+  useEffect(() => {
+    let isMounted = true;
+    fetchFarmData().then(serverData => {
+      if (isMounted && serverData) {
+        if (serverData.farmInfo) {
+          serverData.farmInfo.name = "Samagra Jeeva Vyavasayam & Farms";
+        }
+        const cleaned = removeDummyRecords(serverData);
+        setData(cleaned);
+      }
+    }).catch(err => {
+      console.warn('Backend API connection pending or unavailable, using local cache:', err);
+    });
+
+    return () => { isMounted = false; };
+  }, []);
+
+  // Update local storage cache
   useEffect(() => {
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(data));
   }, [data]);
 
-  // Generic Helpers
-  const addRecord = (key, record) => {
-    const newId = key.substring(0, 3) + '_' + Date.now();
+  // Generic API & State Helpers
+  const addRecord = async (key, record) => {
+    const newId = record.id || (key.substring(0, 3) + '_' + Date.now());
     const item = { id: newId, ...record };
+
+    // Optimistic UI Update
     setData(prev => ({
       ...prev,
       [key]: [item, ...(prev[key] || [])]
     }));
+
+    // Backend API sync
+    await apiAddRecord(key, item);
     return item;
   };
 
-  const deleteRecord = (key, id) => {
+  const deleteRecord = async (key, id) => {
+    // Optimistic UI Update
     setData(prev => ({
       ...prev,
-      [key]: prev[key].filter(item => item.id !== id)
+      [key]: (prev[key] || []).filter(item => item.id !== id)
     }));
+
+    // Backend API sync
+    await apiDeleteRecord(key, id);
   };
 
-  const updateRecord = (key, updatedItem) => {
+  const updateRecord = async (key, updatedItem) => {
+    // Optimistic UI Update
     setData(prev => ({
       ...prev,
-      [key]: prev[key].map(item => item.id === updatedItem.id ? updatedItem : item)
+      [key]: (prev[key] || []).map(item => item.id === updatedItem.id ? updatedItem : item)
     }));
+
+    // Backend API sync
+    await apiUpdateRecord(key, updatedItem);
   };
 
-  const resetToSampleData = () => {
+  const resetToSampleData = async () => {
     setData(INITIAL_DATA);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(INITIAL_DATA));
+
+    // Backend API sync
+    const res = await apiResetData();
+    if (res) setData(res);
   };
 
-  const clearAllData = () => {
+  const clearAllData = async () => {
     const emptyData = {
       farmInfo: { name: "Samagra Jeeva Vyavasayam & Farms", owner: "Uday Kiran", location: "Organic Farm", currency: "₹" },
       crops: [], cropExpenses: [], cropIncomes: [],
@@ -115,12 +160,20 @@ export const FarmProvider = ({ children }) => {
     };
     setData(emptyData);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(emptyData));
+
+    // Backend API sync
+    const res = await apiClearData();
+    if (res) setData(res);
   };
 
-  const importData = (importedData) => {
+  const importData = async (importedData) => {
     if (importedData && typeof importedData === 'object') {
       setData(importedData);
       localStorage.setItem('agri_farm_manager_db', JSON.stringify(importedData));
+
+      // Backend API sync
+      const res = await apiImportData(importedData);
+      if (res) setData(res);
     }
   };
 
