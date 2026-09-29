@@ -59,17 +59,34 @@ const INITIAL_DATA = {
   poultryHenTrades: []
 };
 
+const ARRAY_KEYS = [
+  'crops', 'cropExpenses', 'cropIncomes',
+  'workers', 'attendance', 'workerPayments',
+  'equipment', 'equipmentMaintenance', 'equipmentFuel', 'equipmentUsage',
+  'dairyCustomers', 'dairyMilkLogs', 'dairyPayments', 'cattleHerd', 'dairyExpenses',
+  'poultryBatches', 'poultryDailyLogs', 'poultryHealthLogs', 'poultrySales', 'poultryHenTrades'
+];
+
 const ensureDataIntegrity = (obj) => {
-  if (!obj || typeof obj !== 'object') return INITIAL_DATA;
+  if (!obj || typeof obj !== 'object' || obj.error) return INITIAL_DATA;
   const cleaned = removeDummyRecords(obj);
-  return {
+  
+  const result = {
     ...INITIAL_DATA,
     ...cleaned,
     farmInfo: {
       ...INITIAL_DATA.farmInfo,
-      ...(cleaned.farmInfo || {})
+      ...(cleaned.farmInfo && typeof cleaned.farmInfo === 'object' ? cleaned.farmInfo : {})
     }
   };
+
+  ARRAY_KEYS.forEach(key => {
+    if (!Array.isArray(result[key])) {
+      result[key] = [];
+    }
+  });
+
+  return result;
 };
 
 export const FarmProvider = ({ children }) => {
