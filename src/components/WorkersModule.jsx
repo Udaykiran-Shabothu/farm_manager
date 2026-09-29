@@ -23,7 +23,7 @@ import {
 
 export default function WorkersModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
-  const currency = data.farmInfo.currency || '₹';
+  const currency = data?.farmInfo?.currency || '₹';
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');

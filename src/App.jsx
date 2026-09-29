@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FarmProvider, useFarm } from './context/FarmContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import CropsModule from './components/CropsModule';
@@ -76,8 +77,10 @@ function MainApp() {
 
 export default function App() {
   return (
-    <FarmProvider>
-      <MainApp />
-    </FarmProvider>
+    <ErrorBoundary>
+      <FarmProvider>
+        <MainApp />
+      </FarmProvider>
+    </ErrorBoundary>
   );
 }

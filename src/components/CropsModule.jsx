@@ -63,7 +63,7 @@ export const EXPENSE_UNITS = [
 
 export default function CropsModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
-  const currency = data.farmInfo.currency || '₹';
+  const currency = data?.farmInfo?.currency || '₹';
 
   // Modal visibility states
   const [showCropModal, setShowCropModal] = useState(false);
@@ -291,7 +291,7 @@ export default function CropsModule() {
     const totalInc = cropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
     const netProfit = totalInc - totalExp;
 
-    let text = `🌾 *${data.farmInfo.name || 'Daily Farm'} - Crop Financial Statement*\n\n`;
+    let text = `🌾 *${data?.farmInfo?.name || 'Daily Farm'} - Crop Financial Statement*\n\n`;
     text += `🌱 *Crop:* ${crop.name}\n📍 *Field:* ${crop.field} (${crop.areaAcres} Acres)\n🗓️ *Season:* ${crop.season} | *Status:* ${crop.status}\n\n`;
 
     text += `💸 *EXPENDITURES (Total: ${currency}${totalExp.toLocaleString('en-IN')}):*\n`;
@@ -316,9 +316,9 @@ export default function CropsModule() {
 
   // Download PDF Crop Report
   const downloadPDFCropReport = (crop) => {
-    const cropExpenses = data.cropExpenses.filter(e => e.cropId === crop.id);
-    const cropIncomes = data.cropIncomes.filter(i => i.cropId === crop.id);
-    generateCropReportPDF(crop, cropExpenses, cropIncomes, data.farmInfo);
+    const cropExpenses = (data?.cropExpenses || []).filter(e => e.cropId === crop.id);
+    const cropIncomes = (data?.cropIncomes || []).filter(i => i.cropId === crop.id);
+    generateCropReportPDF(crop, cropExpenses, cropIncomes, data?.farmInfo || {});
   };
 
   return (

@@ -22,103 +22,108 @@ export const getDateRangeBounds = (preset, customStart = '', customEnd = '') => 
   let endStr = '2099-12-31';
   let label = 'All-Time Financial Ledger';
 
-  switch (preset) {
-    case 'TODAY':
-      startStr = todayStr;
-      endStr = todayStr;
-      label = `Today (${todayStr})`;
-      break;
+  try {
+    switch (preset) {
+      case 'TODAY':
+        startStr = todayStr;
+        endStr = todayStr;
+        label = `Today (${todayStr})`;
+        break;
 
-    case 'THIS_MONTH': {
-      const y = today.getFullYear();
-      const m = today.getMonth();
-      const firstDay = new Date(y, m, 1);
-      const lastDay = new Date(y, m + 1, 0);
-      startStr = firstDay.toISOString().split('T')[0];
-      endStr = lastDay.toISOString().split('T')[0];
-      label = `This Month (${today.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
-      break;
+      case 'THIS_MONTH': {
+        const y = today.getFullYear();
+        const m = today.getMonth();
+        const firstDay = new Date(y, m, 1);
+        const lastDay = new Date(y, m + 1, 0);
+        startStr = firstDay.toISOString().split('T')[0];
+        endStr = lastDay.toISOString().split('T')[0];
+        label = `This Month (${today.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+        break;
+      }
+
+      case 'LAST_MONTH': {
+        const y = today.getFullYear();
+        const m = today.getMonth() - 1;
+        const firstDay = new Date(y, m, 1);
+        const lastDay = new Date(y, m + 1, 0);
+        startStr = firstDay.toISOString().split('T')[0];
+        endStr = lastDay.toISOString().split('T')[0];
+        label = `Last Month (${firstDay.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+        break;
+      }
+
+      case 'THIS_FY': {
+        const y = today.getFullYear();
+        const m = today.getMonth(); // 0-indexed (Jan = 0, Apr = 3)
+        const fyStartYear = m >= 3 ? y : y - 1;
+        const fyEndYear = fyStartYear + 1;
+        startStr = `${fyStartYear}-04-01`;
+        endStr = `${fyEndYear}-03-31`;
+        label = `FY ${fyStartYear}-${fyEndYear}`;
+        break;
+      }
+
+      case 'Q1': {
+        const y = today.getFullYear();
+        startStr = `${y}-04-01`;
+        endStr = `${y}-06-30`;
+        label = `Q1 ${y} (Apr - Jun)`;
+        break;
+      }
+
+      case 'Q2': {
+        const y = today.getFullYear();
+        startStr = `${y}-07-01`;
+        endStr = `${y}-09-30`;
+        label = `Q2 ${y} (Jul - Sep)`;
+        break;
+      }
+
+      case 'Q3': {
+        const y = today.getFullYear();
+        startStr = `${y}-10-01`;
+        endStr = `${y}-12-31`;
+        label = `Q3 ${y} (Oct - Dec)`;
+        break;
+      }
+
+      case 'Q4': {
+        const y = today.getFullYear();
+        startStr = `${y}-01-01`;
+        endStr = `${y}-03-31`;
+        label = `Q4 ${y} (Jan - Mar)`;
+        break;
+      }
+
+      case 'CUSTOM':
+        startStr = customStart || '2000-01-01';
+        endStr = customEnd || '2099-12-31';
+        label = `Custom Period (${startStr} to ${endStr})`;
+        break;
+
+      case 'ALL':
+      default:
+        startStr = '2000-01-01';
+        endStr = '2099-12-31';
+        label = 'All-Time Financial Ledger';
+        break;
     }
-
-    case 'LAST_MONTH': {
-      const y = today.getFullYear();
-      const m = today.getMonth() - 1;
-      const firstDay = new Date(y, m, 1);
-      const lastDay = new Date(y, m + 1, 0);
-      startStr = firstDay.toISOString().split('T')[0];
-      endStr = lastDay.toISOString().split('T')[0];
-      label = `Last Month (${firstDay.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
-      break;
-    }
-
-    case 'THIS_FY': {
-      const y = today.getFullYear();
-      const m = today.getMonth(); // 0-indexed (Jan = 0, Apr = 3)
-      const fyStartYear = m >= 3 ? y : y - 1;
-      const fyEndYear = fyStartYear + 1;
-      startStr = `${fyStartYear}-04-01`;
-      endStr = `${fyEndYear}-03-31`;
-      label = `FY ${fyStartYear}-${fyEndYear}`;
-      break;
-    }
-
-    case 'Q1': {
-      const y = today.getFullYear();
-      startStr = `${y}-04-01`;
-      endStr = `${y}-06-30`;
-      label = `Q1 ${y} (Apr - Jun)`;
-      break;
-    }
-
-    case 'Q2': {
-      const y = today.getFullYear();
-      startStr = `${y}-07-01`;
-      endStr = `${y}-09-30`;
-      label = `Q2 ${y} (Jul - Sep)`;
-      break;
-    }
-
-    case 'Q3': {
-      const y = today.getFullYear();
-      startStr = `${y}-10-01`;
-      endStr = `${y}-12-31`;
-      label = `Q3 ${y} (Oct - Dec)`;
-      break;
-    }
-
-    case 'Q4': {
-      const y = today.getFullYear();
-      startStr = `${y}-01-01`;
-      endStr = `${y}-03-31`;
-      label = `Q4 ${y} (Jan - Mar)`;
-      break;
-    }
-
-    case 'CUSTOM':
-      startStr = customStart || '2000-01-01';
-      endStr = customEnd || '2099-12-31';
-      label = `Custom Period (${startStr} to ${endStr})`;
-      break;
-
-    case 'ALL':
-    default:
-      startStr = '2000-01-01';
-      endStr = '2099-12-31';
-      label = 'All-Time Financial Ledger';
-      break;
+  } catch (err) {
+    console.warn('Error calculating date bounds:', err);
   }
 
   return { startStr, endStr, label };
 };
 
-// Core Analytics Processor
+// Core Analytics Processor with Defensive Fallbacks
 export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', customEnd = '') => {
+  const safeData = data || {};
   const { startStr, endStr, label } = getDateRangeBounds(preset, customStart, customEnd);
-  const currency = data?.farmInfo?.currency || '₹';
+  const currency = safeData?.farmInfo?.currency || '₹';
 
   // 1. CROPS SECTOR
-  const filteredCropIncomes = (data?.cropIncomes || []).filter(i => i.date >= startStr && i.date <= endStr);
-  const filteredCropExpenses = (data?.cropExpenses || []).filter(e => e.date >= startStr && e.date <= endStr);
+  const filteredCropIncomes = (safeData?.cropIncomes || []).filter(i => i && i.date && i.date >= startStr && i.date <= endStr);
+  const filteredCropExpenses = (safeData?.cropExpenses || []).filter(e => e && e.date && e.date >= startStr && e.date <= endStr);
 
   const cropsIncome = Math.round(filteredCropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0));
   const cropsExpense = Math.round(filteredCropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
@@ -126,17 +131,17 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const cropsNetProfit = cropsIncome - cropsExpense;
 
   // 2. WORKERS / LABOR SECTOR
-  const filteredAttendance = (data?.attendance || []).filter(a => a.date >= startStr && a.date <= endStr);
-  const filteredWorkerPayments = (data?.workerPayments || []).filter(p => p.date >= startStr && p.date <= endStr);
+  const filteredAttendance = (safeData?.attendance || []).filter(a => a && a.date && a.date >= startStr && a.date <= endStr);
+  const filteredWorkerPayments = (safeData?.workerPayments || []).filter(p => p && p.date && p.date >= startStr && p.date <= endStr);
 
   const workersWagesAccrued = Math.round(filteredAttendance.reduce((acc, curr) => acc + Number(curr.wageEarned || 0), 0));
   const workersPaymentsPaid = Math.round(filteredWorkerPayments.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
-  const workersExpense = workersWagesAccrued; // Labor expense is total wages owed
+  const workersExpense = workersWagesAccrued;
 
   // 3. EQUIPMENT & MACHINERY SECTOR
-  const filteredEquipmentUsage = (data?.equipmentUsage || []).filter(u => u.date >= startStr && u.date <= endStr);
-  const filteredEquipmentFuel = (data?.equipmentFuel || []).filter(f => f.date >= startStr && f.date <= endStr);
-  const filteredEquipmentMaint = (data?.equipmentMaintenance || []).filter(m => m.date >= startStr && m.date <= endStr);
+  const filteredEquipmentUsage = (safeData?.equipmentUsage || []).filter(u => u && u.date && u.date >= startStr && u.date <= endStr);
+  const filteredEquipmentFuel = (safeData?.equipmentFuel || []).filter(f => f && f.date && f.date >= startStr && f.date <= endStr);
+  const filteredEquipmentMaint = (safeData?.equipmentMaintenance || []).filter(m => m && m.date && m.date >= startStr && m.date <= endStr);
 
   const equipmentIncome = Math.round(filteredEquipmentUsage.reduce((acc, curr) => acc + Number(curr.rentalIncome || 0), 0));
   const equipmentFuelCost = Math.round(filteredEquipmentFuel.reduce((acc, curr) => acc + Number(curr.totalCost || 0), 0));
@@ -145,13 +150,13 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const equipmentNetProfit = equipmentIncome - equipmentExpense;
 
   // 4. DAIRY SECTOR
-  const filteredMilkLogs = (data?.dairyMilkLogs || []).filter(l => l.date >= startStr && l.date <= endStr);
-  const filteredDairyPayments = (data?.dairyPayments || []).filter(p => p.date >= startStr && p.date <= endStr);
+  const filteredMilkLogs = (safeData?.dairyMilkLogs || []).filter(l => l && l.date && l.date >= startStr && l.date <= endStr);
+  const filteredDairyPayments = (safeData?.dairyPayments || []).filter(p => p && p.date && p.date >= startStr && p.date <= endStr);
 
-  // Unique milk log deduplication
   const uniqueMilkLogsMap = {};
   filteredMilkLogs.forEach(l => {
-    const key = `${l.customerId}_${l.date}_${l.shift || 'Morning'}`;
+    if (!l) return;
+    const key = `${l.customerId || 'cust'}_${l.date}_${l.shift || 'Morning'}`;
     uniqueMilkLogsMap[key] = l;
   });
   const uniqueMilkLogs = Object.values(uniqueMilkLogsMap);
@@ -159,14 +164,14 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const dairyIncome = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.totalAmount || (curr.liters * 50) || 0), 0));
   const dairyLitersTotal = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.liters || 0), 0));
   const dairyCashReceived = Math.round(filteredDairyPayments.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
-  const dairyExpense = 0; // Operational costs tracked in workers/feed
+  const dairyExpense = 0;
   const dairyNetProfit = dairyIncome - dairyExpense;
 
   // 5. POULTRY SECTOR
-  const filteredPoultrySales = (data?.poultrySales || []).filter(s => s.date >= startStr && s.date <= endStr);
-  const filteredPoultryDaily = (data?.poultryDailyLogs || []).filter(d => d.date >= startStr && d.date <= endStr);
-  const filteredPoultryHealth = (data?.poultryHealthLogs || []).filter(h => h.date >= startStr && h.date <= endStr);
-  const filteredPoultryTrades = (data?.poultryHenTrades || []).filter(t => t.date >= startStr && t.date <= endStr);
+  const filteredPoultrySales = (safeData?.poultrySales || []).filter(s => s && s.date && s.date >= startStr && s.date <= endStr);
+  const filteredPoultryDaily = (safeData?.poultryDailyLogs || []).filter(d => d && d.date && d.date >= startStr && d.date <= endStr);
+  const filteredPoultryHealth = (safeData?.poultryHealthLogs || []).filter(h => h && h.date && h.date >= startStr && h.date <= endStr);
+  const filteredPoultryTrades = (safeData?.poultryHenTrades || []).filter(t => t && t.date && t.date >= startStr && t.date <= endStr);
 
   const poultryBatchSales = Math.round(filteredPoultrySales.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0));
   const poultryTradeSales = Math.round(filteredPoultryTrades.filter(t => t.type === 'Sale').reduce((acc, curr) => acc + Number(curr.totalAmount || 0), 0));
@@ -206,7 +211,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const expenseDistribution = [
     { name: 'Worker Wages', value: workersExpense, color: '#d97706' },
     { name: 'Crop Seeds/Inputs', value: cropsExpense, color: '#16a34a' },
-    { name: 'Equipment Diesel & Repairs', value: equipmentExpense, color: '#2563eb' },
+    { name: 'Equipment Fuel & Repairs', value: equipmentExpense, color: '#2563eb' },
     { name: 'Poultry Feed & Health', value: poultryExpense, color: '#e11d48' }
   ].filter(item => item.value > 0);
 
@@ -214,27 +219,28 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const monthlyDataMap = {};
 
   const addMonthlyRecord = (dateStr, inc, exp) => {
-    if (!dateStr || dateStr.length < 7) return;
+    if (!dateStr || typeof dateStr !== 'string' || dateStr.length < 7) return;
     const monthKey = dateStr.substring(0, 7); // YYYY-MM
     if (!monthlyDataMap[monthKey]) {
       monthlyDataMap[monthKey] = { month: monthKey, income: 0, expense: 0, profit: 0 };
     }
-    monthlyDataMap[monthKey].income += Math.round(inc);
-    monthlyDataMap[monthKey].expense += Math.round(exp);
+    monthlyDataMap[monthKey].income += Math.round(Number(inc) || 0);
+    monthlyDataMap[monthKey].expense += Math.round(Number(exp) || 0);
     monthlyDataMap[monthKey].profit = monthlyDataMap[monthKey].income - monthlyDataMap[monthKey].expense;
   };
 
-  filteredCropIncomes.forEach(i => addMonthlyRecord(i.date, Number(i.totalIncome || 0), 0));
-  filteredCropExpenses.forEach(e => addMonthlyRecord(e.date, 0, Number(e.amount || 0)));
-  filteredAttendance.forEach(a => addMonthlyRecord(a.date, 0, Number(a.wageEarned || 0)));
-  filteredEquipmentUsage.forEach(u => addMonthlyRecord(u.date, Number(u.rentalIncome || 0), 0));
-  filteredEquipmentFuel.forEach(f => addMonthlyRecord(f.date, 0, Number(f.totalCost || 0)));
-  filteredEquipmentMaint.forEach(m => addMonthlyRecord(m.date, 0, Number(m.cost || 0)));
-  uniqueMilkLogs.forEach(l => addMonthlyRecord(l.date, Number(l.totalAmount || (l.liters * 50) || 0), 0));
-  filteredPoultrySales.forEach(s => addMonthlyRecord(s.date, Number(s.totalIncome || 0), 0));
-  filteredPoultryDaily.forEach(d => addMonthlyRecord(d.date, 0, Number(d.feedCost || 0)));
-  filteredPoultryHealth.forEach(h => addMonthlyRecord(h.date, 0, Number(h.medicineCost || 0) + Number(h.doctorFee || 0)));
+  filteredCropIncomes.forEach(i => i && i.date && addMonthlyRecord(i.date, Number(i.totalIncome || 0), 0));
+  filteredCropExpenses.forEach(e => e && e.date && addMonthlyRecord(e.date, 0, Number(e.amount || 0)));
+  filteredAttendance.forEach(a => a && a.date && addMonthlyRecord(a.date, 0, Number(a.wageEarned || 0)));
+  filteredEquipmentUsage.forEach(u => u && u.date && addMonthlyRecord(u.date, Number(u.rentalIncome || 0), 0));
+  filteredEquipmentFuel.forEach(f => f && f.date && addMonthlyRecord(f.date, 0, Number(f.totalCost || 0)));
+  filteredEquipmentMaint.forEach(m => m && m.date && addMonthlyRecord(m.date, 0, Number(m.cost || 0)));
+  uniqueMilkLogs.forEach(l => l && l.date && addMonthlyRecord(l.date, Number(l.totalAmount || (l.liters * 50) || 0), 0));
+  filteredPoultrySales.forEach(s => s && s.date && addMonthlyRecord(s.date, Number(s.totalIncome || 0), 0));
+  filteredPoultryDaily.forEach(d => d && d.date && addMonthlyRecord(d.date, 0, Number(d.feedCost || 0)));
+  filteredPoultryHealth.forEach(h => h && h.date && addMonthlyRecord(h.date, 0, Number(h.medicineCost || 0) + Number(h.doctorFee || 0)));
   filteredPoultryTrades.forEach(t => {
+    if (!t || !t.date) return;
     if (t.type === 'Sale') addMonthlyRecord(t.date, Number(t.totalAmount || 0), 0);
     else addMonthlyRecord(t.date, 0, Number(t.totalAmount || 0));
   });
@@ -266,6 +272,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
 
 // Download Master Financial Statement CSV
 export const downloadMasterFinancialCSV = (summaryData, farmInfo = {}) => {
+  if (!summaryData) return;
   const { label, startStr, endStr, currency, totalIncome, totalExpenses, netProfit, profitMarginPercent, roiPercent, crops, workers, equipment, dairy, poultry } = summaryData;
   const farmName = farmInfo.name || 'Samagra Farm Manager';
 
