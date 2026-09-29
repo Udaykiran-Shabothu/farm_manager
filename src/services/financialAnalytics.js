@@ -37,7 +37,7 @@ export const getDateRangeBounds = (preset, customStart = '', customEnd = '') => 
         const lastDay = new Date(y, m + 1, 0);
         startStr = firstDay.toISOString().split('T')[0];
         endStr = lastDay.toISOString().split('T')[0];
-        label = `This Month (${today.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+        label = `This Month (${today?.toLocaleString ? today.toLocaleString('default', { month: 'long', year: 'numeric' }) : ''})`;
         break;
       }
 
@@ -48,7 +48,7 @@ export const getDateRangeBounds = (preset, customStart = '', customEnd = '') => 
         const lastDay = new Date(y, m + 1, 0);
         startStr = firstDay.toISOString().split('T')[0];
         endStr = lastDay.toISOString().split('T')[0];
-        label = `Last Month (${firstDay.toLocaleString('default', { month: 'long', year: 'numeric' })})`;
+        label = `Last Month (${firstDay?.toLocaleString ? firstDay.toLocaleString('default', { month: 'long', year: 'numeric' }) : ''})`;
         break;
       }
 

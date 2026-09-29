@@ -51,6 +51,16 @@ export class ErrorBoundary extends React.Component {
               <p className="font-mono bg-white p-2.5 rounded-xl border border-slate-200 text-rose-700 overflow-x-auto">
                 {this.state.error?.toString() || 'Unknown Javascript Exception'}
               </p>
+              {this.state.error?.stack && (
+                <details className="mt-2 text-[11px]">
+                  <summary className="cursor-pointer text-slate-500 font-semibold hover:text-slate-800">
+                    View Full Stack Trace
+                  </summary>
+                  <pre className="font-mono bg-slate-900 text-slate-200 p-3 rounded-xl border border-slate-800 text-[10px] mt-1 overflow-x-auto whitespace-pre-wrap max-h-48">
+                    {this.state.error.stack}
+                  </pre>
+                </details>
+              )}
             </div>
 
             <div className="flex flex-col sm:flex-row items-center gap-3 pt-2">

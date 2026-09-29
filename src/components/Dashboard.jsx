@@ -259,7 +259,7 @@ export default function Dashboard({ setActiveTab }) {
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Farm Income</p>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
-                {currency}{analytics.totalIncome.toLocaleString('en-IN')}
+                {currency}{(Number(analytics?.totalIncome) || 0).toLocaleString('en-IN')}
               </h3>
             </div>
           </div>
@@ -280,7 +280,7 @@ export default function Dashboard({ setActiveTab }) {
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Farm Expenses</p>
               <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-0.5">
-                {currency}{analytics.totalExpenses.toLocaleString('en-IN')}
+                {currency}{(Number(analytics?.totalExpenses) || 0).toLocaleString('en-IN')}
               </h3>
             </div>
           </div>
@@ -292,29 +292,29 @@ export default function Dashboard({ setActiveTab }) {
 
         {/* Net Profit / Loss */}
         <div className={`relative p-6 rounded-3xl bg-white border card-3d group overflow-hidden shadow-sm ${
-          analytics.netProfit >= 0 ? 'border-emerald-200' : 'border-rose-200'
+          (analytics?.netProfit || 0) >= 0 ? 'border-emerald-200' : 'border-rose-200'
         }`}>
           <div className="flex items-center space-x-3">
             <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
-              analytics.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
+              (analytics?.netProfit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
             }`}>
               <DollarSign className="w-6 h-6" />
             </div>
             <div>
               <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">Net Farm Profit / Loss</p>
               <h3 className={`text-2xl sm:text-3xl font-extrabold mt-0.5 ${
-                analytics.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'
+                (analytics?.netProfit || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'
               }`}>
-                {currency}{analytics.netProfit.toLocaleString('en-IN')}
+                {currency}{(Number(analytics?.netProfit) || 0).toLocaleString('en-IN')}
               </h3>
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <span>Net Financial Return</span>
             <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-              analytics.netProfit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+              (analytics?.netProfit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
             }`}>
-              {analytics.netProfit >= 0 ? 'Profitable' : 'Deficit'}
+              {(analytics?.netProfit || 0) >= 0 ? 'Profitable' : 'Deficit'}
             </span>
           </div>
         </div>
@@ -368,14 +368,14 @@ export default function Dashboard({ setActiveTab }) {
                 <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
                   <Sprout className="w-4 h-4 text-emerald-600" /> Crops & Fields Enterprise
                 </td>
-                <td className="p-3 text-right font-bold text-emerald-700">{currency}{analytics.crops.income.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right text-slate-600">{currency}{analytics.crops.expense.toLocaleString('en-IN')}</td>
-                <td className={`p-3 text-right font-extrabold ${analytics.crops.profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {currency}{analytics.crops.profit.toLocaleString('en-IN')}
+                <td className="p-3 text-right font-bold text-emerald-700">{currency}{(Number(analytics?.crops?.income) || 0).toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.crops?.expense) || 0).toLocaleString('en-IN')}</td>
+                <td className={`p-3 text-right font-extrabold ${(analytics?.crops?.profit || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {currency}{(Number(analytics?.crops?.profit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${analytics.crops.profit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                    {analytics.crops.profit >= 0 ? 'Profit' : 'Loss'}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${(analytics?.crops?.profit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                    {(analytics?.crops?.profit || 0) >= 0 ? 'Profit' : 'Loss'}
                   </span>
                 </td>
               </tr>
@@ -385,9 +385,9 @@ export default function Dashboard({ setActiveTab }) {
                   <Users className="w-4 h-4 text-amber-600" /> Workers & Field Labor
                 </td>
                 <td className="p-3 text-right text-slate-400">{currency}0</td>
-                <td className="p-3 text-right text-slate-600">{currency}{analytics.workers.expense.toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.workers?.expense) || 0).toLocaleString('en-IN')}</td>
                 <td className="p-3 text-right font-extrabold text-rose-700">
-                  -{currency}{analytics.workers.expense.toLocaleString('en-IN')}
+                  -{currency}{(Number(analytics?.workers?.expense) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
@@ -400,14 +400,14 @@ export default function Dashboard({ setActiveTab }) {
                 <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
                   <Tractor className="w-4 h-4 text-blue-600" /> Tractors & Machinery
                 </td>
-                <td className="p-3 text-right font-bold text-emerald-700">{currency}{analytics.equipment.income.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right text-slate-600">{currency}{analytics.equipment.expense.toLocaleString('en-IN')}</td>
-                <td className={`p-3 text-right font-extrabold ${analytics.equipment.profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {currency}{analytics.equipment.profit.toLocaleString('en-IN')}
+                <td className="p-3 text-right font-bold text-emerald-700">{currency}{(Number(analytics?.equipment?.income) || 0).toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.equipment?.expense) || 0).toLocaleString('en-IN')}</td>
+                <td className={`p-3 text-right font-extrabold ${(analytics?.equipment?.profit || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {currency}{(Number(analytics?.equipment?.profit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${analytics.equipment.profit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                    {analytics.equipment.profit >= 0 ? 'Profit' : 'Loss'}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${(analytics?.equipment?.profit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                    {(analytics?.equipment?.profit || 0) >= 0 ? 'Profit' : 'Loss'}
                   </span>
                 </td>
               </tr>
@@ -416,10 +416,10 @@ export default function Dashboard({ setActiveTab }) {
                 <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
                   <Milk className="w-4 h-4 text-cyan-600" /> Dairy Farm & Milk Sales
                 </td>
-                <td className="p-3 text-right font-bold text-emerald-700">{currency}{analytics.dairy.income.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right text-slate-600">{currency}{analytics.dairy.expense.toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right font-bold text-emerald-700">{currency}{(Number(analytics?.dairy?.income) || 0).toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.dairy?.expense) || 0).toLocaleString('en-IN')}</td>
                 <td className="p-3 text-right font-extrabold text-emerald-700">
-                  {currency}{analytics.dairy.profit.toLocaleString('en-IN')}
+                  {currency}{(Number(analytics?.dairy?.profit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
                   <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
@@ -432,24 +432,24 @@ export default function Dashboard({ setActiveTab }) {
                 <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
                   <Egg className="w-4 h-4 text-rose-600" /> Poultry & Hen Trading
                 </td>
-                <td className="p-3 text-right font-bold text-emerald-700">{currency}{analytics.poultry.income.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right text-slate-600">{currency}{analytics.poultry.expense.toLocaleString('en-IN')}</td>
-                <td className={`p-3 text-right font-extrabold ${analytics.poultry.profit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                  {currency}{analytics.poultry.profit.toLocaleString('en-IN')}
+                <td className="p-3 text-right font-bold text-emerald-700">{currency}{(Number(analytics?.poultry?.income) || 0).toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.poultry?.expense) || 0).toLocaleString('en-IN')}</td>
+                <td className={`p-3 text-right font-extrabold ${(analytics?.poultry?.profit || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {currency}{(Number(analytics?.poultry?.profit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
-                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${analytics.poultry.profit >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-                    {analytics.poultry.profit >= 0 ? 'Profit' : 'Loss'}
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${(analytics?.poultry?.profit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                    {(analytics?.poultry?.profit || 0) >= 0 ? 'Profit' : 'Loss'}
                   </span>
                 </td>
               </tr>
 
               <tr className="bg-slate-100 font-extrabold text-slate-900 text-sm border-t-2 border-slate-300">
                 <td className="p-3">CONSOLIDATED TOTAL</td>
-                <td className="p-3 text-right text-emerald-700">{currency}{analytics.totalIncome.toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right text-slate-800">{currency}{analytics.totalExpenses.toLocaleString('en-IN')}</td>
-                <td className={`p-3 text-right ${analytics.netProfit >= 0 ? 'text-emerald-800' : 'text-rose-800'}`}>
-                  {currency}{analytics.netProfit.toLocaleString('en-IN')}
+                <td className="p-3 text-right text-emerald-700">{currency}{(Number(analytics?.totalIncome) || 0).toLocaleString('en-IN')}</td>
+                <td className="p-3 text-right text-slate-800">{currency}{(Number(analytics?.totalExpenses) || 0).toLocaleString('en-IN')}</td>
+                <td className={`p-3 text-right ${(analytics?.netProfit || 0) >= 0 ? 'text-emerald-800' : 'text-rose-800'}`}>
+                  {currency}{(Number(analytics?.netProfit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-black ${analytics.netProfit >= 0 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'}`}>

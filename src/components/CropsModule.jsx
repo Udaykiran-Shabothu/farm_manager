@@ -294,20 +294,20 @@ export default function CropsModule() {
     let text = `🌾 *${data?.farmInfo?.name || 'Daily Farm'} - Crop Financial Statement*\n\n`;
     text += `🌱 *Crop:* ${crop.name}\n📍 *Field:* ${crop.field} (${crop.areaAcres} Acres)\n🗓️ *Season:* ${crop.season} | *Status:* ${crop.status}\n\n`;
 
-    text += `💸 *EXPENDITURES (Total: ${currency}${totalExp.toLocaleString('en-IN')}):*\n`;
+    text += `💸 *EXPENDITURES (Total: ${currency}${(Number(totalExp) || 0).toLocaleString('en-IN')}):*\n`;
     if (cropExpenses.length === 0) text += `  • No expense records logged.\n`;
     cropExpenses.forEach(exp => {
       const qtyStr = exp.quantityCount && exp.unitCost ? ` (${exp.quantityCount} ${exp.unitType || ''} @ ${currency}${exp.unitCost})` : '';
-      text += `  • [${exp.date}] ${exp.category}${qtyStr}: ${currency}${Number(exp.amount).toLocaleString('en-IN')}\n`;
+      text += `  • [${exp.date}] ${exp.category}${qtyStr}: ${currency}${(Number(exp.amount) || 0).toLocaleString('en-IN')}\n`;
     });
 
-    text += `\n💰 *HARVEST SALES & REVENUE (Total: ${currency}${totalInc.toLocaleString('en-IN')}):*\n`;
+    text += `\n💰 *HARVEST SALES & REVENUE (Total: ${currency}${(Number(totalInc) || 0).toLocaleString('en-IN')}):*\n`;
     if (cropIncomes.length === 0) text += `  • No income records logged.\n`;
     cropIncomes.forEach(inc => {
-      text += `  • [${inc.date}] ${inc.incomeType || 'Harvest Sale'} (${inc.buyer || 'Buyer'}): ${currency}${Number(inc.totalIncome).toLocaleString('en-IN')}\n`;
+      text += `  • [${inc.date}] ${inc.incomeType || 'Harvest Sale'} (${inc.buyer || 'Buyer'}): ${currency}${(Number(inc.totalIncome) || 0).toLocaleString('en-IN')}\n`;
     });
 
-    text += `\n📊 *NET PROFIT / LOSS:* ${currency}${netProfit.toLocaleString('en-IN')}\n`;
+    text += `\n📊 *NET PROFIT / LOSS:* ${currency}${(Number(netProfit) || 0).toLocaleString('en-IN')}\n`;
     text += `\nSent via Daily Farm Manager 3D.`;
 
     const encoded = encodeURIComponent(text);
@@ -448,24 +448,24 @@ export default function CropsModule() {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500 font-medium">Total Expenditures:</span>
-                  <span className="text-rose-700 font-bold">{currency}{totalExp.toLocaleString('en-IN')}</span>
+                  <span className="text-rose-700 font-bold">{currency}{(Number(totalExp) || 0).toLocaleString('en-IN')}</span>
                 </div>
                 {selfWorkTotal > 0 && (
                   <div className="flex justify-between text-xs items-center">
                     <span className="flex items-center gap-1 text-amber-800 font-semibold">
                       <Hammer className="w-3 h-3 text-amber-600" /> Self Work Amount:
                     </span>
-                    <span className="text-amber-800 font-bold">{currency}{selfWorkTotal.toLocaleString('en-IN')}</span>
+                    <span className="text-amber-800 font-bold">{currency}{(Number(selfWorkTotal) || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-xs">
                   <span className="text-slate-500 font-medium">Total Harvest Revenues:</span>
-                  <span className="text-emerald-700 font-bold">{currency}{totalInc.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-700 font-bold">{currency}{(Number(totalInc) || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-extrabold">
                   <span className="text-slate-700">Net Return:</span>
                   <span className={netProfit >= 0 ? 'text-emerald-700' : 'text-amber-700'}>
-                    {currency}{netProfit.toLocaleString('en-IN')}
+                    {currency}{(Number(netProfit) || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
 
@@ -488,7 +488,7 @@ export default function CropsModule() {
                               {cat === 'Self Work' && <Hammer className="w-3 h-3" />}
                               {cat}
                             </span>
-                            <span className={`font-mono font-bold ${cat === 'Self Work' ? 'text-amber-800' : 'text-rose-700'}`}>{currency}{amt.toLocaleString('en-IN')}</span>
+                            <span className={`font-mono font-bold ${cat === 'Self Work' ? 'text-amber-800' : 'text-rose-700'}`}>{currency}{(Number(amt) || 0).toLocaleString('en-IN')}</span>
                           </div>
                         ))}
                       </div>
@@ -683,7 +683,7 @@ export default function CropsModule() {
                 <div>
                   <span className="text-slate-400 block">Net Result</span>
                   <span className={`font-bold ${netProfit >= 0 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                    {currency}{netProfit.toLocaleString('en-IN')}
+                    {currency}{(Number(netProfit) || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -692,7 +692,7 @@ export default function CropsModule() {
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center justify-between">
                   <span>1. Itemized Expenditures</span>
-                  <span>Total: {currency}{totalExp.toLocaleString('en-IN')}</span>
+                  <span>Total: {currency}{(Number(totalExp) || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden text-xs">
                   {cropExpenses.length > 0 ? (
