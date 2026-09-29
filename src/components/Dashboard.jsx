@@ -480,7 +480,7 @@ export default function Dashboard({ setActiveTab }) {
                 <YAxis stroke="#64748b" fontSize={11} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                  formatter={(value) => [`${currency}${Number(value).toLocaleString('en-IN')}`, '']}
+                  formatter={(value, name) => [`${currency}${(Number(value) || 0).toLocaleString('en-IN')}`, name || '']}
                 />
                 <Area type="monotone" dataKey="income" name="Revenue" stroke="#16a34a" fill="#dcfce7" strokeWidth={2} />
                 <Area type="monotone" dataKey="expense" name="Expense" stroke="#e11d48" fill="#ffe4e6" strokeWidth={2} />
@@ -511,7 +511,7 @@ export default function Dashboard({ setActiveTab }) {
                 <YAxis stroke="#64748b" fontSize={12} tickLine={false} />
                 <Tooltip 
                   contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                  formatter={(value) => [`${currency}${Number(value).toLocaleString('en-IN')}`, '']}
+                  formatter={(value, name) => [`${currency}${(Number(value) || 0).toLocaleString('en-IN')}`, name || '']}
                 />
                 <Bar dataKey="income" name="Income" fill="#16a34a" radius={[6, 6, 0, 0]} />
                 <Bar dataKey="expense" name="Expenses" fill="#e11d48" radius={[6, 6, 0, 0]} />
@@ -548,7 +548,7 @@ export default function Dashboard({ setActiveTab }) {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                    formatter={(value) => [`${currency}${Number(value).toLocaleString('en-IN')}`, 'Expense']}
+                    formatter={(value) => [`${currency}${(Number(value) || 0).toLocaleString('en-IN')}`, 'Expense']}
                   />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: '#475569' }} />
                 </PieChart>
@@ -594,7 +594,7 @@ export default function Dashboard({ setActiveTab }) {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ backgroundColor: '#ffffff', borderColor: '#cbd5e1', borderRadius: '12px', color: '#0f172a', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}
-                    formatter={(value) => [`${currency}${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
+                    formatter={(value) => [`${currency}${(Number(value) || 0).toLocaleString('en-IN')}`, 'Revenue']}
                   />
                   <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: '11px', color: '#475569' }} />
                 </PieChart>
