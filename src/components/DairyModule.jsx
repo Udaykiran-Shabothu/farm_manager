@@ -491,12 +491,14 @@ export default function DairyModule() {
   // Helper: Financial Ledger Breakdown with Prior Cycle Carryover
   const getCustomRangeData = (customerId, startDateStr, endDateStr) => {
     const customer = (data?.dairyCustomers || []).find(c => c.id === customerId);
-    if (!customer) return null;
+    if (!customer || !startDateStr || !endDateStr) return null;
+
+    const rate = Number(customer.ratePerLiter || 50);
 
     const [sY, sM, sD] = startDateStr.split('-').map(Number);
     const [eY, eM, eD] = endDateStr.split('-').map(Number);
-    const startObj = new Date(sY, sM - 1, sD);
-    const endObj = new Date(eY, eM - 1, eD);
+    const startObj = new Date(sY || 2026, (sM || 1) - 1, sD || 1);
+    const endObj = new Date(eY || 2026, (eM || 1) - 1, eD || 1);
 
     const rawPriorLogs = (data?.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
@@ -515,7 +517,7 @@ export default function DairyModule() {
       return p.date < startDateStr;
     });
 
-    const priorMilkBillsTotal = Math.round(priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (l.liters * customer.ratePerLiter) || 0), 0));
+    const priorMilkBillsTotal = Math.round(priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (Number(l.liters || 0) * rate) || 0), 0));
     const priorPaymentsTotal = Math.round(priorPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0));
     
     const priorBalance = Math.round(priorMilkBillsTotal - priorPaymentsTotal);
@@ -579,7 +581,7 @@ export default function DairyModule() {
         if (log.shift === 'Morning') dayMap[log.date].morningLiters += Number(log.liters || 0);
         if (log.shift === 'Evening') dayMap[log.date].eveningLiters += Number(log.liters || 0);
         dayMap[log.date].totalLiters += Number(log.liters || 0);
-        dayMap[log.date].totalAmount += Math.round(Number(log.totalAmount || (log.liters * customer.ratePerLiter) || 0));
+        dayMap[log.date].totalAmount += Math.round(Number(log.totalAmount || (Number(log.liters || 0) * rate) || 0));
         if (log.notes) dayMap[log.date].notes = log.notes;
       } else {
         dayMap[log.date].status = 'Not Taken';
