@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌱</text></svg>" />
@@ -11,8 +11,23 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Google Identity Services SDK for 1 TB Google Drive Sync -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script>
+      // Self-Healing Auto-Recovery Script for Stale Browser Cache
+      window.addEventListener('error', function(e) {
+        if (e && e.message && e.message.includes('toLocaleString')) {
+          console.warn('Auto-recovering from stale toLocaleString cache error...');
+          if (!sessionStorage.getItem('auto_recovered_stale_cache')) {
+            sessionStorage.setItem('auto_recovered_stale_cache', 'true');
+            try {
+              localStorage.removeItem('agri_farm_manager_db');
+            } catch (err) {}
+            window.location.reload();
+          }
+        }
+      });
+    </script>
   </head>
-  <body class="bg-[#0b1320] text-slate-100 min-h-screen">
+  <body class="bg-slate-50 text-slate-900 min-h-screen selection:bg-emerald-600 selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
