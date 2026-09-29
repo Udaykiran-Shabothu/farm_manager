@@ -161,7 +161,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   });
   const uniqueMilkLogs = Object.values(uniqueMilkLogsMap);
 
-  const dairyIncome = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.totalAmount || (curr.liters * 50) || 0), 0));
+  const dairyIncome = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.totalAmount || (Number(curr.liters || 0) * 50) || 0), 0));
   const dairyLitersTotal = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.liters || 0), 0));
   const dairyCashReceived = Math.round(filteredDairyPayments.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
   const dairyExpense = 0;
@@ -235,7 +235,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   filteredEquipmentUsage.forEach(u => u && u.date && addMonthlyRecord(u.date, Number(u.rentalIncome || 0), 0));
   filteredEquipmentFuel.forEach(f => f && f.date && addMonthlyRecord(f.date, 0, Number(f.totalCost || 0)));
   filteredEquipmentMaint.forEach(m => m && m.date && addMonthlyRecord(m.date, 0, Number(m.cost || 0)));
-  uniqueMilkLogs.forEach(l => l && l.date && addMonthlyRecord(l.date, Number(l.totalAmount || (l.liters * 50) || 0), 0));
+  uniqueMilkLogs.forEach(l => l && l.date && addMonthlyRecord(l.date, Number(l.totalAmount || (Number(l.liters || 0) * 50) || 0), 0));
   filteredPoultrySales.forEach(s => s && s.date && addMonthlyRecord(s.date, Number(s.totalIncome || 0), 0));
   filteredPoultryDaily.forEach(d => d && d.date && addMonthlyRecord(d.date, 0, Number(d.feedCost || 0)));
   filteredPoultryHealth.forEach(h => h && h.date && addMonthlyRecord(h.date, 0, Number(h.medicineCost || 0) + Number(h.doctorFee || 0)));
