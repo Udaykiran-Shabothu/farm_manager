@@ -92,15 +92,15 @@ export default function Dashboard({ setActiveTab }) {
   // Recent Transactions Stream
   const henTrades = data?.poultryHenTrades || [];
   const recentActivities = [
-    ...(data?.cropExpenses || []).map(e => ({ type: 'Crop Expense', title: `Crop Expense: ${e.category}`, date: e.date, amount: e.amount, isExpense: true, sector: 'crops' })),
-    ...(data?.cropIncomes || []).map(i => ({ type: 'Crop Sale', title: `Harvest Sale: ${i.buyer || 'Produce'}`, date: i.date, amount: i.totalIncome, isExpense: false, sector: 'crops' })),
-    ...(data?.workerPayments || []).map(p => ({ type: 'Worker Payout', title: `Worker Payout (${p.type})`, date: p.date, amount: p.amount, isExpense: true, sector: 'workers' })),
-    ...(data?.equipmentFuel || []).map(f => ({ type: 'Diesel Fill', title: `Diesel Fill (${f.liters}L)`, date: f.date, amount: f.totalCost, isExpense: true, sector: 'equipment' })),
-    ...(data?.dairyMilkLogs || []).map(m => ({ type: 'Milk Entry', title: `Milk Delivered (${m.liters}L)`, date: m.date, amount: m.totalAmount, isExpense: false, sector: 'dairy' })),
-    ...(data?.poultrySales || []).map(s => ({ type: 'Poultry Sale', title: `Poultry Sale (${s.category})`, date: s.date, amount: s.totalIncome, isExpense: false, sector: 'poultry' })),
-    ...henTrades.filter(t => t.type === 'Sale').map(t => ({ type: 'Hen Sale', title: `Hen Sale to ${t.customerName} (${t.henCount} hens)`, date: t.date, amount: t.totalAmount, isExpense: false, sector: 'poultry' })),
-    ...henTrades.filter(t => t.type === 'Purchase').map(t => ({ type: 'Hen Purchase', title: `Hen Purchase from ${t.customerName} (${t.henCount} hens)`, date: t.date, amount: t.totalAmount, isExpense: true, sector: 'poultry' }))
-  ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 6);
+    ...(data?.cropExpenses || []).map(e => ({ type: 'Crop Expense', title: `Crop Expense: ${e?.category || 'General'}`, date: e?.date || '', amount: e?.amount || 0, isExpense: true, sector: 'crops' })),
+    ...(data?.cropIncomes || []).map(i => ({ type: 'Crop Sale', title: `Harvest Sale: ${i?.buyer || 'Produce'}`, date: i?.date || '', amount: i?.totalIncome || 0, isExpense: false, sector: 'crops' })),
+    ...(data?.workerPayments || []).map(p => ({ type: 'Worker Payout', title: `Worker Payout (${p?.type || 'Wage'})`, date: p?.date || '', amount: p?.amount || 0, isExpense: true, sector: 'workers' })),
+    ...(data?.equipmentFuel || []).map(f => ({ type: 'Diesel Fill', title: `Diesel Fill (${f?.liters || 0}L)`, date: f?.date || '', amount: f?.totalCost || 0, isExpense: true, sector: 'equipment' })),
+    ...(data?.dairyMilkLogs || []).map(m => ({ type: 'Milk Entry', title: `Milk Delivered (${m?.liters || 0}L)`, date: m?.date || '', amount: m?.totalAmount || 0, isExpense: false, sector: 'dairy' })),
+    ...(data?.poultrySales || []).map(s => ({ type: 'Poultry Sale', title: `Poultry Sale (${s?.category || 'Birds'})`, date: s?.date || '', amount: s?.totalIncome || 0, isExpense: false, sector: 'poultry' })),
+    ...(henTrades || []).filter(t => t?.type === 'Sale').map(t => ({ type: 'Hen Sale', title: `Hen Sale to ${t?.customerName || 'Customer'} (${t?.henCount || 0} hens)`, date: t?.date || '', amount: t?.totalAmount || 0, isExpense: false, sector: 'poultry' })),
+    ...(henTrades || []).filter(t => t?.type === 'Purchase').map(t => ({ type: 'Hen Purchase', title: `Hen Purchase from ${t?.customerName || 'Vendor'} (${t?.henCount || 0} hens)`, date: t?.date || '', amount: t?.totalAmount || 0, isExpense: true, sector: 'poultry' }))
+  ].filter(act => act && act.date).sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0)).slice(0, 6);
 
   return (
     <div className="space-y-8 pb-12 animate-fadeIn text-slate-900">
