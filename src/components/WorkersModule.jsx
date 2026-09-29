@@ -233,19 +233,19 @@ export default function WorkersModule() {
     let text = `👷 *${data?.farmInfo?.name || 'Daily Farm'} - Farm Owner to Laborer Wage Voucher*\n\n`;
     text += `👤 *Laborer/Group:* ${worker.name} (${worker.type || 'Individual'})\n💼 *Work Role:* ${worker.role}\n📞 *Phone:* ${worker.phone || 'N/A'}\n💵 *Wage Rate:* ${currency}${worker.dailyRate}/day\n\n`;
 
-    text += `📅 *FIELD WORK LOGGED & WAGES OWED (Total: ${currency}${totalEarned.toLocaleString('en-IN')}):*\n`;
+    text += `📅 *FIELD WORK LOGGED & WAGES OWED (Total: ${currency}${(totalEarned || 0).toLocaleString('en-IN')}):*\n`;
     if (attendanceLogs.length === 0) text += `  • No field work logs.\n`;
     attendanceLogs.forEach(att => {
-      text += `  • [${att.date}] ${att.status}${att.overtimeHours > 0 ? ` (+${att.overtimeHours}h OT)` : ''}: ${currency}${Number(att.wageEarned).toLocaleString('en-IN')}\n`;
+      text += `  • [${att.date}] ${att.status}${att.overtimeHours > 0 ? ` (+${att.overtimeHours}h OT)` : ''}: ${currency}${Number(att.wageEarned || 0).toLocaleString('en-IN')}\n`;
     });
 
-    text += `\n💳 *WAGE PAYOUTS & ADVANCES PAID BY OWNER (Total: ${currency}${totalPaid.toLocaleString('en-IN')}):*\n`;
+    text += `\n💳 *WAGE PAYOUTS & ADVANCES PAID BY OWNER (Total: ${currency}${(totalPaid || 0).toLocaleString('en-IN')}):*\n`;
     if (paymentLogs.length === 0) text += `  • No payout records.\n`;
     paymentLogs.forEach(pay => {
-      text += `  • [${pay.date}] ${pay.type} (${pay.notes || '-'}): ${currency}${Number(pay.amount).toLocaleString('en-IN')}\n`;
+      text += `  • [${pay.date}] ${pay.type} (${pay.notes || '-'}): ${currency}${Number(pay.amount || 0).toLocaleString('en-IN')}\n`;
     });
 
-    text += `\n💰 *NET OUTSTANDING WAGE OWED TO WORKER:* ${currency}${pendingBalance.toLocaleString('en-IN')}\n`;
+    text += `\n💰 *NET OUTSTANDING WAGE OWED TO WORKER:* ${currency}${(pendingBalance || 0).toLocaleString('en-IN')}\n`;
     text += `\nNote: This voucher details labor expenses paid by farm owner for field work.\nSent via Daily Farm Manager 3D.`;
 
     const encoded = encodeURIComponent(text);

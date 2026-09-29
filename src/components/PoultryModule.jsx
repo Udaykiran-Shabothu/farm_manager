@@ -370,11 +370,11 @@ export default function PoultryModule() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Total Feed & Health Cost:</span>
-                      <span className="text-amber-700 font-bold">{currency}{(totalFeedCost + totalHealthCost).toLocaleString('en-IN')}</span>
+                      <span className="text-amber-700 font-bold">{currency}${((totalFeedCost || 0) + (totalHealthCost || 0)).toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Total Sales Revenue:</span>
-                      <span className="text-emerald-700 font-bold">{currency}{totalIncome.toLocaleString('en-IN')}</span>
+                      <span className="text-emerald-700 font-bold">{currency}${(totalIncome || 0).toLocaleString('en-IN')}</span>
                     </div>
                     {totalEggs > 0 && (
                       <div className="flex justify-between">

@@ -741,21 +741,21 @@ export default function DairyModule() {
     text += `📊 *FINANCIAL BILL LEDGER:*
 • Total Days: ${totalDaysInCycle} Days (${daysTakenCount} Taken / ${daysNotTakenCount} Off)
 • Total Milk Delivered: ${totalLitersTaken} Liters
-• 🥛 Current Month Bill: ${currency}${totalMonthBill.toLocaleString('en-IN')}\n`;
+• 🥛 Current Month Bill: ${currency}${(totalMonthBill || 0).toLocaleString('en-IN')}\n`;
 
     if (priorDueAmount > 0) {
-      text += `• ⚠️ Last Month Pending Due (+): ${currency}${priorDueAmount.toLocaleString('en-IN')}\n`;
+      text += `• ⚠️ Last Month Pending Due (+): ${currency}${(priorDueAmount || 0).toLocaleString('en-IN')}\n`;
     }
     if (priorExtraPaidAdvance > 0) {
-      text += `• 🎁 Last Month Extra Paid Credit (-): ${currency}${priorExtraPaidAdvance.toLocaleString('en-IN')}\n`;
+      text += `• 🎁 Last Month Extra Paid Credit (-): ${currency}${(priorExtraPaidAdvance || 0).toLocaleString('en-IN')}\n`;
     }
 
-    text += `• 💰 Gross Total Payable: ${currency}${grossTotalPayable.toLocaleString('en-IN')}
-• 💳 Payments Paid: ${currency}${totalPaymentsReceived.toLocaleString('en-IN')}
-• ‼️ *NET REMAINING DUE TO PAY:* ${currency}${pendingBalanceDue.toLocaleString('en-IN')}\n\n`;
+    text += `• 💰 Gross Total Payable: ${currency}${(grossTotalPayable || 0).toLocaleString('en-IN')}
+• 💳 Payments Paid: ${currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}
+• ‼️ *NET REMAINING DUE TO PAY:* ${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}\n\n`;
 
     if (pendingBalanceDue > 0) {
-      text += `Kindly pay the remaining balance of ${currency}${pendingBalanceDue.toLocaleString('en-IN')} via Cash/UPI. Thank you!\n\n`;
+      text += `Kindly pay the remaining balance of ${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')} via Cash/UPI. Thank you!\n\n`;
     }
 
     text += `📋 *DAY-BY-DAY MILK LEDGER:*\n`;
@@ -977,7 +977,7 @@ export default function DairyModule() {
           </div>
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Net Dues</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-700">{currency}{totalPendingDuesSum.toLocaleString('en-IN')}</span>
+            <span className="text-xl sm:text-2xl font-black text-amber-700">{currency}${(totalPendingDuesSum || 0).toLocaleString('en-IN')}</span>
           </div>
         </div>
 
@@ -1094,26 +1094,26 @@ export default function DairyModule() {
 
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-medium">Current Month Bill:</span>
-                    <span className="text-slate-900 font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
+                    <span className="text-slate-900 font-bold">{currency}${(totalMonthBill || 0).toLocaleString('en-IN')}</span>
                   </div>
 
                   {priorDueAmount > 0 && (
                     <div className="flex justify-between text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
                       <span className="flex items-center gap-1 text-[11px]"><ArrowDownLeft className="w-3 h-3 text-rose-600" /> Last Month Pending Due:</span>
-                      <span>+ {currency}{priorDueAmount.toLocaleString('en-IN')}</span>
+                      <span>+ {currency}${(priorDueAmount || 0).toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   {priorExtraPaidAdvance > 0 && (
                     <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                       <span className="flex items-center gap-1 text-[11px]"><Sparkles className="w-3 h-3 text-emerald-600" /> Last Month Extra Paid Credit:</span>
-                      <span>- {currency}{priorExtraPaidAdvance.toLocaleString('en-IN')}</span>
+                      <span>- {currency}${(priorExtraPaidAdvance || 0).toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between">
                     <span className="text-slate-500 font-medium">Current Cycle Payments:</span>
-                    <span className="text-emerald-700 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
+                    <span className="text-emerald-700 font-bold">{currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}</span>
                   </div>
 
                   <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-xs">
@@ -1206,8 +1206,8 @@ export default function DairyModule() {
                 <div className="text-xs space-y-1 text-slate-600">
                   <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
                   <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
-                  <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
-                  <p><span className="text-slate-500 font-medium">Payments Paid:</span> <strong className="text-emerald-700">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
+                  <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}${(cycle.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
+                  <p><span className="text-slate-500 font-medium">Payments Paid:</span> <strong className="text-emerald-700">{currency}${(cycle.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
                 </div>
 
                 <div className="pt-2 border-t border-slate-100 space-y-2">
@@ -1293,10 +1293,10 @@ export default function DairyModule() {
                       <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
                       <p><span className="text-slate-500 font-medium">Days Taken vs Off:</span> <strong className="text-emerald-700">{cycle.daysTakenCount} Taken</strong> / <strong className="text-rose-700">{cycle.daysNotTakenCount} Off</strong></p>
                       <p><span className="text-slate-500 font-medium">Total Quantity:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
-                      <p><span className="text-slate-500 font-medium">Current Month Bill:</span> <strong className="text-slate-900">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Current Month Bill:</span> <strong className="text-slate-900">{currency}${(cycle.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
                       {cycle.priorDueAmount > 0 && <p className="text-rose-700"><span className="text-slate-500 font-medium">Last Month Due:</span> + {currency}{cycle.priorDueAmount}</p>}
                       {cycle.priorExtraPaidAdvance > 0 && <p className="text-emerald-700"><span className="text-slate-500 font-medium">Last Month Extra Paid:</span> - {currency}{cycle.priorExtraPaidAdvance}</p>}
-                      <p><span className="text-slate-500 font-medium">Amount Paid:</span> <strong className="text-emerald-700">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Amount Paid:</span> <strong className="text-emerald-700">{currency}${(cycle.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
                     </div>
 
                     <div className="pt-2 border-t border-slate-100 space-y-2">
@@ -1670,32 +1670,32 @@ export default function DairyModule() {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Current Month Bill Amount:</span>
-                  <span className="text-slate-900 font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-900 font-bold">{currency}${(totalMonthBill || 0).toLocaleString('en-IN')}</span>
                 </div>
                 {priorDueAmount > 0 && (
                   <div className="flex justify-between text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
                     <span>Last Month Pending Unpaid Due (+):</span>
-                    <span>+ {currency}{priorDueAmount.toLocaleString('en-IN')}</span>
+                    <span>+ {currency}${(priorDueAmount || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {priorExtraPaidAdvance > 0 && (
                   <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                     <span>Last Month Extra Paid Advance Credit (-):</span>
-                    <span>- {currency}{priorExtraPaidAdvance.toLocaleString('en-IN')}</span>
+                    <span>- {currency}${(priorExtraPaidAdvance || 0).toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-slate-900 font-bold border-t border-slate-200 pt-1">
                   <span>Gross Total Payable:</span>
-                  <span>{currency}{grossTotalPayable.toLocaleString('en-IN')}</span>
+                  <span>{currency}${(grossTotalPayable || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Payments Paid in Cycle:</span>
-                  <span className="text-emerald-700 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-700 font-bold">{currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between text-sm font-extrabold border-t border-slate-200 pt-2">
                   <span className="text-slate-700">Net Remaining Balance Due:</span>
                   <span className={pendingBalanceDue > 0 ? 'text-amber-700' : 'text-emerald-700'}>
-                    {currency}{pendingBalanceDue.toLocaleString('en-IN')}
+                    {currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>

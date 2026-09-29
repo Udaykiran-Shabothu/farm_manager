@@ -150,15 +150,15 @@ export default function EquipmentModule() {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Diesel/Fuel Cost:</span>
-                  <span className="text-amber-700 font-bold">{currency}{totalFuelCost.toLocaleString('en-IN')}</span>
+                  <span className="text-amber-700 font-bold">{currency}${(totalFuelCost || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Service & Repairs:</span>
-                  <span className="text-rose-700 font-bold">{currency}{totalMaintCost.toLocaleString('en-IN')}</span>
+                  <span className="text-rose-700 font-bold">{currency}${(totalMaintCost || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
                   <span className="text-slate-700">Rental Income Earned:</span>
-                  <span className="text-emerald-700 font-extrabold">{currency}{totalRentalEarned.toLocaleString('en-IN')}</span>
+                  <span className="text-emerald-700 font-extrabold">{currency}${(totalRentalEarned || 0).toLocaleString('en-IN')}</span>
                 </div>
               </div>
             </div>
