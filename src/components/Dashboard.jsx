@@ -638,7 +638,7 @@ export default function Dashboard({ setActiveTab }) {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className={`font-mono font-bold ${act.isExpense ? 'text-rose-700' : 'text-emerald-700'}`}>
-                      {act.isExpense ? '-' : '+'}{currency}{Number(act.amount).toLocaleString('en-IN')}
+                      {act.isExpense ? '-' : '+'}{currency}{Number(act.amount || 0).toLocaleString('en-IN')}
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-400" />
                   </div>

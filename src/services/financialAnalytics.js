@@ -280,9 +280,9 @@ export const downloadMasterFinancialCSV = (summaryData, farmInfo = {}) => {
   csvContent += `Farm Name,${farmName}\nPeriod / Date Range,${label} (${startStr} to ${endStr})\nGenerated On,${new Date().toISOString().split('T')[0]}\n\n`;
 
   csvContent += `1. EXECUTIVE FINANCIAL SUMMARY\nMetric,Amount (${currency})\n`;
-  csvContent += `Gross Total Farm Revenue / Income,${currency}${totalIncome.toLocaleString('en-IN')}\n`;
-  csvContent += `Gross Total Farm Expenses,${currency}${totalExpenses.toLocaleString('en-IN')}\n`;
-  csvContent += `Net Farm Profit / Loss,${currency}${netProfit.toLocaleString('en-IN')}\n`;
+  csvContent += `Gross Total Farm Revenue / Income,${currency}${(totalIncome || 0).toLocaleString('en-IN')}\n`;
+  csvContent += `Gross Total Farm Expenses,${currency}${(totalExpenses || 0).toLocaleString('en-IN')}\n`;
+  csvContent += `Net Farm Profit / Loss,${currency}${(netProfit || 0).toLocaleString('en-IN')}\n`;
   csvContent += `Net Profit Margin %,${profitMarginPercent}%\n`;
   csvContent += `Return on Investment (ROI) %,${roiPercent}%\n\n`;
 

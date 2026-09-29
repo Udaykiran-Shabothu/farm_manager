@@ -548,7 +548,7 @@ export default function CropsModule() {
                         )}
                         {exp.description && <div className="text-[10px] text-slate-500 mt-0.5">{exp.description}</div>}
                       </td>
-                      <td className="p-3 font-bold text-rose-700 whitespace-nowrap">{currency}{exp.amount.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-bold text-rose-700 whitespace-nowrap">{currency}{Number(exp.amount || 0).toLocaleString('en-IN')}</td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
                           <button 
@@ -605,7 +605,7 @@ export default function CropsModule() {
                         </span>
                         <div className="text-[10px] text-slate-500 mt-0.5">{inc.buyer} ({inc.quantityQuintals} Qtl @ {currency}{inc.ratePerQuintal})</div>
                       </td>
-                      <td className="p-3 font-bold text-emerald-700 whitespace-nowrap">{currency}{inc.totalIncome.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-bold text-emerald-700 whitespace-nowrap">{currency}{Number(inc.totalIncome || 0).toLocaleString('en-IN')}</td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
                           <button 
@@ -709,7 +709,7 @@ export default function CropsModule() {
                             ) : null}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono text-rose-400 font-bold">{currency}{exp.amount.toLocaleString('en-IN')}</span>
+                            <span className="font-mono text-rose-400 font-bold">{currency}{Number(exp.amount || 0).toLocaleString('en-IN')}</span>
                             <button 
                               onClick={() => { setPreviewReportCrop(null); handleEditExpense(exp); }} 
                               className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition-colors"
@@ -730,7 +730,7 @@ export default function CropsModule() {
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center justify-between">
                   <span>2. Itemized Harvest Sales & Revenues</span>
-                  <span>Total: {currency}{totalInc.toLocaleString('en-IN')}</span>
+                  <span>Total: {currency}{(totalInc || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden text-xs">
                   {cropIncomes.length > 0 ? (
@@ -742,7 +742,7 @@ export default function CropsModule() {
                             <span className="text-[10px] text-slate-400 ml-2">({inc.buyer || 'Buyer'})</span>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="font-mono text-emerald-400 font-bold">{currency}{inc.totalIncome.toLocaleString('en-IN')}</span>
+                            <span className="font-mono text-emerald-400 font-bold">{currency}{Number(inc.totalIncome || 0).toLocaleString('en-IN')}</span>
                             <button 
                               onClick={() => { setPreviewReportCrop(null); handleEditIncome(inc); }} 
                               className="px-2 py-0.5 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 text-[10px] font-bold transition-colors"

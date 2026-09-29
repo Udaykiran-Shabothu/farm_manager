@@ -411,16 +411,16 @@ export default function WorkersModule() {
               <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 flex items-center gap-1 font-medium"><ArrowDownRight className="w-3.5 h-3.5 text-amber-600" /> Total Wages Owed by Owner:</span>
-                  <span className="text-amber-800 font-bold">{currency}{totalWagesEarned.toLocaleString('en-IN')}</span>
+                  <span className="text-amber-800 font-bold">{currency}{(totalWagesEarned || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Total Payouts Paid by Owner:</span>
-                  <span className="text-cyan-800 font-bold">{currency}{totalPaid.toLocaleString('en-IN')}</span>
+                  <span className="text-cyan-800 font-bold">{currency}{(totalPaid || 0).toLocaleString('en-IN')}</span>
                 </div>
                 <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-extrabold">
                   <span className="text-slate-700">Net Outstanding Wage Owed:</span>
                   <span className={pendingBalance > 0 ? 'text-rose-700' : 'text-slate-600'}>
-                    {currency}{pendingBalance.toLocaleString('en-IN')}
+                    {currency}{(pendingBalance || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
 
@@ -604,7 +604,7 @@ export default function WorkersModule() {
                 <div>
                   <span className="text-slate-500 block">Net Wage Owed</span>
                   <span className={`font-bold ${pendingBalance > 0 ? 'text-rose-700' : 'text-slate-700'}`}>
-                    {currency}{pendingBalance.toLocaleString('en-IN')}
+                    {currency}{(pendingBalance || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
               </div>
@@ -613,7 +613,7 @@ export default function WorkersModule() {
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 flex justify-between">
                   <span>1. Field Work Logged & Daily Wages Owed by Owner</span>
-                  <span>Total Owed: {currency}{totalEarned.toLocaleString('en-IN')}</span>
+                  <span>Total Owed: {currency}{(totalEarned || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
                   {attendanceLogs.length > 0 ? (
@@ -638,7 +638,7 @@ export default function WorkersModule() {
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex justify-between">
                   <span>2. Wage Payouts & Advance Payments Made by Owner</span>
-                  <span>Total Paid: {currency}{totalPaid.toLocaleString('en-IN')}</span>
+                  <span>Total Paid: {currency}{(totalPaid || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
                   {paymentLogs.length > 0 ? (

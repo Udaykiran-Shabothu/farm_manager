@@ -761,7 +761,7 @@ export default function DairyModule() {
     text += `📋 *DAY-BY-DAY MILK LEDGER:*\n`;
     dayList.forEach(d => {
       if (d.status === 'Taken') {
-        text += `  • [${d.date}] ✅ Taken: ${d.totalLiters}L (${currency}${d.totalAmount.toLocaleString('en-IN')})\n`;
+        text += `  • [${d.date}] ✅ Taken: ${d.totalLiters}L (${currency}${Number(d.totalAmount || 0).toLocaleString('en-IN')})\n`;
       } else {
         text += `  • [${d.date}] ❌ NOT Taken (Off Day)\n`;
       }

@@ -49,19 +49,19 @@ export const generateDairyBillPDF = (summary, farmInfo = {}) => {
 
   // Financial Ledger Summary Table
   const ledgerRows = [
-    ['Current Month Milk Delivered', `${totalLitersTaken} Liters`, `${currency}${totalMonthBill.toLocaleString('en-IN')}`]
+    ['Current Month Milk Delivered', `${totalLitersTaken || 0} Liters`, `${currency}${(totalMonthBill || 0).toLocaleString('en-IN')}`]
   ];
 
   if (priorDueAmount > 0) {
-    ledgerRows.push(['Last Month Unpaid Pending Due (+)', '-', `+ ${currency}${priorDueAmount.toLocaleString('en-IN')}`]);
+    ledgerRows.push(['Last Month Unpaid Pending Due (+)', '-', `+ ${currency}${(priorDueAmount || 0).toLocaleString('en-IN')}`]);
   }
   if (priorExtraPaidAdvance > 0) {
-    ledgerRows.push(['Last Month Extra Paid Advance Credit (-)', '-', `- ${currency}${priorExtraPaidAdvance.toLocaleString('en-IN')}`]);
+    ledgerRows.push(['Last Month Extra Paid Advance Credit (-)', '-', `- ${currency}${(priorExtraPaidAdvance || 0).toLocaleString('en-IN')}`]);
   }
 
-  ledgerRows.push(['Gross Total Payable Amount', '-', `${currency}${grossTotalPayable.toLocaleString('en-IN')}`]);
-  ledgerRows.push(['Payments Paid in Current Cycle', '-', `${currency}${totalPaymentsReceived.toLocaleString('en-IN')}`]);
-  ledgerRows.push(['NET REMAINING BALANCE DUE', '-', `${currency}${pendingBalanceDue.toLocaleString('en-IN')}`]);
+  ledgerRows.push(['Gross Total Payable Amount', '-', `${currency}${(grossTotalPayable || 0).toLocaleString('en-IN')}`]);
+  ledgerRows.push(['Payments Paid in Current Cycle', '-', `${currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}`]);
+  ledgerRows.push(['NET REMAINING BALANCE DUE', '-', `${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}`]);
 
   autoTable(doc, {
     startY: 74,
@@ -157,14 +157,14 @@ export const generateWorkerWagePDF = (worker, attendanceLogs, paymentLogs, farmI
   doc.setFont('helvetica', 'bold');
   doc.text(`Daily Rate: ${currency}${worker.dailyRate}/day`, 120, 52);
   doc.setTextColor(pendingBalance > 0 ? 225 : 15, pendingBalance > 0 ? 29 : 23, pendingBalance > 0 ? 72 : 42);
-  doc.text(`Net Pending Wage Owed: ${currency}${pendingBalance.toLocaleString('en-IN')}`, 120, 60);
+  doc.text(`Net Pending Wage Owed: ${currency}${(pendingBalance || 0).toLocaleString('en-IN')}`, 120, 60);
 
   // Table 1: Field Work Logged
   const attRows = attendanceLogs.map(a => [
     a.date,
     a.status,
     a.overtimeHours > 0 ? `+${a.overtimeHours} hrs` : '-',
-    `${currency}${a.wageEarned.toLocaleString('en-IN')}`
+    `${currency}${Number(a.wageEarned || 0).toLocaleString('en-IN')}`
   ]);
 
   doc.setTextColor(15, 23, 42);
@@ -187,7 +187,7 @@ export const generateWorkerWagePDF = (worker, attendanceLogs, paymentLogs, farmI
     p.date,
     p.type || 'Salary Payout',
     p.notes || '-',
-    `${currency}${p.amount.toLocaleString('en-IN')}`
+    `${currency}${Number(p.amount || 0).toLocaleString('en-IN')}`
   ]);
 
   doc.setFont('helvetica', 'bold');
@@ -210,10 +210,10 @@ export const generateWorkerWagePDF = (worker, attendanceLogs, paymentLogs, farmI
   doc.roundedRect(14, finalY, 182, 20, 3, 3, 'F');
   doc.setFontSize(9);
   doc.setTextColor(15, 23, 42);
-  doc.text(`Total Wages Accrued: ${currency}${totalEarned.toLocaleString('en-IN')}`, 18, finalY + 8);
-  doc.text(`Total Payouts Paid: ${currency}${totalPaid.toLocaleString('en-IN')}`, 18, finalY + 15);
+  doc.text(`Total Wages Accrued: ${currency}${(totalEarned || 0).toLocaleString('en-IN')}`, 18, finalY + 8);
+  doc.text(`Total Payouts Paid: ${currency}${(totalPaid || 0).toLocaleString('en-IN')}`, 18, finalY + 15);
   doc.setFont('helvetica', 'bold');
-  doc.text(`NET REMAINING WAGE OWED: ${currency}${pendingBalance.toLocaleString('en-IN')}`, 120, finalY + 12);
+  doc.text(`NET REMAINING WAGE OWED: ${currency}${(pendingBalance || 0).toLocaleString('en-IN')}`, 120, finalY + 12);
 
   doc.save(`${worker.name.replace(/\s+/g, '_')}_Wage_Voucher.pdf`);
 };
@@ -259,9 +259,9 @@ export const generateCropReportPDF = (crop, cropExpenses, cropIncomes, farmInfo 
   doc.text(`Field Location: ${crop.field} (${crop.areaAcres} Acres)`, 18, 60);
 
   doc.setFont('helvetica', 'bold');
-  doc.text(`Revenue: ${currency}${totalInc.toLocaleString('en-IN')}`, 120, 52);
+  doc.text(`Revenue: ${currency}${(totalInc || 0).toLocaleString('en-IN')}`, 120, 52);
   doc.setTextColor(netProfit >= 0 ? 16 : 225, netProfit >= 0 ? 185 : 29, netProfit >= 0 ? 129 : 72);
-  doc.text(`Net Profit: ${currency}${netProfit.toLocaleString('en-IN')}`, 120, 60);
+  doc.text(`Net Profit: ${currency}${(netProfit || 0).toLocaleString('en-IN')}`, 120, 60);
 
   // Table 1: Expenditures
   const expRows = cropExpenses.map(e => [
@@ -269,7 +269,7 @@ export const generateCropReportPDF = (crop, cropExpenses, cropIncomes, farmInfo 
     e.category,
     e.description || '-',
     e.quantityCount && e.unitCost ? `${e.quantityCount} (${currency}${e.unitCost})` : '-',
-    `${currency}${e.amount.toLocaleString('en-IN')}`
+    `${currency}${Number(e.amount || 0).toLocaleString('en-IN')}`
   ]);
 
   doc.setTextColor(15, 23, 42);
@@ -293,7 +293,7 @@ export const generateCropReportPDF = (crop, cropExpenses, cropIncomes, farmInfo 
     i.incomeType || 'Harvest Sale',
     i.buyer || '-',
     `${i.quantityQuintals} Quintals`,
-    `${currency}${i.totalIncome.toLocaleString('en-IN')}`
+    `${currency}${Number(i.totalIncome || 0).toLocaleString('en-IN')}`
   ]);
 
   doc.setFont('helvetica', 'bold');
@@ -345,25 +345,25 @@ export const generateMasterFinancialPDF = (summaryData, farmInfo = {}) => {
   doc.setTextColor(15, 23, 42);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text(`Gross Total Revenue: ${currency}${totalIncome.toLocaleString('en-IN')}`, 18, 56);
-  doc.text(`Gross Total Expenses: ${currency}${totalExpenses.toLocaleString('en-IN')}`, 18, 65);
+  doc.text(`Gross Total Revenue: ${currency}${(totalIncome || 0).toLocaleString('en-IN')}`, 18, 56);
+  doc.text(`Gross Total Expenses: ${currency}${(totalExpenses || 0).toLocaleString('en-IN')}`, 18, 65);
 
   doc.setTextColor(netProfit >= 0 ? 22 : 225, netProfit >= 0 ? 163 : 29, netProfit >= 0 ? 74 : 72);
   doc.setFontSize(12);
-  doc.text(`NET FARM PROFIT: ${currency}${netProfit.toLocaleString('en-IN')}`, 110, 56);
+  doc.text(`NET FARM PROFIT: ${currency}${(netProfit || 0).toLocaleString('en-IN')}`, 110, 56);
   
   doc.setFontSize(9);
   doc.setTextColor(71, 85, 105);
-  doc.text(`Profit Margin: ${profitMarginPercent}%  |  ROI: ${roiPercent}%`, 110, 65);
+  doc.text(`Profit Margin: ${profitMarginPercent || 0}%  |  ROI: ${roiPercent || 0}%`, 110, 65);
 
   // Sector Breakdown Table
   const sectorRows = [
-    ['Crops & Fields Enterprise', `${currency}${crops.income.toLocaleString('en-IN')}`, `${currency}${crops.expense.toLocaleString('en-IN')}`, `${currency}${crops.profit.toLocaleString('en-IN')}`],
-    ['Workers & Field Labor', `${currency}0`, `${currency}${workers.expense.toLocaleString('en-IN')}`, `-${currency}${workers.expense.toLocaleString('en-IN')}`],
-    ['Tractors & Equipment Hired', `${currency}${equipment.income.toLocaleString('en-IN')}`, `${currency}${equipment.expense.toLocaleString('en-IN')}`, `${currency}${equipment.profit.toLocaleString('en-IN')}`],
-    ['Dairy Farm & Milk Sales', `${currency}${dairy.income.toLocaleString('en-IN')}`, `${currency}${dairy.expense.toLocaleString('en-IN')}`, `${currency}${dairy.profit.toLocaleString('en-IN')}`],
-    ['Poultry & Hen Trading', `${currency}${poultry.income.toLocaleString('en-IN')}`, `${currency}${poultry.expense.toLocaleString('en-IN')}`, `${currency}${poultry.profit.toLocaleString('en-IN')}`],
-    ['TOTAL CONSOLIDATED P&L', `${currency}${totalIncome.toLocaleString('en-IN')}`, `${currency}${totalExpenses.toLocaleString('en-IN')}`, `${currency}${netProfit.toLocaleString('en-IN')}`]
+    ['Crops & Fields Enterprise', `${currency}${(crops?.income || 0).toLocaleString('en-IN')}`, `${currency}${(crops?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(crops?.profit || 0).toLocaleString('en-IN')}`],
+    ['Workers & Field Labor', `${currency}0`, `${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`, `-${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`],
+    ['Tractors & Equipment Hired', `${currency}${(equipment?.income || 0).toLocaleString('en-IN')}`, `${currency}${(equipment?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(equipment?.profit || 0).toLocaleString('en-IN')}`],
+    ['Dairy Farm & Milk Sales', `${currency}${(dairy?.income || 0).toLocaleString('en-IN')}`, `${currency}${(dairy?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(dairy?.profit || 0).toLocaleString('en-IN')}`],
+    ['Poultry & Hen Trading', `${currency}${(poultry?.income || 0).toLocaleString('en-IN')}`, `${currency}${(poultry?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(poultry?.profit || 0).toLocaleString('en-IN')}`],
+    ['TOTAL CONSOLIDATED P&L', `${currency}${(totalIncome || 0).toLocaleString('en-IN')}`, `${currency}${(totalExpenses || 0).toLocaleString('en-IN')}`, `${currency}${(netProfit || 0).toLocaleString('en-IN')}`]
   ];
 
   doc.setTextColor(15, 23, 42);
@@ -387,15 +387,15 @@ export const generateMasterFinancialPDF = (summaryData, farmInfo = {}) => {
 
   // Section 2: Detailed Line-Item Metrics
   const itemRows = [
-    ['Crops Self-Work Value', `${currency}${crops.selfWork.toLocaleString('en-IN')}`, 'Valuation of self-labor on crop fields'],
-    ['Worker Labor Wages Accrued', `${currency}${workers.accrued.toLocaleString('en-IN')}`, 'Total wage liabilities owed to laborers'],
-    ['Worker Cash Payouts Paid', `${currency}${workers.paid.toLocaleString('en-IN')}`, 'Actual cash payouts disbursed'],
-    ['Equipment Fuel Expense', `${currency}${equipment.fuel.toLocaleString('en-IN')}`, 'Diesel fuel cost for tractors & pumps'],
-    ['Equipment Service & Repairs', `${currency}${equipment.maint.toLocaleString('en-IN')}`, 'Mechanic & workshop maintenance cost'],
-    ['Dairy Milk Volume Delivered', `${dairy.liters.toLocaleString('en-IN')} Liters`, 'Total morning & evening milk yield'],
-    ['Dairy Payments Collected', `${currency}${dairy.cashReceived.toLocaleString('en-IN')}`, 'Actual customer payment receipts'],
-    ['Poultry Feed Expense', `${currency}${poultry.feed.toLocaleString('en-IN')}`, 'Feed bags purchase cost'],
-    ['Poultry Health & Doctor Fee', `${currency}${poultry.health.toLocaleString('en-IN')}`, 'Vaccinations and vet doctor fees']
+    ['Crops Self-Work Value', `${currency}${(crops?.selfWork || 0).toLocaleString('en-IN')}`, 'Valuation of self-labor on crop fields'],
+    ['Worker Labor Wages Accrued', `${currency}${(workers?.accrued || 0).toLocaleString('en-IN')}`, 'Total wage liabilities owed to laborers'],
+    ['Worker Cash Payouts Paid', `${currency}${(workers?.paid || 0).toLocaleString('en-IN')}`, 'Actual cash payouts disbursed'],
+    ['Equipment Fuel Expense', `${currency}${(equipment?.fuel || 0).toLocaleString('en-IN')}`, 'Diesel fuel cost for tractors & pumps'],
+    ['Equipment Service & Repairs', `${currency}${(equipment?.maint || 0).toLocaleString('en-IN')}`, 'Mechanic & workshop maintenance cost'],
+    ['Dairy Milk Volume Delivered', `${(dairy?.liters || 0).toLocaleString('en-IN')} Liters`, 'Total morning & evening milk yield'],
+    ['Dairy Payments Collected', `${currency}${(dairy?.cashReceived || 0).toLocaleString('en-IN')}`, 'Actual customer payment receipts'],
+    ['Poultry Feed Expense', `${currency}${(poultry?.feed || 0).toLocaleString('en-IN')}`, 'Feed bags purchase cost'],
+    ['Poultry Health & Doctor Fee', `${currency}${(poultry?.health || 0).toLocaleString('en-IN')}`, 'Vaccinations and vet doctor fees']
   ];
 
   doc.setFont('helvetica', 'bold');

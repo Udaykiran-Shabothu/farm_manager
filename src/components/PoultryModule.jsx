@@ -481,18 +481,18 @@ export default function PoultryModule() {
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
               <TrendingUp className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
               <p className="text-[10px] text-slate-500 uppercase font-bold">Sales Income</p>
-              <p className="text-lg font-black text-emerald-700">{currency}{tradeSummary.totalSalesIncome.toLocaleString('en-IN')}</p>
+              <p className="text-lg font-black text-emerald-700">{currency}{(tradeSummary.totalSalesIncome || 0).toLocaleString('en-IN')}</p>
             </div>
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
               <TrendingDown className="w-5 h-5 text-rose-600 mx-auto mb-1" />
               <p className="text-[10px] text-slate-500 uppercase font-bold">Purchase Cost</p>
-              <p className="text-lg font-black text-rose-700">{currency}{tradeSummary.totalPurchaseExpense.toLocaleString('en-IN')}</p>
+              <p className="text-lg font-black text-rose-700">{currency}{(tradeSummary.totalPurchaseExpense || 0).toLocaleString('en-IN')}</p>
             </div>
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
               <DollarSign className="w-5 h-5 text-amber-600 mx-auto mb-1" />
               <p className="text-[10px] text-slate-500 uppercase font-bold">Net Profit</p>
               <p className={`text-lg font-black ${tradeSummary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                {tradeSummary.netProfit >= 0 ? '+' : ''}{currency}{tradeSummary.netProfit.toLocaleString('en-IN')}
+                {tradeSummary.netProfit >= 0 ? '+' : ''}{currency}{(tradeSummary.netProfit || 0).toLocaleString('en-IN')}
               </p>
             </div>
             <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
@@ -691,19 +691,19 @@ export default function PoultryModule() {
                       {info.salesAmount > 0 && (
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-500 font-medium">Received Income ({info.salesHens ? `${info.salesHens} hens` : 'Items'}):</span>
-                          <span className="text-emerald-700 font-bold">+{currency}{info.salesAmount.toLocaleString('en-IN')}</span>
+                          <span className="text-emerald-700 font-bold">+{currency}{(info.salesAmount || 0).toLocaleString('en-IN')}</span>
                         </div>
                       )}
                       {info.purchaseAmount > 0 && (
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-500 font-medium">Paid Expense ({info.purchaseHens ? `${info.purchaseHens} hens` : 'Items'}):</span>
-                          <span className="text-rose-700 font-bold">-{currency}{info.purchaseAmount.toLocaleString('en-IN')}</span>
+                          <span className="text-rose-700 font-bold">-{currency}{(info.purchaseAmount || 0).toLocaleString('en-IN')}</span>
                         </div>
                       )}
                       <div className="flex justify-between text-xs pt-1 border-t border-slate-200">
                         <span className="text-slate-700 font-bold">Net:</span>
-                        <span className={`font-extrabold ${(info.salesAmount - info.purchaseAmount) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                          {(info.salesAmount - info.purchaseAmount) >= 0 ? '+' : ''}{currency}{(info.salesAmount - info.purchaseAmount).toLocaleString('en-IN')}
+                        <span className={`font-extrabold ${((info.salesAmount || 0) - (info.purchaseAmount || 0)) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                          {((info.salesAmount || 0) - (info.purchaseAmount || 0)) >= 0 ? '+' : ''}{currency}{((info.salesAmount || 0) - (info.purchaseAmount || 0)).toLocaleString('en-IN')}
                         </span>
                       </div>
                     </div>
