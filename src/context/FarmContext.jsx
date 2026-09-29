@@ -83,6 +83,8 @@ const ensureDataIntegrity = (obj) => {
   ARRAY_KEYS.forEach(key => {
     if (!Array.isArray(result[key])) {
       result[key] = [];
+    } else {
+      result[key] = result[key].filter(item => item && typeof item === 'object');
     }
   });
 
