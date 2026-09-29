@@ -325,15 +325,15 @@ export default function CropsModule() {
     <div className="space-y-8 pb-12">
       
       {/* Header Banner */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 glass-panel-glow rounded-3xl border border-emerald-500/30 card-3d">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 bg-white rounded-3xl border border-slate-200 card-3d shadow-sm">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-2.5 rounded-xl bg-emerald-500/20 text-emerald-400">
+            <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
               <Sprout className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white">Crops & Field Financial Hub</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">Crops & Field Financial Hub</h2>
           </div>
-          <p className="text-xs text-slate-400 mt-1 truncate">Track crop field expenditures, harvest revenues, unit costs, and net farm profits.</p>
+          <p className="text-xs text-slate-500 mt-1 truncate">Track crop field expenditures, harvest revenues, unit costs, and net farm profits.</p>
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -343,7 +343,7 @@ export default function CropsModule() {
               setCropForm({ name: '', field: '', areaAcres: '', season: 'Kharif 2026', status: 'Growing' });
               setShowCropModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
           >
             <Plus className="w-4 h-4" /> Add New Crop
           </button>
@@ -353,7 +353,7 @@ export default function CropsModule() {
               setEditingExpense(null);
               setShowExpenseModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 hover:bg-rose-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100 text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <ArrowDownRight className="w-4 h-4" /> Log Crop Expense
           </button>
@@ -363,7 +363,7 @@ export default function CropsModule() {
               setEditingExpense(null);
               setShowExpenseModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <Hammer className="w-4 h-4" /> Log Self Work
           </button>
@@ -373,7 +373,7 @@ export default function CropsModule() {
               setEditingIncome(null);
               setShowIncomeModal(true);
             }}
-            className="px-3.5 py-2 rounded-xl bg-teal-500/20 border border-teal-500/40 text-teal-300 hover:bg-teal-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+            className="px-3.5 py-2 rounded-xl bg-teal-50 border border-teal-200 text-teal-800 hover:bg-teal-100 text-xs font-bold flex items-center gap-1.5 transition-all"
           >
             <ArrowUpRight className="w-4 h-4" /> Log Crop Income
           </button>
@@ -405,26 +405,26 @@ export default function CropsModule() {
           const isExpanded = expandedCropId === crop.id;
 
           return (
-            <div key={crop.id} className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d flex flex-col justify-between space-y-4">
+            <div key={crop.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
               <div>
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                       {crop.season}
                     </span>
-                    <h3 className="text-xl font-bold text-white mt-1.5">{crop.name}</h3>
+                    <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{crop.name}</h3>
                   </div>
                   <div className="flex items-center space-x-1">
                     <button 
                       onClick={() => handleEditCrop(crop)}
-                      className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-slate-800 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
                       title="Edit Crop Details"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button 
                       onClick={() => deleteRecord('crops', crop.id)}
-                      className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                       title="Delete Crop"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -432,39 +432,39 @@ export default function CropsModule() {
                   </div>
                 </div>
 
-                <div className="mt-3 space-y-1.5 text-xs text-slate-300">
+                <div className="mt-3 space-y-1.5 text-xs text-slate-600">
                   <p className="flex items-center gap-1.5">
-                    <MapPin className="w-3.5 h-3.5 text-emerald-400" />
-                    <span>{crop.field}</span> ({crop.areaAcres} Acres)
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                    <span className="font-semibold">{crop.field}</span> ({crop.areaAcres} Acres)
                   </p>
                   <p className="flex items-center gap-1.5">
-                    <Tag className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>Status:</span> <span className="text-white font-medium">{crop.status}</span>
+                    <Tag className="w-3.5 h-3.5 text-cyan-600" />
+                    <span>Status:</span> <span className="text-slate-900 font-bold">{crop.status}</span>
                   </p>
                 </div>
               </div>
 
               {/* Crop P&L Summary Box */}
-              <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Total Expenditures:</span>
-                  <span className="text-rose-400 font-semibold">{currency}{totalExp.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-500 font-medium">Total Expenditures:</span>
+                  <span className="text-rose-700 font-bold">{currency}{totalExp.toLocaleString('en-IN')}</span>
                 </div>
                 {selfWorkTotal > 0 && (
                   <div className="flex justify-between text-xs items-center">
-                    <span className="flex items-center gap-1 text-amber-300">
-                      <Hammer className="w-3 h-3" /> Self Work Amount:
+                    <span className="flex items-center gap-1 text-amber-800 font-semibold">
+                      <Hammer className="w-3 h-3 text-amber-600" /> Self Work Amount:
                     </span>
-                    <span className="text-amber-300 font-semibold">{currency}{selfWorkTotal.toLocaleString('en-IN')}</span>
+                    <span className="text-amber-800 font-bold">{currency}{selfWorkTotal.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 <div className="flex justify-between text-xs">
-                  <span className="text-slate-400">Total Harvest Revenues:</span>
-                  <span className="text-emerald-400 font-semibold">{currency}{totalInc.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-500 font-medium">Total Harvest Revenues:</span>
+                  <span className="text-emerald-700 font-bold">{currency}{totalInc.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="pt-2 border-t border-slate-800 flex justify-between text-sm font-bold">
-                  <span className="text-slate-300">Net Return:</span>
-                  <span className={netProfit >= 0 ? 'text-emerald-400' : 'text-amber-400'}>
+                <div className="pt-2 border-t border-slate-200 flex justify-between text-sm font-extrabold">
+                  <span className="text-slate-700">Net Return:</span>
+                  <span className={netProfit >= 0 ? 'text-emerald-700' : 'text-amber-700'}>
                     {currency}{netProfit.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -474,21 +474,21 @@ export default function CropsModule() {
                   <div className="pt-2">
                     <button
                       onClick={() => setExpandedCropId(isExpanded ? null : crop.id)}
-                      className="w-full flex items-center justify-between text-[11px] text-slate-400 hover:text-slate-200 transition-colors py-1"
+                      className="w-full flex items-center justify-between text-[11px] text-slate-600 hover:text-slate-900 transition-colors py-1 font-semibold"
                     >
                       <span>{isExpanded ? 'Hide Category Breakdown' : 'View Expense Breakdown'}</span>
                       {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
                     </button>
 
                     {isExpanded && (
-                      <div className="mt-2 space-y-1 border-t border-slate-800/80 pt-2 text-[11px]">
+                      <div className="mt-2 space-y-1 border-t border-slate-200 pt-2 text-[11px]">
                         {Object.entries(expCategoryMap).map(([cat, amt]) => (
-                          <div key={cat} className={`flex justify-between ${cat === 'Self Work' ? 'text-amber-300 font-semibold' : 'text-slate-300'}`}>
+                          <div key={cat} className={`flex justify-between ${cat === 'Self Work' ? 'text-amber-800 font-bold' : 'text-slate-700'}`}>
                             <span className="truncate pr-2 flex items-center gap-1">
                               {cat === 'Self Work' && <Hammer className="w-3 h-3" />}
                               {cat}
                             </span>
-                            <span className={`font-mono ${cat === 'Self Work' ? 'text-amber-300' : 'text-rose-300'}`}>{currency}{amt.toLocaleString('en-IN')}</span>
+                            <span className={`font-mono font-bold ${cat === 'Self Work' ? 'text-amber-800' : 'text-rose-700'}`}>{currency}{amt.toLocaleString('en-IN')}</span>
                           </div>
                         ))}
                       </div>
@@ -499,7 +499,7 @@ export default function CropsModule() {
                 {/* Report Download & Share Pop-up Trigger Button */}
                 <button
                   onClick={() => setPreviewReportCrop(crop)}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-500/10"
+                  className="w-full mt-2 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 transition-all shadow-sm"
                 >
                   <FileSpreadsheet className="w-4 h-4" /> Download / Share Report
                 </button>
@@ -513,14 +513,14 @@ export default function CropsModule() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Field Expenditures Ledger Table with Detailed Unit Breakdown */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <ArrowDownRight className="w-5 h-5 text-rose-400" />
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+          <h3 className="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+            <ArrowDownRight className="w-5 h-5 text-rose-600" />
             Field Expenditures Ledger
           </h3>
           <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-100 sticky top-0 z-10 uppercase text-[10px] text-slate-600 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Date</th>
                   <th className="p-3">Crop</th>
@@ -529,38 +529,38 @@ export default function CropsModule() {
                   <th className="p-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-200">
                 {data.cropExpenses.map((exp) => {
                   const crop = data.crops.find(c => c.id === exp.cropId);
                   const hasUnitDetails = exp.quantityCount && exp.unitCost;
                   return (
-                    <tr key={exp.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 whitespace-nowrap">{exp.date}</td>
-                      <td className="p-3 font-medium text-white whitespace-nowrap">{crop ? crop.name : 'General'}</td>
+                    <tr key={exp.id} className="hover:bg-slate-50">
+                      <td className="p-3 whitespace-nowrap font-medium text-slate-600">{exp.date}</td>
+                      <td className="p-3 font-bold text-slate-900 whitespace-nowrap">{crop ? crop.name : 'General'}</td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-200 font-bold">
                           {exp.category}
                         </span>
                         {hasUnitDetails && (
-                          <div className="text-[11px] text-amber-300/90 font-medium mt-1">
+                          <div className="text-[11px] text-amber-800 font-semibold mt-1">
                             {exp.quantityCount} {exp.unitType || 'Units'} @ {currency}{Number(exp.unitCost).toLocaleString('en-IN')}/unit
                           </div>
                         )}
-                        {exp.description && <div className="text-[10px] text-slate-400 mt-0.5">{exp.description}</div>}
+                        {exp.description && <div className="text-[10px] text-slate-500 mt-0.5">{exp.description}</div>}
                       </td>
-                      <td className="p-3 font-bold text-rose-400 whitespace-nowrap">{currency}{exp.amount.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-bold text-rose-700 whitespace-nowrap">{currency}{exp.amount.toLocaleString('en-IN')}</td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
                           <button 
                             onClick={() => handleEditExpense(exp)} 
-                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                            className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors"
                             title="Edit Expenditure"
                           >
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
                             onClick={() => deleteRecord('cropExpenses', exp.id)} 
-                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -576,14 +576,14 @@ export default function CropsModule() {
         </div>
 
         {/* Crop Sales Income Table */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <ArrowUpRight className="w-5 h-5 text-emerald-400" />
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+          <h3 className="text-lg font-extrabold text-slate-900 mb-4 flex items-center gap-2">
+            <ArrowUpRight className="w-5 h-5 text-emerald-600" />
             Crop Incomes & Revenues Register
           </h3>
           <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-100 sticky top-0 z-10 uppercase text-[10px] text-slate-600 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Date</th>
                   <th className="p-3">Crop</th>
@@ -592,32 +592,32 @@ export default function CropsModule() {
                   <th className="p-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-200">
                 {data.cropIncomes.map((inc) => {
                   const crop = data.crops.find(c => c.id === inc.cropId);
                   return (
-                    <tr key={inc.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 whitespace-nowrap">{inc.date}</td>
-                      <td className="p-3 font-medium text-white whitespace-nowrap">{crop ? crop.name : 'Crop Harvest'}</td>
+                    <tr key={inc.id} className="hover:bg-slate-50">
+                      <td className="p-3 whitespace-nowrap font-medium text-slate-600">{inc.date}</td>
+                      <td className="p-3 font-bold text-slate-900 whitespace-nowrap">{crop ? crop.name : 'Crop Harvest'}</td>
                       <td className="p-3">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 font-medium">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 font-bold">
                           {inc.incomeType || 'Harvest Sale'}
                         </span>
-                        <div className="text-[10px] text-slate-400 mt-0.5">{inc.buyer} ({inc.quantityQuintals} Qtl @ {currency}{inc.ratePerQuintal})</div>
+                        <div className="text-[10px] text-slate-500 mt-0.5">{inc.buyer} ({inc.quantityQuintals} Qtl @ {currency}{inc.ratePerQuintal})</div>
                       </td>
-                      <td className="p-3 font-bold text-emerald-400 whitespace-nowrap">{currency}{inc.totalIncome.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-bold text-emerald-700 whitespace-nowrap">{currency}{inc.totalIncome.toLocaleString('en-IN')}</td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
                           <button 
                             onClick={() => handleEditIncome(inc)} 
-                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                            className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors"
                             title="Edit Income"
                           >
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
                             onClick={() => deleteRecord('cropIncomes', inc.id)} 
-                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -791,60 +791,60 @@ export default function CropsModule() {
 
       {/* Add / Edit Crop Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">{editingCrop ? 'Edit Crop Details' : 'Add New Crop / Field Block'}</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+            <h3 className="text-lg font-extrabold text-slate-900">{editingCrop ? 'Edit Crop Details' : 'Add New Crop / Field Block'}</h3>
             <form onSubmit={handleSaveCrop} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Crop Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Crop Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Organic Paddy (Rice), Wheat, Sugarcane"
                   value={cropForm.name}
                   onChange={(e) => setCropForm({ ...cropForm, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600"
                 />
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Field Block Location</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Field Block Location</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. North Field Block A"
                   value={cropForm.field}
                   onChange={(e) => setCropForm({ ...cropForm, field: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Area (Acres)</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Area (Acres)</label>
                   <input
                     type="number"
                     step="0.1"
                     placeholder="e.g. 4.5"
                     value={cropForm.areaAcres}
                     onChange={(e) => setCropForm({ ...cropForm, areaAcres: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Season</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Season</label>
                   <input
                     type="text"
                     value={cropForm.season}
                     onChange={(e) => setCropForm({ ...cropForm, season: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Crop Status</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Crop Status</label>
                 <select
                   value={cropForm.status}
                   onChange={(e) => setCropForm({ ...cropForm, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600"
                 >
                   <option value="Sown / Nursery">Sown / Nursery</option>
                   <option value="Growing">Growing</option>
@@ -854,8 +854,8 @@ export default function CropsModule() {
                 </select>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowCropModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold">
+                <button type="button" onClick={() => setShowCropModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                   {editingCrop ? 'Update Crop' : 'Save Crop'}
                 </button>
               </div>
@@ -864,21 +864,21 @@ export default function CropsModule() {
         </div>
       )}
 
-      {/* Add / Edit Crop Expense Modal with Detailed Quantity, Unit Type & Unit Cost Inputs */}
+      {/* Add / Edit Crop Expense Modal */}
       {showExpenseModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <Calculator className="w-5 h-5 text-rose-400" />
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <Calculator className="w-5 h-5 text-rose-600" />
               {editingExpense ? 'Edit Crop Expense' : 'Record Crop Expenditure'}
             </h3>
             <form onSubmit={handleSaveExpense} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Crop</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Crop</label>
                 <select
                   value={expenseForm.cropId}
                   onChange={(e) => setExpenseForm({ ...expenseForm, cropId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white"
                 >
                   {data.crops.map(c => (
                     <option key={c.id} value={c.id}>{c.name} ({c.field})</option>
@@ -888,7 +888,7 @@ export default function CropsModule() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
+                  <label className="block text-slate-600 mb-1 font-bold text-emerald-700 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" /> Select Date
                   </label>
                   <input
@@ -896,15 +896,15 @@ export default function CropsModule() {
                     required
                     value={expenseForm.date}
                     onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Expenditure Type</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Expenditure Type</label>
                   <select
                     value={expenseForm.category}
                     onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                   >
                     {CROP_EXPENSE_TYPES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -913,31 +913,31 @@ export default function CropsModule() {
                 </div>
               </div>
 
-              {/* Detailed Breakdown Inputs: Quantity, Unit Type & Unit Cost — hidden for Self Work */}
+              {/* Detailed Breakdown Inputs — hidden for Self Work */}
               {expenseForm.category !== 'Self Work' ? (
-                <div className="p-3 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-3">
-                  <div className="text-[11px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1">
-                    <UserCheck className="w-3.5 h-3.5 text-amber-400" /> Quantity / Labor & Unit Cost Calculator
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-1">
+                    <UserCheck className="w-3.5 h-3.5 text-amber-600" /> Quantity / Labor & Unit Cost Calculator
                   </div>
 
                   <div className="grid grid-cols-3 gap-2">
                     <div>
-                      <label className="block text-slate-400 mb-1">Quantity / Count</label>
+                      <label className="block text-slate-600 mb-1">Quantity / Count</label>
                       <input
                         type="number"
                         step="0.5"
                         placeholder="e.g. 5"
                         value={expenseForm.quantityCount}
                         onChange={(e) => handleExpenseCalcChange('quantityCount', e.target.value)}
-                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
+                        className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-center font-bold"
                       />
                     </div>
                     <div>
-                      <label className="block text-slate-400 mb-1">Unit Type</label>
+                      <label className="block text-slate-600 mb-1">Unit Type</label>
                       <select
                         value={expenseForm.unitType}
                         onChange={(e) => setExpenseForm({ ...expenseForm, unitType: e.target.value })}
-                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-xs"
+                        className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-xs font-semibold"
                       >
                         {EXPENSE_UNITS.map(u => (
                           <option key={u} value={u}>{u}</option>
@@ -945,45 +945,45 @@ export default function CropsModule() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-slate-400 mb-1">Unit Cost ({currency})</label>
+                      <label className="block text-slate-600 mb-1">Unit Cost ({currency})</label>
                       <input
                         type="number"
                         placeholder="e.g. 600"
                         value={expenseForm.unitCost}
                         onChange={(e) => handleExpenseCalcChange('unitCost', e.target.value)}
-                        className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-white text-center font-bold"
+                        className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 text-center font-bold"
                       />
                     </div>
                   </div>
                 </div>
               ) : (
-                /* Self Work: show banner instead of qty/rate calculator */
-                <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center gap-2">
-                  <Hammer className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span className="text-[11px] text-amber-300 font-semibold">
+                /* Self Work */
+                <div className="p-3 rounded-2xl bg-amber-50 border border-amber-200 flex items-center gap-2">
+                  <Hammer className="w-4 h-4 text-amber-700 shrink-0" />
+                  <span className="text-[11px] text-amber-900 font-bold">
                     Self Work — Enter the total labor/work amount directly below. No quantity × rate calculation needed.
                   </span>
                 </div>
               )}
 
               <div>
-                <label className="block text-slate-400 mb-1">Description / Notes</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Description / Notes</label>
                 <input
                   type="text"
                   placeholder={expenseForm.category === 'Self Work' ? 'e.g. Own field ploughing, transplanting, harvesting' : 'e.g. Hired weeders for North Field Block A'}
                   value={expenseForm.description}
                   onChange={(e) => setExpenseForm({ ...expenseForm, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                 />
               </div>
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="block text-slate-400">
+                  <label className="block text-slate-600 font-bold">
                     {expenseForm.category === 'Self Work' ? 'Self Work Amount' : 'Total Amount'} ({currency})
                   </label>
                   {expenseForm.category !== 'Self Work' && (
-                    <span className="text-[10px] text-amber-400 font-semibold">Auto-Calculated: Qty × Unit Cost</span>
+                    <span className="text-[10px] text-amber-700 font-bold">Auto-Calculated: Qty × Unit Cost</span>
                   )}
                 </div>
                 <input
@@ -992,17 +992,17 @@ export default function CropsModule() {
                   placeholder={expenseForm.category === 'Self Work' ? 'e.g. 1500 (enter total labor amount)' : 'e.g. 3000'}
                   value={expenseForm.amount}
                   onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                  className={`w-full p-2.5 rounded-xl bg-slate-900 border font-extrabold text-base ${
+                  className={`w-full p-2.5 rounded-xl bg-slate-50 border font-extrabold text-base ${
                     expenseForm.category === 'Self Work'
-                      ? 'border-amber-500/50 text-amber-400'
-                      : 'border-slate-700 text-rose-400'
+                      ? 'border-amber-300 text-amber-900'
+                      : 'border-slate-300 text-rose-700'
                   }`}
                 />
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowExpenseModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-rose-500 text-white font-bold">
+                <button type="button" onClick={() => setShowExpenseModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold">
                   {editingExpense ? 'Update Expense' : 'Save Expense'}
                 </button>
               </div>
@@ -1013,16 +1013,16 @@ export default function CropsModule() {
 
       {/* Add / Edit Crop Income Modal */}
       {showIncomeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">{editingIncome ? 'Edit Crop Income' : 'Log Crop Revenue / Income'}</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+            <h3 className="text-lg font-extrabold text-slate-900">{editingIncome ? 'Edit Crop Income' : 'Log Crop Revenue / Income'}</h3>
             <form onSubmit={handleSaveIncome} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Crop</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Crop</label>
                 <select
                   value={incomeForm.cropId}
                   onChange={(e) => setIncomeForm({ ...incomeForm, cropId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                 >
                   {data.crops.map(c => (
                     <option key={c.id} value={c.id}>{c.name} ({c.field})</option>
@@ -1031,7 +1031,7 @@ export default function CropsModule() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
+                  <label className="block text-slate-600 mb-1 font-bold text-emerald-700 flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5" /> Select Date
                   </label>
                   <input
@@ -1039,15 +1039,15 @@ export default function CropsModule() {
                     required
                     value={incomeForm.date}
                     onChange={(e) => setIncomeForm({ ...incomeForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Income Type</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Income Type</label>
                   <select
                     value={incomeForm.incomeType}
                     onChange={(e) => setIncomeForm({ ...incomeForm, incomeType: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                   >
                     {CROP_INCOME_TYPES.map(incType => (
                       <option key={incType} value={incType}>{incType}</option>
@@ -1056,43 +1056,43 @@ export default function CropsModule() {
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Buyer / Merchant / Source Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Buyer / Merchant / Source Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Mandi Merchant / Govt Subsidy Dept"
                   value={incomeForm.buyer}
                   onChange={(e) => setIncomeForm({ ...incomeForm, buyer: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Quantity (Quintals/Units)</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Quantity (Quintals/Units)</label>
                   <input
                     type="number"
                     required
                     placeholder="e.g. 50"
                     value={incomeForm.quantityQuintals}
                     onChange={(e) => setIncomeForm({ ...incomeForm, quantityQuintals: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Rate per Unit ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Rate per Unit ({currency})</label>
                   <input
                     type="number"
                     required
                     placeholder="e.g. 2400"
                     value={incomeForm.ratePerQuintal}
                     onChange={(e) => setIncomeForm({ ...incomeForm, ratePerQuintal: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium"
                   />
                 </div>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowIncomeModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold">
+                <button type="button" onClick={() => setShowIncomeModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold">
                   {editingIncome ? 'Update Income' : 'Save Income'}
                 </button>
               </div>

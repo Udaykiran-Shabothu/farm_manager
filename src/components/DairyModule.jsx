@@ -42,7 +42,7 @@ import {
 
 export default function DairyModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
-  const currency = data.farmInfo.currency || '₹';
+  const currency = data?.farmInfo?.currency || '₹';
 
   // Customer Filter Tab state: "Active", "Completed", "Stopped", "All"
   const [customerTab, setCustomerTab] = useState('Active');
@@ -146,9 +146,8 @@ export default function DairyModule() {
   const todayStr = new Date().toISOString().split('T')[0];
 
   // AUTOMATED MONTHLY BILLING CYCLE ROLLOVER ENGINE:
-  // Automatically archives completed cycles to "Completed" tab and advances active cycle to next month
   useEffect(() => {
-    if (!data.dairyCustomers || data.dairyCustomers.length === 0) return;
+    if (!data?.dairyCustomers || data.dairyCustomers.length === 0) return;
 
     data.dairyCustomers.forEach(customer => {
       let start = customer.cycleStartDate || customer.startDate || todayStr;
@@ -169,7 +168,7 @@ export default function DairyModule() {
         });
       }
     });
-  }, [data.dairyCustomers, todayStr]);
+  }, [data?.dairyCustomers, todayStr]);
 
   // 1-Click Action: Manually Close & Complete Current Cycle & Advance to Next Month
   const handleAdvanceCustomerCycle = (customer) => {
@@ -222,7 +221,7 @@ export default function DairyModule() {
 
   // Open Direct Bill Payment Settlement Modal for specific customer & suggested amount
   const handleOpenPaymentForCustomer = (customerId, suggestedAmount = '') => {
-    const targetCustId = customerId || (data.dairyCustomers[0]?.id || '');
+    const targetCustId = customerId || (data?.dairyCustomers?.[0]?.id || '');
     setPaymentForm({
       customerId: targetCustId,
       date: todayStr,
@@ -253,7 +252,7 @@ export default function DairyModule() {
   // Open Bulk Milk Modal (populates all active customer default quotas)
   const handleOpenBulkMilkModal = () => {
     const initialEntries = {};
-    const activeCustomers = data.dairyCustomers.filter(c => c.status !== 'Stopped & Bill Pending');
+    const activeCustomers = (data?.dairyCustomers || []).filter(c => c.status !== 'Stopped & Bill Pending');
     activeCustomers.forEach(c => {
       initialEntries[c.id] = {
         status: 'Taken',
@@ -291,7 +290,7 @@ export default function DairyModule() {
     const shift = bulkMilkForm.shift;
 
     Object.entries(bulkMilkForm.entries).forEach(([customerId, entry]) => {
-      const customer = data.dairyCustomers.find(c => c.id === customerId);
+      const customer = (data?.dairyCustomers || []).find(c => c.id === customerId);
       if (!customer) return;
 
       const isTaken = entry.status === 'Taken';
@@ -312,7 +311,7 @@ export default function DairyModule() {
         notes: isTaken ? (entry.notes || '') : (entry.notes || 'Milk Not Taken (Off Day)')
       };
 
-      const existingLog = (data.dairyMilkLogs || []).find(
+      const existingLog = (data?.dairyMilkLogs || []).find(
         l => l.customerId === customerId && l.date === date && (l.shift || 'Morning') === shift
       );
 
@@ -414,7 +413,7 @@ export default function DairyModule() {
   const handleSaveMilkLog = (e) => {
     e.preventDefault();
     if (!milkForm.customerId) return;
-    const customer = data.dairyCustomers.find(c => c.id === milkForm.customerId);
+    const customer = (data?.dairyCustomers || []).find(c => c.id === milkForm.customerId);
     if (!customer) return;
 
     const isTaken = milkForm.status === 'Taken';
@@ -436,7 +435,7 @@ export default function DairyModule() {
     if (editingMilkLog) {
       updateRecord('dairyMilkLogs', { id: editingMilkLog.id, ...payload });
     } else {
-      const existingLog = (data.dairyMilkLogs || []).find(
+      const existingLog = (data?.dairyMilkLogs || []).find(
         l => l.customerId === milkForm.customerId && l.date === milkForm.date && (l.shift || 'Morning') === (milkForm.shift || 'Morning')
       );
       if (existingLog) {
@@ -453,7 +452,7 @@ export default function DairyModule() {
   // Save Customer Payment Payout Received
   const handleSaveDairyPayment = (e) => {
     e.preventDefault();
-    const targetCustId = paymentForm.customerId || (data.dairyCustomers[0]?.id || '');
+    const targetCustId = paymentForm.customerId || (data?.dairyCustomers?.[0]?.id || '');
     const amountVal = Number(paymentForm.amount) || 0;
 
     if (!targetCustId || amountVal <= 0) {
@@ -489,9 +488,9 @@ export default function DairyModule() {
     setShowCattleModal(false);
   };
 
-  // Helper: Financial Ledger Breakdown with Prior Cycle Carryover (Last Month Due / Extra Paid Advance)
+  // Helper: Financial Ledger Breakdown with Prior Cycle Carryover
   const getCustomRangeData = (customerId, startDateStr, endDateStr) => {
-    const customer = data.dairyCustomers.find(c => c.id === customerId);
+    const customer = (data?.dairyCustomers || []).find(c => c.id === customerId);
     if (!customer) return null;
 
     const [sY, sM, sD] = startDateStr.split('-').map(Number);
@@ -499,8 +498,7 @@ export default function DairyModule() {
     const startObj = new Date(sY, sM - 1, sD);
     const endObj = new Date(eY, eM - 1, eD);
 
-    // 1. Prior Cycle Carryover Calculation (deduplicated logs & payments strictly before startDateStr)
-    const rawPriorLogs = (data.dairyMilkLogs || []).filter(l => {
+    const rawPriorLogs = (data?.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
       return l.date < startDateStr;
     });
@@ -512,7 +510,7 @@ export default function DairyModule() {
     });
     const priorLogs = Object.values(uniquePriorLogsMap);
 
-    const priorPayments = (data.dairyPayments || []).filter(p => {
+    const priorPayments = (data?.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
       return p.date < startDateStr;
     });
@@ -520,14 +518,11 @@ export default function DairyModule() {
     const priorMilkBillsTotal = Math.round(priorLogs.reduce((acc, l) => acc + Number(l.totalAmount || (l.liters * customer.ratePerLiter) || 0), 0));
     const priorPaymentsTotal = Math.round(priorPayments.reduce((acc, p) => acc + Number(p.amount || 0), 0));
     
-    // priorBalance > 0 means Pending Due from prior cycles
-    // priorBalance < 0 means Extra Paid Advance Credit from prior cycles!
     const priorBalance = Math.round(priorMilkBillsTotal - priorPaymentsTotal);
     const priorDueAmount = priorBalance > 0 ? priorBalance : 0;
     const priorExtraPaidAdvance = priorBalance < 0 ? Math.abs(priorBalance) : 0;
 
-    // 2. Current Custom Cycle Date Range Calculation (deduplicated by date + shift)
-    const rawLogsInRange = (data.dairyMilkLogs || []).filter(l => {
+    const rawLogsInRange = (data?.dairyMilkLogs || []).filter(l => {
       if (l.customerId !== customerId) return false;
       return l.date >= startDateStr && l.date <= endDateStr;
     });
@@ -539,7 +534,7 @@ export default function DairyModule() {
     });
     const logsInRange = Object.values(uniqueLogsMap);
 
-    const paymentsInRange = (data.dairyPayments || []).filter(p => {
+    const paymentsInRange = (data?.dairyPayments || []).filter(p => {
       if (p.customerId !== customerId) return false;
       return p.date >= startDateStr && p.date <= endDateStr;
     });
@@ -600,15 +595,13 @@ export default function DairyModule() {
     const totalLitersTaken = Math.round(dayList.reduce((acc, curr) => acc + curr.totalLiters, 0));
     const totalMonthBill = Math.round(dayList.reduce((acc, curr) => acc + curr.totalAmount, 0));
 
-    const allCustomerPayments = (data.dairyPayments || []).filter(p => p.customerId === customerId);
+    const allCustomerPayments = (data?.dairyPayments || []).filter(p => p.customerId === customerId);
     const paymentsAfterEnd = allCustomerPayments.filter(p => p.date > endDateStr);
 
     const totalPaymentsReceived = Math.round(paymentsInRange.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
     const totalPaymentsAfterEnd = Math.round(paymentsAfterEnd.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
     const totalAppliedPayments = Math.round(totalPaymentsReceived + totalPaymentsAfterEnd);
 
-    // Net Financial Settlement Equation:
-    // Net Due = (Current Cycle Bill + Last Cycle Due - Last Cycle Extra Paid) - Applicable Payments
     const grossTotalPayable = Math.round(totalMonthBill + priorDueAmount - priorExtraPaidAdvance);
     const pendingBalanceDue = Math.round(Math.max(0, grossTotalPayable - totalAppliedPayments));
     const isPaidInFull = pendingBalanceDue <= 0;
@@ -636,7 +629,7 @@ export default function DairyModule() {
 
   // Helper: Get Active Configured Month Data for Customer Card
   const getCustomerMonthlyData = (customerId) => {
-    const customer = data.dairyCustomers.find(c => c.id === customerId);
+    const customer = (data?.dairyCustomers || []).find(c => c.id === customerId);
     if (!customer) return null;
 
     let start = customer.cycleStartDate || customer.startDate || todayStr;
@@ -655,8 +648,7 @@ export default function DairyModule() {
     const activeStartStr = customer.cycleStartDate || customer.startDate || todayStr;
     const activeEndStr = customer.cycleEndDate || getDefaultCycleEndDate(activeStartStr);
     
-    // Find earliest start date from customer.startDate or earliest recorded milk log date
-    const logDates = (data.dairyMilkLogs || [])
+    const logDates = (data?.dairyMilkLogs || [])
       .filter(l => l.customerId === customer.id)
       .map(l => l.date);
     
@@ -680,7 +672,6 @@ export default function DairyModule() {
       const startDateStr = currStartObj.toISOString().split('T')[0];
       const endDateStr = currEndObj.toISOString().split('T')[0];
       
-      // Cycle is completed if its end date is before current active cycle start date OR strictly before today
       const isCompleted = endDateStr < activeStartStr || endDateStr < todayStr;
 
       const summary = getCustomRangeData(customer.id, startDateStr, endDateStr);
@@ -702,7 +693,7 @@ export default function DairyModule() {
     return cycles.sort((a, b) => new Date(b.startDateStr) - new Date(a.startDateStr));
   };
 
-  // Download CSV Receipt Statement for specified Range
+  // Download CSV Receipt Statement
   const downloadCustomerRangeCSV = (customerId, startDateStr, endDateStr) => {
     const summary = getCustomRangeData(customerId, startDateStr, endDateStr);
     if (!summary) return;
@@ -736,14 +727,14 @@ export default function DairyModule() {
     document.body.removeChild(link);
   };
 
-  // Send WhatsApp Monthly Bill Statement for specified Range with Financial Ledger breakdown
+  // Send WhatsApp Monthly Bill Statement
   const sendWhatsAppRangeBill = (customerId, startDateStr, endDateStr) => {
     const summary = getCustomRangeData(customerId, startDateStr, endDateStr);
     if (!summary) return;
 
     const { customer, totalDaysInCycle, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull, dayList } = summary;
 
-    let text = `🥛 *${data.farmInfo.name || 'Daily Farm'} - ${isPaidInFull ? 'MONTHLY STATEMENT' : 'MONTHLY BILL NOTICE'}*\n\n`;
+    let text = `🥛 *${data?.farmInfo?.name || 'Daily Farm'} - ${isPaidInFull ? 'MONTHLY STATEMENT' : 'MONTHLY BILL NOTICE'}*\n\n`;
     text += `👤 *Customer:* ${customer.name}\n📞 *Phone:* ${customer.phone || 'N/A'}\n🗓️ *Cycle Period:* ${startDateStr} to ${endDateStr}\n💵 *Rate:* ${currency}${customer.ratePerLiter} / Liter\n`;
     text += `💳 *STATUS:* ${isPaidInFull ? '✅ PAID IN FULL' : '⚠️ BILL PENDING'}\n\n`;
 
@@ -786,19 +777,18 @@ export default function DairyModule() {
   const downloadPDFRangeBill = (customerId, startDateStr, endDateStr) => {
     const summary = getCustomRangeData(customerId, startDateStr, endDateStr);
     if (!summary) return;
-    generateDairyBillPDF(summary, data.farmInfo);
+    generateDairyBillPDF(summary, data?.farmInfo || {});
   };
 
   // Build All Completed Monthly Cycles List for "Completed" Tab
   const allCompletedCycles = [];
-  data.dairyCustomers.forEach(customer => {
+  (data?.dairyCustomers || []).forEach(customer => {
     const cycles = getCustomerAllCycles(customer);
     cycles.filter(c => c.isCompleted).forEach(c => {
       allCompletedCycles.push(c);
     });
   });
 
-  // Visible completed cycles excluding cleared paid ones
   const visibleCompletedCycles = allCompletedCycles.filter(c => {
     const key = `${c.customer.id}_${c.startDateStr}`;
     return !clearedCycleKeys.includes(key);
@@ -808,62 +798,60 @@ export default function DairyModule() {
   const pendingCompletedCycles = visibleCompletedCycles.filter(c => !c.isPaidInFull);
 
   // Filtered Customers list
-  const filteredCustomers = data.dairyCustomers.filter(customer => {
+  const filteredCustomers = (data?.dairyCustomers || []).filter(customer => {
     const isStopped = customer.status === 'Stopped & Bill Pending';
     if (customerTab === 'Active') return !isStopped;
     if (customerTab === 'Stopped') return isStopped;
     return true;
   });
 
-  const stoppedCount = data.dairyCustomers.filter(c => c.status === 'Stopped & Bill Pending').length;
-  const activeCount = data.dairyCustomers.length - stoppedCount;
+  const stoppedCount = (data?.dairyCustomers || []).filter(c => c.status === 'Stopped & Bill Pending').length;
+  const activeCount = (data?.dairyCustomers || []).length - stoppedCount;
 
   // Header Executive Summary Metrics
-  const todayLitersTotal = (data.dairyMilkLogs || [])
+  const todayLitersTotal = (data?.dairyMilkLogs || [])
     .filter(l => l.date === todayStr && (l.status === 'Taken' || Number(l.liters) > 0))
     .reduce((acc, curr) => acc + Number(curr.liters || 0), 0);
 
-  const totalPendingDuesSum = data.dairyCustomers.reduce((acc, c) => {
+  const totalPendingDuesSum = (data?.dairyCustomers || []).reduce((acc, c) => {
     const summary = getCustomerMonthlyData(c.id);
     return acc + (summary ? Number(summary.pendingBalanceDue || 0) : 0);
   }, 0);
 
   return (
-    <div className="space-y-8 pb-12 animate-fadeIn text-slate-100">
+    <div className="space-y-8 pb-12 animate-fadeIn text-slate-900">
       
-      {/* Top Nature Farm Banner & Main Quick Action Toolbar */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-6 sm:p-7 bg-gradient-to-r from-emerald-950 via-teal-950 to-emerald-900 rounded-3xl border border-emerald-500/40 card-3d shadow-2xl relative overflow-hidden">
-        <div className="space-y-1 z-10">
+      {/* Banner */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5 p-6 sm:p-7 bg-white rounded-3xl border border-slate-200 card-3d shadow-sm">
+        <div className="space-y-1">
           <div className="flex items-center space-x-3">
-            <div className="p-3 rounded-2xl bg-gradient-to-br from-emerald-500/30 to-teal-500/20 text-emerald-300 border border-emerald-500/40 shadow-inner">
+            <div className="p-3 rounded-2xl bg-emerald-100 text-emerald-700">
               <Milk className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">Dairy Farm & Milk Register</h2>
-              <p className="text-xs sm:text-sm text-emerald-200/90 font-medium">Monthly billing cycles, daily quotas, & 1-click ledger settlements.</p>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Dairy Farm & Milk Register</h2>
+              <p className="text-xs sm:text-sm text-slate-500 font-medium">Monthly billing cycles, daily quotas, & 1-click ledger settlements.</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 w-full lg:w-auto z-10">
-          {/* BULK ENTRY BUTTON FOR ALL ACTIVE CUSTOMERS AT ONCE */}
+        <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5 w-full lg:w-auto">
           <button
             onClick={handleOpenBulkMilkModal}
-            className="col-span-2 sm:col-auto px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-400 via-teal-300 to-amber-300 hover:from-emerald-300 hover:to-amber-200 text-slate-950 font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/25 transition-all transform hover:scale-105 active:scale-95"
+            className="col-span-2 sm:col-auto px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all"
           >
-            <Zap className="w-4 h-4 fill-slate-950 text-slate-950" /> Log ALL Customers (Bulk Entry)
+            <Zap className="w-4 h-4" /> Log ALL Customers (Bulk Entry)
           </button>
           
-          {/* SEPARATE SINGLE CUSTOMER MILK LOG BUTTON */}
           <button
             onClick={() => {
-              if (data.dairyCustomers.length > 0) setMilkForm(prev => ({ ...prev, customerId: data.dairyCustomers[0].id }));
+              if ((data?.dairyCustomers || []).length > 0) setMilkForm(prev => ({ ...prev, customerId: data.dairyCustomers[0].id }));
               setEditingMilkLog(null);
               setShowMilkModal(true);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-200 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
           >
-            <Milk className="w-4 h-4" /> Log Single Milk
+            <Milk className="w-4 h-4 text-emerald-600" /> Log Single Milk
           </button>
 
           <button
@@ -880,31 +868,31 @@ export default function DairyModule() {
               });
               setShowCustomerModal(true);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-teal-500/20 hover:bg-teal-500/30 text-teal-200 border border-teal-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-xl bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
           >
-            <Plus className="w-4 h-4" /> Add Customer
+            <Plus className="w-4 h-4 text-teal-600" /> Add Customer
           </button>
 
           <button
             onClick={() => {
-              if (data.dairyCustomers.length > 0) handleOpenPaymentForCustomer(data.dairyCustomers[0].id);
+              if ((data?.dairyCustomers || []).length > 0) handleOpenPaymentForCustomer(data.dairyCustomers[0].id);
             }}
-            className="px-3.5 py-2.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-amber-600/20 transition-all"
           >
             <Wallet className="w-4 h-4" /> Record Payment
           </button>
 
           <button
             onClick={() => setShowCattleModal(true)}
-            className="px-3.5 py-2.5 rounded-2xl bg-emerald-700/30 hover:bg-emerald-700/40 text-emerald-200 border border-emerald-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5"
+            className="px-3.5 py-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
           >
-            <Award className="w-4 h-4" /> Add Cattle
+            <Award className="w-4 h-4 text-indigo-600" /> Add Cattle
           </button>
         </div>
       </div>
 
-      {/* 🌟 Rich Nature Interactive Dairy Carousel */}
-      <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-emerald-500/30 group card-3d h-64 sm:h-80">
+      {/* Nature Visual Carousel */}
+      <div className="relative rounded-3xl overflow-hidden shadow-sm border border-slate-200 group card-3d h-64 sm:h-80">
         {carouselSlides.map((slide, idx) => (
           <div
             key={slide.id}
@@ -917,48 +905,44 @@ export default function DairyModule() {
               alt={slide.title}
               className="w-full h-full object-cover transform scale-105 group-hover:scale-100 transition-transform duration-700"
             />
-            {/* Organic Nature Gradient Overlays */}
-            <div className="absolute inset-0 bg-gradient-to-t from-emerald-950 via-emerald-950/70 to-transparent" />
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-950/90 via-emerald-900/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/30 to-transparent" />
 
-            {/* Slide Content */}
             <div className="absolute bottom-0 left-0 right-0 p-6 sm:p-8 space-y-2 max-w-2xl">
-              <span className="px-3 py-1 rounded-full text-xs font-black bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 backdrop-blur-md inline-block shadow-md">
+              <span className="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/30 text-emerald-200 border border-emerald-400/40 backdrop-blur-md inline-block">
                 {slide.badge}
               </span>
-              <h3 className="text-2xl sm:text-4xl font-black text-white tracking-tight drop-shadow-md">
+              <h3 className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight drop-shadow-md">
                 {slide.title}
               </h3>
-              <p className="text-xs sm:text-sm text-emerald-100/90 font-medium drop-shadow-sm">
+              <p className="text-xs sm:text-sm text-slate-200 font-medium">
                 {slide.subtitle}
               </p>
             </div>
           </div>
         ))}
 
-        {/* Carousel Controls */}
         <button
           onClick={() => setCurrentSlide((prev) => (prev === 0 ? carouselSlides.length - 1 : prev - 1))}
-          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-emerald-950/70 hover:bg-emerald-900/90 text-white border border-emerald-500/40 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all"
+          className="absolute left-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white border border-slate-700 backdrop-blur-md transition-all"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
 
         <button
           onClick={() => setCurrentSlide((prev) => (prev + 1) % carouselSlides.length)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2 sm:p-2.5 rounded-full bg-emerald-950/70 hover:bg-emerald-900/90 text-white border border-emerald-500/40 backdrop-blur-md opacity-80 group-hover:opacity-100 transition-all"
+          className="absolute right-3 top-1/2 -translate-y-1/2 z-20 p-2.5 rounded-full bg-slate-900/70 hover:bg-slate-900 text-white border border-slate-700 backdrop-blur-md transition-all"
         >
           <ChevronRight className="w-5 h-5" />
         </button>
 
-        {/* Indicators */}
         <div className="absolute bottom-4 right-6 z-20 flex items-center space-x-2">
           {carouselSlides.map((_, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentSlide(idx)}
               className={`h-2 rounded-full transition-all ${
-                idx === currentSlide ? 'w-8 bg-emerald-400 shadow-md shadow-emerald-400/50' : 'w-2 bg-white/40 hover:bg-white/70'
+                idx === currentSlide ? 'w-8 bg-emerald-400' : 'w-2 bg-white/40 hover:bg-white/70'
               }`}
             />
           ))}
@@ -967,84 +951,84 @@ export default function DairyModule() {
 
       {/* Dairy Executive Summary KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-cyan-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-cyan-950/20">
-          <div className="p-3 rounded-2xl bg-cyan-500/20 text-cyan-400 border border-cyan-500/30">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3.5 shadow-sm">
+          <div className="p-3 rounded-2xl bg-cyan-50 text-cyan-700 border border-cyan-200">
             <Users className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Active Buyers</span>
-            <span className="text-xl sm:text-2xl font-black text-white">{activeCount} Buyers</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Active Buyers</span>
+            <span className="text-xl sm:text-2xl font-black text-slate-900">{activeCount} Buyers</span>
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-emerald-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-emerald-950/20">
-          <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3.5 shadow-sm">
+          <div className="p-3 rounded-2xl bg-emerald-50 text-emerald-700 border border-emerald-200">
             <Milk className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Today's Milk</span>
-            <span className="text-xl sm:text-2xl font-black text-emerald-300">{todayLitersTotal} Liters</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today's Milk</span>
+            <span className="text-xl sm:text-2xl font-black text-emerald-700">{todayLitersTotal} Liters</span>
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-amber-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-amber-950/20">
-          <div className="p-3 rounded-2xl bg-amber-500/20 text-amber-400 border border-amber-500/30">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3.5 shadow-sm">
+          <div className="p-3 rounded-2xl bg-amber-50 text-amber-700 border border-amber-200">
             <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Total Net Dues</span>
-            <span className="text-xl sm:text-2xl font-black text-amber-300">{currency}{totalPendingDuesSum.toLocaleString('en-IN')}</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Net Dues</span>
+            <span className="text-xl sm:text-2xl font-black text-amber-700">{currency}{totalPendingDuesSum.toLocaleString('en-IN')}</span>
           </div>
         </div>
 
-        <div className="p-4 sm:p-5 rounded-3xl bg-slate-900/90 backdrop-blur-xl border border-purple-500/20 card-3d flex items-center space-x-3.5 shadow-xl shadow-purple-950/20">
-          <div className="p-3 rounded-2xl bg-purple-500/20 text-purple-400 border border-purple-500/30">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3.5 shadow-sm">
+          <div className="p-3 rounded-2xl bg-indigo-50 text-indigo-700 border border-indigo-200">
             <FolderCheck className="w-5 h-5 sm:w-6 sm:h-6" />
           </div>
           <div>
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 block">Completed Cycles</span>
-            <span className="text-xl sm:text-2xl font-black text-purple-300">{visibleCompletedCycles.length} Statements</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Completed Cycles</span>
+            <span className="text-xl sm:text-2xl font-black text-indigo-700">{visibleCompletedCycles.length} Statements</span>
           </div>
         </div>
       </div>
 
       {/* Customer Category Filter Sub-Tabs Pill Bar */}
-      <div className="p-2 sm:p-2.5 glass-panel rounded-2xl border border-slate-800 backdrop-blur-2xl shadow-xl">
+      <div className="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
         <div className="overflow-x-auto no-scrollbar flex items-center space-x-2 text-nowrap snap-x py-0.5 max-w-full">
           <button
             onClick={() => setCustomerTab('Active')}
-            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-              customerTab === 'Active' ? 'bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-lg shadow-cyan-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              customerTab === 'Active' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <Milk className="w-4 h-4" /> 🟢 Active Buyers ({activeCount})
+            <Milk className="w-4 h-4" /> Active Buyers ({activeCount})
           </button>
           
           <button
             onClick={() => setCustomerTab('Completed')}
-            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-              customerTab === 'Completed' ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-slate-950 shadow-lg shadow-emerald-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              customerTab === 'Completed' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <FolderCheck className="w-4 h-4" /> ✅ Paid Bills / Completed ({visibleCompletedCycles.length})
+            <FolderCheck className="w-4 h-4" /> Paid Bills / Completed ({visibleCompletedCycles.length})
           </button>
 
           <button
             onClick={() => setCustomerTab('Stopped')}
-            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all flex items-center gap-2 ${
-              customerTab === 'Stopped' ? 'bg-gradient-to-r from-rose-500 to-pink-600 text-white shadow-lg shadow-rose-500/30 scale-105' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              customerTab === 'Stopped' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <Octagon className="w-4 h-4" /> ⚠️ Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
+            <Octagon className="w-4 h-4" /> Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
           </button>
 
           <button
             onClick={() => setCustomerTab('All')}
-            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-black transition-all ${
-              customerTab === 'All' ? 'bg-slate-700 text-white shadow-md' : 'text-slate-400 hover:text-white bg-slate-900/60 border border-slate-800'
+            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
+              customerTab === 'All' ? 'bg-slate-900 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            All Customers ({data.dairyCustomers.length})
+            All Customers ({(data?.dairyCustomers || []).length})
           </button>
         </div>
       </div>
@@ -1060,30 +1044,30 @@ export default function DairyModule() {
             const isStopped = customer.status === 'Stopped & Bill Pending';
 
             return (
-              <div key={customer.id} className={`glass-panel p-6 rounded-3xl border card-3d flex flex-col justify-between space-y-4 ${
-                isStopped ? 'border-rose-500/40 bg-rose-950/10' : 'border-slate-800'
+              <div key={customer.id} className={`bg-white p-6 rounded-3xl border card-3d flex flex-col justify-between space-y-4 shadow-sm ${
+                isStopped ? 'border-rose-300 bg-rose-50/20' : 'border-slate-200'
               }`}>
                 <div>
                   <div className="flex items-start justify-between">
                     <div>
                       <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                        isStopped ? 'bg-rose-500/20 text-rose-300 border-rose-500/30' : 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30'
+                        isStopped ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
                       }`}>
                         {isStopped ? '🛑 Milk Stopped (Bill Pending)' : `Rate: ${currency}${customer.ratePerLiter} / Liter`}
                       </span>
-                      <h3 className="text-xl font-bold text-white mt-1.5">{customer.name}</h3>
+                      <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{customer.name}</h3>
                     </div>
                     <div className="flex items-center space-x-1">
                       <button 
                         onClick={() => handleEditCustomer(customer)} 
-                        className="p-1.5 text-slate-400 hover:text-amber-300 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Edit Customer Profile & Cycle Dates"
                       >
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button 
                         onClick={() => deleteRecord('dairyCustomers', customer.id)} 
-                        className="p-1.5 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Delete Customer"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -1091,102 +1075,96 @@ export default function DairyModule() {
                     </div>
                   </div>
 
-                  <div className="mt-3 space-y-1 text-xs text-slate-300">
-                    <p><span className="text-slate-400">Phone:</span> {customer.phone || 'N/A'}</p>
-                    <p><span className="text-slate-400">Current Cycle:</span> <span className="text-cyan-300 font-bold">{startDateStr} to {endDateStr}</span></p>
+                  <div className="mt-3 space-y-1 text-xs text-slate-600">
+                    <p><span className="text-slate-500 font-medium">Phone:</span> {customer.phone || 'N/A'}</p>
+                    <p><span className="text-slate-500 font-medium">Current Cycle:</span> <span className="text-emerald-700 font-bold">{startDateStr} to {endDateStr}</span></p>
                   </div>
                 </div>
 
-                {/* Monthly Bill & Financial Carryover Settlement Box */}
-                <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
-                  <div className="grid grid-cols-2 gap-2 border-b border-slate-800 pb-2">
-                    <div className="text-emerald-400 font-bold flex items-center gap-1">
+                {/* Monthly Bill Summary Box */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                  <div className="grid grid-cols-2 gap-2 border-b border-slate-200 pb-2">
+                    <div className="text-emerald-700 font-bold flex items-center gap-1">
                       <CheckCircle2 className="w-3.5 h-3.5" /> Taken: {daysTakenCount} Days
                     </div>
-                    <div className="text-rose-400 font-bold flex items-center gap-1 justify-end">
+                    <div className="text-rose-700 font-bold flex items-center gap-1 justify-end">
                       <XCircle className="w-3.5 h-3.5" /> Off: {daysNotTakenCount} Days
                     </div>
                   </div>
 
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Current Month Bill:</span>
-                    <span className="text-white font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
+                    <span className="text-slate-500 font-medium">Current Month Bill:</span>
+                    <span className="text-slate-900 font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
                   </div>
 
-                  {/* Prior Month Carryover Due / Extra Paid Advance Credit */}
                   {priorDueAmount > 0 && (
-                    <div className="flex justify-between text-rose-300 font-semibold bg-rose-500/10 px-2 py-0.5 rounded">
-                      <span className="flex items-center gap-1 text-[11px]"><ArrowDownLeft className="w-3 h-3 text-rose-400" /> Last Month Pending Due:</span>
+                    <div className="flex justify-between text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
+                      <span className="flex items-center gap-1 text-[11px]"><ArrowDownLeft className="w-3 h-3 text-rose-600" /> Last Month Pending Due:</span>
                       <span>+ {currency}{priorDueAmount.toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   {priorExtraPaidAdvance > 0 && (
-                    <div className="flex justify-between text-emerald-300 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
-                      <span className="flex items-center gap-1 text-[11px]"><Sparkles className="w-3 h-3 text-emerald-400" /> Last Month Extra Paid Credit:</span>
+                    <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
+                      <span className="flex items-center gap-1 text-[11px]"><Sparkles className="w-3 h-3 text-emerald-600" /> Last Month Extra Paid Credit:</span>
                       <span>- {currency}{priorExtraPaidAdvance.toLocaleString('en-IN')}</span>
                     </div>
                   )}
 
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Current Cycle Payments:</span>
-                    <span className="text-emerald-400 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
+                    <span className="text-slate-500 font-medium">Current Cycle Payments:</span>
+                    <span className="text-emerald-700 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
                   </div>
 
-                  {/* Net Pending Balance Due */}
-                  <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                    <span className="text-slate-300 font-bold">Net Bill Status:</span>
+                  <div className="pt-2 border-t border-slate-200 flex justify-between items-center text-xs">
+                    <span className="text-slate-700 font-bold">Net Bill Status:</span>
                     <span className={`px-2 py-0.5 rounded font-extrabold ${
-                      isPaidInFull ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                      isPaidInFull ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
                     }`}>
                       {isPaidInFull ? '✅ PAID IN FULL' : `⚠️ NET DUE: ${currency}${pendingBalanceDue}`}
                     </span>
                   </div>
 
-                  {/* DIRECT ACTION BUTTON TO RECORD & SAVE PAYMENT FOR THIS CUSTOMER */}
                   <button
                     onClick={() => handleOpenPaymentForCustomer(customer.id, pendingBalanceDue > 0 ? pendingBalanceDue : '')}
-                    className="w-full mt-2 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                    className="w-full mt-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
                   >
-                    <Wallet className="w-4 h-4 fill-slate-950" /> Record & Save Payment ({currency}{pendingBalanceDue > 0 ? pendingBalanceDue : 'Custom'})
+                    <Wallet className="w-4 h-4" /> Record & Save Payment ({currency}{pendingBalanceDue > 0 ? pendingBalanceDue : 'Custom'})
                   </button>
 
-                  {/* Primary Bill Statement View Button */}
                   <button
                     onClick={() => setSelectedBillCycle({ customer, startDateStr, endDateStr })}
                     className={`w-full mt-1 py-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all ${
                       isStopped 
-                        ? 'bg-rose-500 hover:bg-rose-400 text-white shadow-rose-500/20' 
-                        : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700'
+                        ? 'bg-rose-600 hover:bg-rose-700 text-white shadow-sm' 
+                        : 'bg-slate-900 hover:bg-slate-800 text-emerald-400 shadow-sm'
                     }`}
                   >
                     <FileText className="w-4 h-4" /> {isStopped ? 'View & Send Final Collection Bill' : 'View & Send Itemized Bill'}
                   </button>
 
-                  {/* 1-Click Action: Manually Complete Current Month & Start Next Cycle */}
                   <button
                     onClick={() => {
                       if (window.confirm(`Complete current month cycle (${startDateStr} to ${endDateStr}) for ${customer.name} and advance to next month?`)) {
                         handleAdvanceCustomerCycle(customer);
                       }
                     }}
-                    className="w-full mt-1 py-1.5 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                    className="w-full mt-1 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
                   >
                     <RotateCcw className="w-3.5 h-3.5" /> 🔄 Complete Month & Start Next Cycle
                   </button>
 
-                  {/* 1-Click Status Toggle Button (Stop Milk vs Reactivate) */}
                   {!isStopped ? (
                     <button
                       onClick={() => handleStopCustomerMilk(customer)}
-                      className="w-full mt-1 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                      className="w-full mt-1 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <Octagon className="w-3.5 h-3.5" /> 🛑 Stop Milk & Move to Pending Bills
                     </button>
                   ) : (
                     <button
                       onClick={() => handleReactivateCustomer(customer)}
-                      className="w-full mt-1 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                      className="w-full mt-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
                     >
                       <RotateCcw className="w-3.5 h-3.5" /> 🟢 Reactivate Customer to Active
                     </button>
@@ -1199,64 +1177,64 @@ export default function DairyModule() {
         </div>
       )}
 
-      {/* RENDER VIEW TAB 3 SUB-SECTION: UNPAID COMPLETED MONTHS IN STOPPED & PENDING BILLS */}
+      {/* RENDER VIEW TAB 3 SUB-SECTION: UNPAID COMPLETED MONTHS */}
       {customerTab === 'Stopped' && pendingCompletedCycles.length > 0 && (
-        <div className="space-y-4 pt-4 border-t border-slate-800">
+        <div className="space-y-4 pt-4 border-t border-slate-200">
           <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-rose-400" />
+            <AlertTriangle className="w-5 h-5 text-rose-600" />
             <div>
-              <h3 className="text-lg font-bold text-white">Unpaid Pending Bills from Completed Months</h3>
-              <p className="text-xs text-slate-400">Completed month statements with unpaid pending balances carried forward.</p>
+              <h3 className="text-lg font-bold text-slate-900">Unpaid Pending Bills from Completed Months</h3>
+              <p className="text-xs text-slate-500">Completed month statements with unpaid pending balances carried forward.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pendingCompletedCycles.map((cycle, idx) => (
-              <div key={idx} className="p-5 rounded-2xl bg-slate-900 border border-rose-500/40 space-y-3 shadow-lg shadow-rose-950/20 card-3d">
+              <div key={idx} className="p-5 rounded-3xl bg-white border border-rose-200 space-y-3 shadow-sm card-3d">
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
                       Completed Month Bill Pending
                     </span>
-                    <h4 className="text-lg font-bold text-white mt-1">{cycle.customer.name}</h4>
+                    <h4 className="text-lg font-bold text-slate-900 mt-1">{cycle.customer.name}</h4>
                   </div>
-                  <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                  <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
                     ⚠️ NET DUE: {currency}{cycle.pendingBalanceDue}
                   </span>
                 </div>
 
-                <div className="text-xs space-y-1 text-slate-300">
-                  <p><span className="text-slate-400">Cycle Period:</span> <strong className="text-white">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
-                  <p><span className="text-slate-400">Milk Delivered:</span> <strong className="text-cyan-300">{cycle.totalLitersTaken} Liters</strong></p>
-                  <p><span className="text-slate-400">Month Bill:</span> <strong className="text-white">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
-                  <p><span className="text-slate-400">Payments Paid:</span> <strong className="text-emerald-400">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
+                <div className="text-xs space-y-1 text-slate-600">
+                  <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
+                  <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
+                  <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
+                  <p><span className="text-slate-500 font-medium">Payments Paid:</span> <strong className="text-emerald-700">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
                 </div>
 
-                <div className="pt-2 border-t border-slate-800 space-y-2">
+                <div className="pt-2 border-t border-slate-100 space-y-2">
                   <button
                     onClick={() => handleOpenPaymentForCustomer(cycle.customer.id, cycle.pendingBalanceDue)}
-                    className="w-full py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/20"
+                    className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
                   >
-                    <Wallet className="w-4 h-4 fill-slate-950" /> Record & Save Payment ({currency}{cycle.pendingBalanceDue})
+                    <Wallet className="w-4 h-4" /> Record & Save Payment ({currency}{cycle.pendingBalanceDue})
                   </button>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
-                      className="flex-1 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1 border border-slate-700"
+                      className="flex-1 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 border border-slate-200"
                     >
                       <FileText className="w-3.5 h-3.5" /> Statement
                     </button>
                     <button
                       onClick={() => downloadPDFRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                      className="flex-1 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/30 text-xs font-bold flex items-center justify-center gap-1"
+                      className="flex-1 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-1"
                     >
-                      <FileText className="w-3.5 h-3.5 text-rose-400" /> PDF
+                      <FileText className="w-3.5 h-3.5 text-rose-600" /> PDF
                     </button>
                     <button
                       onClick={() => sendWhatsAppRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                      className="flex-1 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1"
+                      className="flex-1 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1"
                     >
-                      <MessageCircle className="w-3.5 h-3.5 fill-slate-950" /> WhatsApp
+                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                     </button>
                   </div>
                 </div>
@@ -1268,22 +1246,22 @@ export default function DairyModule() {
 
       {/* RENDER VIEW TAB 2: COMPLETED MONTHLY STATEMENTS HISTORY ARCHIVE */}
       {customerTab === 'Completed' && (
-        <div className="glass-panel p-6 rounded-3xl border border-emerald-500/30 card-3d space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
             <div className="flex items-center space-x-2">
-              <FolderCheck className="w-6 h-6 text-emerald-400" />
+              <FolderCheck className="w-6 h-6 text-emerald-600" />
               <div>
-                <h3 className="text-xl font-bold text-white">Monthly Completed Milk Log Statements History</h3>
-                <p className="text-xs text-slate-400">Paid month bills can be deleted/cleared in 1 click; Unpaid bills stay back until paid.</p>
+                <h3 className="text-xl font-bold text-slate-900">Monthly Completed Milk Log Statements History</h3>
+                <p className="text-xs text-slate-500">Paid month bills can be deleted/cleared in 1 click; Unpaid bills stay back until paid.</p>
               </div>
             </div>
 
             {paidCompletedCount > 0 && (
               <button
                 onClick={handleClearAllPaidCycles}
-                className="px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5 transition-all self-start sm:self-auto"
+                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-all self-start sm:self-auto"
               >
-                <Sparkles className="w-4 h-4 text-emerald-400" /> Clear All Paid Statements ({paidCompletedCount})
+                <Sparkles className="w-4 h-4 text-emerald-600" /> Clear All Paid Statements ({paidCompletedCount})
               </button>
             )}
           </div>
@@ -1294,68 +1272,66 @@ export default function DairyModule() {
                 const cycleKey = `${cycle.customer.id}_${cycle.startDateStr}`;
 
                 return (
-                  <div key={idx} className={`p-5 rounded-2xl bg-slate-900 border space-y-3 ${
-                    cycle.isPaidInFull ? 'border-slate-800' : 'border-rose-500/30 bg-rose-950/10'
+                  <div key={idx} className={`p-5 rounded-2xl bg-white border space-y-3 shadow-sm ${
+                    cycle.isPaidInFull ? 'border-slate-200' : 'border-rose-200 bg-rose-50/20'
                   }`}>
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
                           Completed Month Cycle
                         </span>
-                        <h4 className="text-lg font-bold text-white mt-1">{cycle.customer.name}</h4>
+                        <h4 className="text-lg font-bold text-slate-900 mt-1">{cycle.customer.name}</h4>
                       </div>
                       <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold border ${
-                        cycle.isPaidInFull ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border-rose-500/30'
+                        cycle.isPaidInFull ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
                       }`}>
                         {cycle.isPaidInFull ? '✅ PAID IN FULL' : `⚠️ UNPAID DUE: ${currency}${cycle.pendingBalanceDue}`}
                       </span>
                     </div>
 
-                    <div className="text-xs space-y-1 text-slate-300">
-                      <p><span className="text-slate-400">Cycle Period:</span> <strong className="text-white">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
-                      <p><span className="text-slate-400">Days Taken vs Off:</span> <strong className="text-emerald-400">{cycle.daysTakenCount} Taken</strong> / <strong className="text-rose-400">{cycle.daysNotTakenCount} Off</strong></p>
-                      <p><span className="text-slate-400">Total Quantity:</span> <strong className="text-cyan-300">{cycle.totalLitersTaken} Liters</strong></p>
-                      <p><span className="text-slate-400">Current Month Bill:</span> <strong className="text-white">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
-                      {cycle.priorDueAmount > 0 && <p className="text-rose-300"><span className="text-slate-400">Last Month Due:</span> + {currency}{cycle.priorDueAmount}</p>}
-                      {cycle.priorExtraPaidAdvance > 0 && <p className="text-emerald-300"><span className="text-slate-400">Last Month Extra Paid:</span> - {currency}{cycle.priorExtraPaidAdvance}</p>}
-                      <p><span className="text-slate-400">Amount Paid:</span> <strong className="text-emerald-400">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
+                    <div className="text-xs space-y-1 text-slate-600">
+                      <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Days Taken vs Off:</span> <strong className="text-emerald-700">{cycle.daysTakenCount} Taken</strong> / <strong className="text-rose-700">{cycle.daysNotTakenCount} Off</strong></p>
+                      <p><span className="text-slate-500 font-medium">Total Quantity:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
+                      <p><span className="text-slate-500 font-medium">Current Month Bill:</span> <strong className="text-slate-900">{currency}{cycle.totalMonthBill.toLocaleString('en-IN')}</strong></p>
+                      {cycle.priorDueAmount > 0 && <p className="text-rose-700"><span className="text-slate-500 font-medium">Last Month Due:</span> + {currency}{cycle.priorDueAmount}</p>}
+                      {cycle.priorExtraPaidAdvance > 0 && <p className="text-emerald-700"><span className="text-slate-500 font-medium">Last Month Extra Paid:</span> - {currency}{cycle.priorExtraPaidAdvance}</p>}
+                      <p><span className="text-slate-500 font-medium">Amount Paid:</span> <strong className="text-emerald-700">{currency}{cycle.totalPaymentsReceived.toLocaleString('en-IN')}</strong></p>
                     </div>
 
-                    {/* Retention & Delete Button */}
-                    <div className="pt-2 border-t border-slate-800 space-y-2">
+                    <div className="pt-2 border-t border-slate-100 space-y-2">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
-                          className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 text-xs font-bold flex items-center justify-center gap-1 border border-slate-700"
+                          className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 border border-slate-200"
                         >
                           <FileText className="w-3.5 h-3.5" /> Statement
                         </button>
                         <button
                           onClick={() => sendWhatsAppRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                          className="flex-1 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-bold flex items-center justify-center gap-1"
+                          className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1"
                         >
-                          <MessageCircle className="w-3.5 h-3.5 fill-slate-950" /> WhatsApp
+                          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
                         </button>
                         <button
                           onClick={() => downloadCustomerRangeCSV(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                          className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-slate-700"
+                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-emerald-700 border border-slate-200"
                           title="Download CSV"
                         >
                           <FileSpreadsheet className="w-4 h-4" />
                         </button>
                       </div>
 
-                      {/* 1-Click Delete Paid Cycle vs Saved Unpaid Lock Badge */}
                       {cycle.isPaidInFull ? (
                         <button
                           onClick={() => handleClearPaidCycle(cycleKey)}
-                          className="w-full py-1.5 rounded-xl bg-slate-800 hover:bg-rose-500/20 text-slate-400 hover:text-rose-300 border border-slate-700 hover:border-rose-500/40 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
+                          className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
                         >
-                          <Trash2 className="w-3.5 h-3.5 text-slate-400 hover:text-rose-300" /> Delete Paid Statement
+                          <Trash2 className="w-3.5 h-3.5" /> Delete Paid Statement
                         </button>
                       ) : (
-                        <div className="w-full py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-[11px] font-bold flex items-center justify-center gap-1">
-                          <Lock className="w-3.5 h-3.5 text-rose-400" /> Saved (Stays Back Until Bill Paid)
+                        <div className="w-full py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold flex items-center justify-center gap-1">
+                          <Lock className="w-3.5 h-3.5 text-rose-600" /> Saved (Stays Back Until Bill Paid)
                         </div>
                       )}
                     </div>
@@ -1365,7 +1341,7 @@ export default function DairyModule() {
               })}
             </div>
           ) : (
-            <div className="text-center text-slate-500 text-xs py-12">
+            <div className="text-center text-slate-400 text-xs py-12">
               No completed month cycle archives present. Cleared paid statements or future completed months will appear here.
             </div>
           )}
@@ -1376,14 +1352,14 @@ export default function DairyModule() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
         {/* Daily Milk Collection Register */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Milk className="w-5 h-5 text-cyan-400" />
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Milk className="w-5 h-5 text-emerald-600" />
             Daily Milk Delivery Register
           </h3>
           <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Date</th>
                   <th className="p-3">Customer</th>
@@ -1392,47 +1368,47 @@ export default function DairyModule() {
                   <th className="p-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-slate-100">
                 {(() => {
                   const uniqueMilkLogsMap = {};
-                  (data.dairyMilkLogs || []).forEach(log => {
+                  (data?.dairyMilkLogs || []).forEach(log => {
                     const key = `${log.customerId}_${log.date}_${log.shift || 'Morning'}`;
                     uniqueMilkLogsMap[key] = log;
                   });
                   const displayLogs = Object.values(uniqueMilkLogsMap).sort((a, b) => (b.date < a.date ? -1 : b.date > a.date ? 1 : 0));
                   return displayLogs.map((log) => {
-                    const customer = data.dairyCustomers.find(c => c.id === log.customerId);
+                    const customer = (data?.dairyCustomers || []).find(c => c.id === log.customerId);
                     const isTaken = log.status === 'Taken' || Number(log.liters) > 0;
                     return (
-                      <tr key={log.id} className="hover:bg-slate-800/40">
-                        <td className="p-3 whitespace-nowrap">{log.date}</td>
-                        <td className="p-3 font-medium text-white whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
+                      <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 whitespace-nowrap font-medium text-slate-600">{log.date}</td>
+                        <td className="p-3 font-bold text-slate-900 whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
                         <td className="p-3 whitespace-nowrap">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                            isTaken ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                            isTaken ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'
                           }`}>
                             {isTaken ? `Taken (${log.shift})` : '❌ Not Taken (Off Day)'}
                           </span>
-                          {log.notes && <div className="text-[10px] text-slate-400 mt-0.5">{log.notes}</div>}
+                          {log.notes && <div className="text-[10px] text-slate-400 mt-0.5 font-normal">{log.notes}</div>}
                         </td>
-                        <td className="p-3 font-semibold whitespace-nowrap">
+                        <td className="p-3 font-bold whitespace-nowrap">
                           {isTaken ? (
-                            <span className="text-cyan-300">{log.liters} L ({currency}{log.totalAmount})</span>
+                            <span className="text-emerald-700">{log.liters} L ({currency}{Number(log.totalAmount || 0).toLocaleString('en-IN')})</span>
                           ) : (
-                            <span className="text-slate-500">0 L ({currency}0)</span>
+                            <span className="text-slate-400">0 L ({currency}0)</span>
                           )}
                         </td>
                         <td className="p-3 whitespace-nowrap">
                           <div className="flex items-center space-x-1.5">
                             <button 
                               onClick={() => handleEditMilkLog(log)} 
-                              className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                              className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors"
                             >
                               <Edit3 className="w-3 h-3" /> Edit
                             </button>
                             <button 
                               onClick={() => deleteRecord('dairyMilkLogs', log.id)} 
-                              className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1448,14 +1424,14 @@ export default function DairyModule() {
         </div>
 
         {/* Customer Payments Register */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-          <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-emerald-400" />
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+            <Wallet className="w-5 h-5 text-emerald-600" />
             Customer Milk Bill Payments Received
           </h3>
           <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-            <table className="w-full text-left text-xs text-slate-300">
-              <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+            <table className="w-full text-left text-xs text-slate-700">
+              <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
                 <tr>
                   <th className="p-3">Date Paid</th>
                   <th className="p-3">Customer</th>
@@ -1464,31 +1440,31 @@ export default function DairyModule() {
                   <th className="p-3">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
-                {(data.dairyPayments || []).map((pay) => {
-                  const customer = data.dairyCustomers.find(c => c.id === pay.customerId);
+              <tbody className="divide-y divide-slate-100">
+                {(data?.dairyPayments || []).map((pay) => {
+                  const customer = (data?.dairyCustomers || []).find(c => c.id === pay.customerId);
                   return (
-                    <tr key={pay.id} className="hover:bg-slate-800/40">
-                      <td className="p-3 whitespace-nowrap">{pay.date}</td>
-                      <td className="p-3 font-medium text-white whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
+                    <tr key={pay.id} className="hover:bg-slate-50 transition-colors">
+                      <td className="p-3 whitespace-nowrap font-medium text-slate-600">{pay.date}</td>
+                      <td className="p-3 font-bold text-slate-900 whitespace-nowrap">{customer ? customer.name : 'Customer'}</td>
                       <td className="p-3 whitespace-nowrap">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-semibold">
+                        <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-[10px] font-bold">
                           Payment Received
                         </span>
-                        {pay.notes && <div className="text-[10px] text-slate-400 mt-0.5">{pay.notes}</div>}
+                        {pay.notes && <div className="text-[10px] text-slate-400 mt-0.5 font-normal">{pay.notes}</div>}
                       </td>
-                      <td className="p-3 font-extrabold text-emerald-400 whitespace-nowrap">{currency}{pay.amount.toLocaleString('en-IN')}</td>
+                      <td className="p-3 font-extrabold text-emerald-700 whitespace-nowrap">{currency}{Number(pay.amount || 0).toLocaleString('en-IN')}</td>
                       <td className="p-3 whitespace-nowrap">
                         <div className="flex items-center space-x-1.5">
                           <button 
                             onClick={() => handleEditDairyPayment(pay)} 
-                            className="px-2 py-1 rounded bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/30 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                            className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors"
                           >
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
                             onClick={() => deleteRecord('dairyPayments', pay.id)} 
-                            className="p-1 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded transition-colors"
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -1504,48 +1480,47 @@ export default function DairyModule() {
 
       </div>
 
-      {/* BULK MILK LOG MODAL FOR ALL ACTIVE CUSTOMERS AT ONCE */}
+      {/* BULK MILK LOG MODAL */}
       {showBulkMilkModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-cyan-500/40 max-w-3xl w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-3xl w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
               <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
-                  <Zap className="w-5 h-5 fill-cyan-400" />
+                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
+                  <Zap className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white">Log Daily Milk for ALL Active Customers (Bulk Sheet)</h3>
-                  <p className="text-xs text-slate-400">Record daily milk quantities for every active buyer in a single form.</p>
+                  <h3 className="text-lg font-bold text-slate-900">Log Daily Milk for ALL Active Customers (Bulk Sheet)</h3>
+                  <p className="text-xs text-slate-500">Record daily milk quantities for every active buyer in a single form.</p>
                 </div>
               </div>
-              <button onClick={() => setShowBulkMilkModal(false)} className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+              <button onClick={() => setShowBulkMilkModal(false)} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveBulkMilkLogs} className="space-y-4 text-xs">
-              
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+              <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
                   </label>
                   <input
                     type="date"
                     required
                     value={bulkMilkForm.date}
                     onChange={(e) => setBulkMilkForm({ ...bulkMilkForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-cyan-400">Select Shift</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Select Shift</label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
                       type="button"
                       onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Morning' })}
                       className={`py-2 rounded-xl font-bold border transition-all ${
-                        bulkMilkForm.shift === 'Morning' ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 text-slate-400 border-slate-800'
+                        bulkMilkForm.shift === 'Morning' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300'
                       }`}
                     >
                       Morning Shift
@@ -1554,7 +1529,7 @@ export default function DairyModule() {
                       type="button"
                       onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Evening' })}
                       className={`py-2 rounded-xl font-bold border transition-all ${
-                        bulkMilkForm.shift === 'Evening' ? 'bg-cyan-500 text-slate-950 border-cyan-400' : 'bg-slate-950 text-slate-400 border-slate-800'
+                        bulkMilkForm.shift === 'Evening' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300'
                       }`}
                     >
                       Evening Shift
@@ -1564,29 +1539,27 @@ export default function DairyModule() {
               </div>
 
               <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                {data.dairyCustomers.filter(c => c.status !== 'Stopped & Bill Pending').map(customer => {
+                {(data?.dairyCustomers || []).filter(c => c.status !== 'Stopped & Bill Pending').map(customer => {
                   const entry = bulkMilkForm.entries[customer.id] || { status: 'Taken', liters: customer.defaultQuotaLiters || 5, fatPercent: 4.5, notes: '' };
                   const isTaken = entry.status === 'Taken';
                   const rowAmount = isTaken ? (Number(entry.liters) || 0) * customer.ratePerLiter : 0;
 
                   return (
-                    <div key={customer.id} className="p-3.5 rounded-2xl bg-slate-900/90 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      
+                    <div key={customer.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div className="sm:w-1/3">
-                        <h4 className="font-bold text-white text-sm">{customer.name}</h4>
-                        <p className="text-[11px] text-slate-400">
-                          Quota: {customer.defaultQuotaLiters}L @ <strong className="text-cyan-400">{currency}{customer.ratePerLiter}/L</strong>
+                        <h4 className="font-bold text-slate-900 text-sm">{customer.name}</h4>
+                        <p className="text-[11px] text-slate-500">
+                          Quota: {customer.defaultQuotaLiters}L @ <strong className="text-emerald-700">{currency}{customer.ratePerLiter}/L</strong>
                         </p>
                       </div>
 
                       <div className="flex items-center space-x-2 sm:w-2/3 justify-end">
-                        
-                        <div className="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                        <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200">
                           <button
                             type="button"
                             onClick={() => handleBulkEntryChange(customer.id, 'status', 'Taken')}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                              isTaken ? 'bg-emerald-500 text-slate-950' : 'text-slate-400 hover:text-white'
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                              isTaken ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
                             }`}
                           >
                             Taken
@@ -1594,8 +1567,8 @@ export default function DairyModule() {
                           <button
                             type="button"
                             onClick={() => handleBulkEntryChange(customer.id, 'status', 'Not Taken')}
-                            className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                              !isTaken ? 'bg-rose-500 text-white' : 'text-slate-400 hover:text-white'
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
+                              !isTaken ? 'bg-rose-600 text-white' : 'text-slate-600 hover:text-slate-900'
                             }`}
                           >
                             Off
@@ -1611,30 +1584,28 @@ export default function DairyModule() {
                                 placeholder="Liters"
                                 value={entry.liters}
                                 onChange={(e) => handleBulkEntryChange(customer.id, 'liters', e.target.value)}
-                                className="w-full p-2 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 font-bold text-center"
+                                className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-center focus:border-emerald-600 focus:outline-none"
                               />
                             </div>
-                            <span className="font-mono text-cyan-400 font-bold text-xs min-w-[65px] text-right">
+                            <span className="font-mono text-emerald-700 font-bold text-xs min-w-[65px] text-right">
                               {currency}{rowAmount}
                             </span>
                           </>
                         ) : (
-                          <span className="text-rose-400 font-bold text-xs min-w-[120px] text-right">
+                          <span className="text-rose-600 font-bold text-xs min-w-[120px] text-right">
                             ❌ Off (0 L)
                           </span>
                         )}
-
                       </div>
-
                     </div>
                   );
                 })}
               </div>
 
-              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-800">
-                <button type="button" onClick={() => setShowBulkMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs flex items-center gap-1.5 shadow-lg shadow-cyan-500/20">
-                  <Zap className="w-4 h-4 fill-slate-950 text-slate-950" /> Save ALL Active Customer Logs
+              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-200">
+                <button type="button" onClick={() => setShowBulkMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
+                  <Zap className="w-4 h-4" /> Save ALL Active Customer Logs
                 </button>
               </div>
 
@@ -1651,79 +1622,79 @@ export default function DairyModule() {
         const { customer, startDateStr, endDateStr, totalDaysInCycle, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull, dayList } = summary;
 
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-            <div className="glass-panel-glow p-5 sm:p-8 rounded-3xl border border-slate-700 max-w-2xl w-full my-auto space-y-6 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+            <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 max-w-2xl w-full my-auto space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
               
               {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
                 <div className="flex items-center space-x-3">
-                  <div className="p-2 rounded-xl bg-cyan-500/20 text-cyan-400">
+                  <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
                     <Milk className="w-6 h-6" />
                   </div>
                   <div>
-                    <h3 className="text-xl font-bold text-white">Monthly Milk Billing Statement</h3>
-                    <p className="text-xs text-slate-400">{customer.name} ({startDateStr} to {endDateStr})</p>
+                    <h3 className="text-xl font-extrabold text-slate-900">Monthly Milk Billing Statement</h3>
+                    <p className="text-xs text-slate-500">{customer.name} ({startDateStr} to {endDateStr})</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setSelectedBillCycle(null)} 
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
+                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Customer Financial Summary Ledger */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-900 border border-slate-800 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
                 <div>
-                  <span className="text-slate-400 block">Phone</span>
-                  <span className="font-bold text-white">{customer.phone || 'N/A'}</span>
+                  <span className="text-slate-500 block">Phone</span>
+                  <span className="font-bold text-slate-900">{customer.phone || 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block">Milk Rate</span>
-                  <span className="font-bold text-cyan-400">{currency}{customer.ratePerLiter} / Liter</span>
+                  <span className="text-slate-500 block">Milk Rate</span>
+                  <span className="font-bold text-emerald-700">{currency}{customer.ratePerLiter} / Liter</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block">Total Quantity</span>
-                  <span className="font-bold text-emerald-400">{totalLitersTaken} Liters</span>
+                  <span className="text-slate-500 block">Total Quantity</span>
+                  <span className="font-bold text-emerald-700">{totalLitersTaken} Liters</span>
                 </div>
                 <div>
-                  <span className="text-slate-400 block">Payment Status</span>
-                  <span className={`font-bold ${isPaidInFull ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <span className="text-slate-500 block">Payment Status</span>
+                  <span className={`font-bold ${isPaidInFull ? 'text-emerald-700' : 'text-amber-700'}`}>
                     {isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${pendingBalanceDue}`}
                   </span>
                 </div>
               </div>
 
               {/* Carryover Calculation Box */}
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-slate-800 space-y-2 text-xs">
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Current Month Bill Amount:</span>
-                  <span className="text-white font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-500 font-medium">Current Month Bill Amount:</span>
+                  <span className="text-slate-900 font-bold">{currency}{totalMonthBill.toLocaleString('en-IN')}</span>
                 </div>
                 {priorDueAmount > 0 && (
-                  <div className="flex justify-between text-rose-300 font-semibold bg-rose-500/10 px-2 py-0.5 rounded">
+                  <div className="flex justify-between text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded border border-rose-100">
                     <span>Last Month Pending Unpaid Due (+):</span>
                     <span>+ {currency}{priorDueAmount.toLocaleString('en-IN')}</span>
                   </div>
                 )}
                 {priorExtraPaidAdvance > 0 && (
-                  <div className="flex justify-between text-emerald-300 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded">
+                  <div className="flex justify-between text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">
                     <span>Last Month Extra Paid Advance Credit (-):</span>
                     <span>- {currency}{priorExtraPaidAdvance.toLocaleString('en-IN')}</span>
                   </div>
                 )}
-                <div className="flex justify-between text-cyan-300 font-bold border-t border-slate-800 pt-1">
+                <div className="flex justify-between text-slate-900 font-bold border-t border-slate-200 pt-1">
                   <span>Gross Total Payable:</span>
                   <span>{currency}{grossTotalPayable.toLocaleString('en-IN')}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Payments Paid in Cycle:</span>
-                  <span className="text-emerald-400 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
+                  <span className="text-slate-500 font-medium">Payments Paid in Cycle:</span>
+                  <span className="text-emerald-700 font-bold">{currency}{totalPaymentsReceived.toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-sm font-extrabold border-t border-slate-800 pt-2">
-                  <span className="text-slate-200">Net Remaining Balance Due:</span>
-                  <span className={pendingBalanceDue > 0 ? 'text-amber-400' : 'text-emerald-400'}>
+                <div className="flex justify-between text-sm font-extrabold border-t border-slate-200 pt-2">
+                  <span className="text-slate-700">Net Remaining Balance Due:</span>
+                  <span className={pendingBalanceDue > 0 ? 'text-amber-700' : 'text-emerald-700'}>
                     {currency}{pendingBalanceDue.toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -1731,27 +1702,27 @@ export default function DairyModule() {
 
               {/* Day-by-Day Itemized Calendar Ledger */}
               <div className="space-y-2">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-cyan-400 flex justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex justify-between">
                   <span>Day-by-Day Milk Delivery Ledger</span>
                   <span>Total: {totalLitersTaken} Liters</span>
                 </h4>
-                <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden text-xs">
-                  <div className="divide-y divide-slate-800 max-h-48 overflow-y-auto">
+                <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
+                  <div className="divide-y divide-slate-200 max-h-48 overflow-y-auto">
                     {dayList.map((d) => {
                       const isTaken = d.status === 'Taken';
                       return (
-                        <div key={d.date} className="p-2.5 flex justify-between items-center text-slate-300">
+                        <div key={d.date} className="p-2.5 flex justify-between items-center text-slate-700">
                           <div className="flex items-center space-x-2">
-                            <span className={`w-2 h-2 rounded-full ${isTaken ? 'bg-emerald-400' : 'bg-rose-400'}`} />
-                            <span className="font-semibold text-white">{d.date}</span>
+                            <span className={`w-2 h-2 rounded-full ${isTaken ? 'bg-emerald-500' : 'bg-rose-500'}`} />
+                            <span className="font-bold text-slate-900">{d.date}</span>
                           </div>
                           <div className="flex items-center space-x-3">
                             <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isTaken ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'
+                              isTaken ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
                             }`}>
                               {isTaken ? `Taken: ${d.totalLiters}L` : '❌ NOT Taken'}
                             </span>
-                            <span className="font-mono text-cyan-300 font-bold min-w-[60px] text-right">
+                            <span className="font-mono text-emerald-800 font-bold min-w-[60px] text-right">
                               {currency}{d.totalAmount}
                             </span>
                           </div>
@@ -1762,38 +1733,38 @@ export default function DairyModule() {
                 </div>
               </div>
 
-              {/* Action Buttons: Record Payment, CSV & WhatsApp */}
-              <div className="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-end gap-3">
+              {/* Action Buttons */}
+              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedBillCycle(null);
                     handleOpenPaymentForCustomer(customer.id, pendingBalanceDue > 0 ? pendingBalanceDue : '');
                   }}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-500 hover:bg-blue-400 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
                 >
                   <Wallet className="w-4 h-4" /> Record Payment
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadCustomerRangeCSV(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold flex items-center justify-center gap-2"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-cyan-400" /> CSV
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> CSV
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadPDFRangeBill(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
                 >
-                  <FileText className="w-4 h-4 text-rose-400" /> Download PDF
+                  <FileText className="w-4 h-4 text-rose-600" /> Download PDF
                 </button>
                 <button
                   type="button"
                   onClick={() => sendWhatsAppRangeBill(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <MessageCircle className="w-4 h-4 fill-slate-950" /> Send via WhatsApp
+                  <MessageCircle className="w-4 h-4" /> Send via WhatsApp
                 </button>
               </div>
 
@@ -1802,74 +1773,73 @@ export default function DairyModule() {
         );
       })()}
 
-      {/* Add / Edit Customer Modal with Active Cycle Date Range Configuration */}
+      {/* Add / Edit Customer Modal */}
       {showCustomerModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-lg w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-lg font-bold text-white">{editingCustomer ? 'Edit Customer Profile & Active Cycle' : 'Add New Milk Buyer'}</h3>
-              <button onClick={() => setShowCustomerModal(false)} className="p-1 rounded text-slate-400 hover:text-white">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-lg w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <h3 className="text-lg font-bold text-slate-900">{editingCustomer ? 'Edit Customer Profile & Active Cycle' : 'Add New Milk Buyer'}</h3>
+              <button onClick={() => setShowCustomerModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             <form onSubmit={handleSaveCustomer} className="space-y-4 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1 font-semibold">Customer / Buyer Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Customer / Buyer Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Venkatesh Dairy Depot / Sharma Household"
                   value={customerForm.name}
                   onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Phone Number</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Phone Number</label>
                   <input
                     type="text"
                     placeholder="9448123456"
                     value={customerForm.phone}
                     onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Milk Rate ({currency}/Liter)</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Milk Rate ({currency}/Liter)</label>
                   <input
                     type="number"
                     required
                     placeholder="50"
                     value={customerForm.ratePerLiter}
                     onChange={(e) => setCustomerForm({ ...customerForm, ratePerLiter: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Default Quota (Liters/Day)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Default Quota (Liters/Day)</label>
                 <input
                   type="number"
                   placeholder="5"
                   value={customerForm.defaultQuotaLiters}
                   onChange={(e) => setCustomerForm({ ...customerForm, defaultQuotaLiters: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 />
               </div>
 
-              {/* Direct Configuration of Current Active Billing Cycle for this Customer */}
-              <div className="p-4 rounded-2xl bg-slate-900/90 border border-cyan-500/30 space-y-3">
-                <h4 className="font-bold text-cyan-300 flex items-center gap-1.5 text-xs">
-                  <Calendar className="w-4 h-4 text-cyan-400" /> Set Active Monthly Billing Cycle Range
+              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                <h4 className="font-bold text-emerald-800 flex items-center gap-1.5 text-xs">
+                  <Calendar className="w-4 h-4 text-emerald-600" /> Set Active Monthly Billing Cycle Range
                 </h4>
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-slate-400 mb-1">Cycle Start Date</label>
+                    <label className="block text-slate-600 mb-1 font-semibold">Cycle Start Date</label>
                     <input
                       type="date"
                       required
@@ -1882,30 +1852,26 @@ export default function DairyModule() {
                           cycleEndDate: getDefaultCycleEndDate(newStart)
                         });
                       }}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white cursor-pointer"
+                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-400 mb-1">Cycle End Date</label>
+                    <label className="block text-slate-600 mb-1 font-semibold">Cycle End Date</label>
                     <input
                       type="date"
                       required
                       value={customerForm.cycleEndDate}
                       onChange={(e) => setCustomerForm({ ...customerForm, cycleEndDate: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white cursor-pointer"
+                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
                     />
                   </div>
                 </div>
-
-                <p className="text-[10px] text-slate-400">
-                  Daily milk entries & statement bills will calculate between <strong className="text-cyan-300">{customerForm.cycleStartDate || 'Start'}</strong> and <strong className="text-cyan-300">{customerForm.cycleEndDate || 'End'}</strong> for this buyer.
-                </p>
               </div>
 
-              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-800">
-                <button type="button" onClick={() => setShowCustomerModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-cyan-500 text-slate-950 font-bold">
+              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-200">
+                <button type="button" onClick={() => setShowCustomerModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm">
                   {editingCustomer ? 'Update Profile & Cycle' : 'Save Buyer Profile'}
                 </button>
               </div>
@@ -1916,18 +1882,18 @@ export default function DairyModule() {
 
       {/* Log / Edit Single Milk Entry Modal */}
       {showMilkModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">{editingMilkLog ? 'Edit Daily Milk Entry' : 'Log Single Customer Milk Entry'}</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">{editingMilkLog ? 'Edit Daily Milk Entry' : 'Log Single Customer Milk Entry'}</h3>
             <form onSubmit={handleSaveMilkLog} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Customer</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Customer</label>
                 <select
                   value={milkForm.customerId}
                   onChange={(e) => setMilkForm({ ...milkForm, customerId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 >
-                  {data.dairyCustomers.map(c => (
+                  {(data?.dairyCustomers || []).map(c => (
                     <option key={c.id} value={c.id}>{c.name} ({currency}{c.ratePerLiter}/L)</option>
                   ))}
                 </select>
@@ -1935,23 +1901,23 @@ export default function DairyModule() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
                   </label>
                   <input
                     type="date"
                     required
                     value={milkForm.date}
                     onChange={(e) => setMilkForm({ ...milkForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Shift</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Shift</label>
                   <select
                     value={milkForm.shift}
                     onChange={(e) => setMilkForm({ ...milkForm, shift: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                   >
                     <option value="Morning">Morning Shift</option>
                     <option value="Evening">Evening Shift</option>
@@ -1959,15 +1925,14 @@ export default function DairyModule() {
                 </div>
               </div>
 
-              {/* Milk Taken vs NOT Taken Selector */}
               <div>
-                <label className="block text-slate-400 mb-1 font-bold text-amber-300">Daily Milk Status</label>
+                <label className="block text-slate-600 mb-1 font-bold">Daily Milk Status</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setMilkForm({ ...milkForm, status: 'Taken' })}
                     className={`py-2 rounded-xl font-bold border transition-all ${
-                      milkForm.status === 'Taken' ? 'bg-emerald-500 text-slate-950 border-emerald-400' : 'bg-slate-900 text-slate-400 border-slate-800'
+                      milkForm.status === 'Taken' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
                     }`}
                   >
                     ✅ Milk Taken
@@ -1976,7 +1941,7 @@ export default function DairyModule() {
                     type="button"
                     onClick={() => setMilkForm({ ...milkForm, status: 'Not Taken', liters: 0 })}
                     className={`py-2 rounded-xl font-bold border transition-all ${
-                      milkForm.status === 'Not Taken' ? 'bg-rose-500 text-white border-rose-400' : 'bg-slate-900 text-slate-400 border-slate-800'
+                      milkForm.status === 'Not Taken' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
                     }`}
                   >
                     ❌ Milk NOT Taken (Off)
@@ -1985,9 +1950,9 @@ export default function DairyModule() {
               </div>
 
               {milkForm.status === 'Taken' && (
-                <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-900 border border-slate-800">
+                <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
                   <div>
-                    <label className="block text-slate-400 mb-1">Quantity (Liters)</label>
+                    <label className="block text-slate-600 mb-1 font-semibold">Quantity (Liters)</label>
                     <input
                       type="number"
                       step="0.5"
@@ -1995,37 +1960,37 @@ export default function DairyModule() {
                       placeholder="5"
                       value={milkForm.liters}
                       onChange={(e) => setMilkForm({ ...milkForm, liters: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 font-bold"
+                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-emerald-700 font-bold focus:border-emerald-600 focus:outline-none"
                     />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1">Fat % (Optional)</label>
+                    <label className="block text-slate-600 mb-1 font-semibold">Fat % (Optional)</label>
                     <input
                       type="number"
                       step="0.1"
                       placeholder="4.5"
                       value={milkForm.fatPercent}
                       onChange={(e) => setMilkForm({ ...milkForm, fatPercent: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white"
+                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none"
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-slate-400 mb-1">Notes / Reason (Optional)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Notes / Reason (Optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Vacation day / Customer requested off"
                   value={milkForm.notes}
                   onChange={(e) => setMilkForm({ ...milkForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 />
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold">
+                <button type="button" onClick={() => setShowMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm">
                   {editingMilkLog ? 'Update Entry' : 'Save Milk Log'}
                 </button>
               </div>
@@ -2036,18 +2001,18 @@ export default function DairyModule() {
 
       {/* Record Customer Bill Payment Received Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">{editingDairyPayment ? 'Edit Payment Record' : 'Record Customer Payment Received'}</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">{editingDairyPayment ? 'Edit Payment Record' : 'Record Customer Payment Received'}</h3>
             <form onSubmit={handleSaveDairyPayment} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Customer</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Customer</label>
                 <select
                   value={paymentForm.customerId}
                   onChange={(e) => setPaymentForm({ ...paymentForm, customerId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 >
-                  {data.dairyCustomers.map(c => (
+                  {(data?.dairyCustomers || []).map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
@@ -2055,44 +2020,44 @@ export default function DairyModule() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date Paid
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date Paid
                   </label>
                   <input
                     type="date"
                     required
                     value={paymentForm.date}
                     onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Amount Received ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Amount Received ({currency})</label>
                   <input
                     type="number"
                     required
                     placeholder="2000"
                     value={paymentForm.amount}
                     onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-400 mb-1">Notes / Payment Method</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Notes / Payment Method</label>
                 <input
                   type="text"
                   placeholder="e.g. Monthly Settlement / UPI Transfer"
                   value={paymentForm.notes}
                   onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 />
               </div>
 
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-blue-500 text-white font-bold">
+                <button type="button" onClick={() => setShowPaymentModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm">
                   {editingDairyPayment ? 'Update Payment' : 'Save Payment'}
                 </button>
               </div>
@@ -2103,62 +2068,62 @@ export default function DairyModule() {
 
       {/* Add Cattle Modal */}
       {showCattleModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Add New Cattle to Herd</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">Add New Cattle to Herd</h3>
             <form onSubmit={handleAddCattle} className="space-y-3 text-xs">
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Tag Number</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Tag Number</label>
                   <input
                     type="text"
                     required
                     placeholder="COW-104"
                     value={cattleForm.tagNo}
                     onChange={(e) => setCattleForm({ ...cattleForm, tagNo: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Cattle Name</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Cattle Name</label>
                   <input
                     type="text"
                     required
                     placeholder="Kamadhenu"
                     value={cattleForm.name}
                     onChange={(e) => setCattleForm({ ...cattleForm, name: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Breed</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Breed</label>
                   <input
                     type="text"
                     placeholder="Jersey / HF / Murrah"
                     value={cattleForm.breed}
                     onChange={(e) => setCattleForm({ ...cattleForm, breed: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Daily Yield (Liters)</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Daily Yield (Liters)</label>
                   <input
                     type="number"
                     placeholder="15"
                     value={cattleForm.dailyYieldLiters}
                     onChange={(e) => setCattleForm({ ...cattleForm, dailyYieldLiters: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Status</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Status</label>
                 <select
                   value={cattleForm.status}
                   onChange={(e) => setCattleForm({ ...cattleForm, status: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                 >
                   <option value="Milking">Milking</option>
                   <option value="Dry">Dry</option>
@@ -2167,8 +2132,8 @@ export default function DairyModule() {
                 </select>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowCattleModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-500 text-white font-bold">Add Cattle</button>
+                <button type="button" onClick={() => setShowCattleModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">Add Cattle</button>
               </div>
             </form>
           </div>

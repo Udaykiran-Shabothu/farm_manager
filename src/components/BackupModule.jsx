@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { 
   Database, 
@@ -11,9 +11,7 @@ import {
   Cloud, 
   CloudDownload, 
   CloudUpload, 
-  Key, 
-  CheckCircle2,
-  AlertCircle
+  Key
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { initGoogleOAuth, saveToGoogleDrive, loadFromGoogleDrive, DEFAULT_CLIENT_ID } from '../services/googleDrive';
@@ -144,35 +142,35 @@ export default function BackupModule() {
     <div className="space-y-8 pb-12 max-w-4xl mx-auto">
       
       {/* Banner */}
-      <div className="p-6 glass-panel-glow rounded-3xl border border-cyan-500/30 card-3d flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="p-6 bg-white rounded-3xl border border-slate-200 card-3d shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4">
         <div>
           <div className="flex items-center space-x-2">
-            <div className="p-2.5 rounded-xl bg-cyan-500/20 text-cyan-400">
+            <div className="p-2.5 rounded-xl bg-cyan-100 text-cyan-700">
               <Cloud className="w-6 h-6" />
             </div>
-            <h2 className="text-2xl font-extrabold text-white">1 TB Google Drive & Local Data Backup</h2>
+            <h2 className="text-2xl font-extrabold text-slate-900">1 TB Google Drive & Local Data Backup</h2>
           </div>
-          <p className="text-xs text-slate-300 mt-1">Sync farm databases to your private 1 TB Google Drive, export offline JSON files, or restore backups seamlessly.</p>
+          <p className="text-xs text-slate-500 mt-1">Sync farm databases to your private 1 TB Google Drive, export offline JSON files, or restore backups seamlessly.</p>
         </div>
-        <div className="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-500/30 text-xs font-bold flex items-center gap-1.5">
-          <ShieldCheck className="w-4 h-4 text-emerald-400" /> Private & Protected
+        <div className="px-3 py-1 bg-emerald-50 text-emerald-800 rounded-full border border-emerald-200 text-xs font-bold flex items-center gap-1.5">
+          <ShieldCheck className="w-4 h-4 text-emerald-600" /> Private & Protected
         </div>
       </div>
 
       {/* SECTION 1: 1 TB GOOGLE DRIVE CLOUD SYNC */}
-      <div className="glass-panel p-6 rounded-3xl border border-cyan-500/30 card-3d space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-3">
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
           <div className="flex items-center space-x-2">
-            <Cloud className="w-5 h-5 text-cyan-400" />
+            <Cloud className="w-5 h-5 text-cyan-600" />
             <div>
-              <h3 className="text-lg font-bold text-white">☁️ 1 TB Google Drive Cloud Database Sync</h3>
-              <p className="text-xs text-slate-400">Stores samagra_farm_database.json inside your private Google Drive folder (Samagra_Farm_Manager_Cloud_DB).</p>
+              <h3 className="text-lg font-bold text-slate-900">☁️ 1 TB Google Drive Cloud Database Sync</h3>
+              <p className="text-xs text-slate-500">Stores samagra_farm_database.json inside your private Google Drive folder (Samagra_Farm_Manager_Cloud_DB).</p>
             </div>
           </div>
 
           <button
             onClick={() => setShowSettings(!showSettings)}
-            className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs font-bold flex items-center gap-1.5 transition-all self-start sm:self-auto"
+            className="px-3.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 text-xs font-bold flex items-center gap-1.5 transition-all self-start sm:self-auto"
           >
             <Key className="w-3.5 h-3.5" /> {showSettings ? 'Close Settings' : 'Google OAuth Client ID'}
           </button>
@@ -180,12 +178,12 @@ export default function BackupModule() {
 
         {/* Client ID Configuration Form */}
         {showSettings && (
-          <form onSubmit={handleSaveClientId} className="p-4 rounded-2xl bg-slate-900 border border-cyan-500/30 space-y-3 text-xs">
-            <h4 className="font-bold text-white flex items-center gap-1.5">
-              <Key className="w-4 h-4 text-cyan-400" /> Google Cloud OAuth 2.0 Client ID Configuration
+          <form onSubmit={handleSaveClientId} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3 text-xs">
+            <h4 className="font-bold text-slate-900 flex items-center gap-1.5">
+              <Key className="w-4 h-4 text-cyan-600" /> Google Cloud OAuth 2.0 Client ID Configuration
             </h4>
-            <p className="text-slate-400 text-[11px]">
-              Paste your safe Client ID from Google Cloud Console (e.g. <code className="text-cyan-300">xxxx.apps.googleusercontent.com</code>).
+            <p className="text-slate-500 text-[11px]">
+              Paste your safe Client ID from Google Cloud Console (e.g. <code className="text-cyan-700 font-bold">xxxx.apps.googleusercontent.com</code>).
             </p>
             <div className="flex gap-2">
               <input
@@ -194,9 +192,9 @@ export default function BackupModule() {
                 placeholder="xxxx.apps.googleusercontent.com"
                 value={clientId}
                 onChange={(e) => setClientId(e.target.value)}
-                className="flex-1 p-2.5 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono"
+                className="flex-1 p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-mono text-xs focus:border-cyan-600 focus:outline-none"
               />
-              <button type="submit" className="px-4 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold">
+              <button type="submit" className="px-4 py-2.5 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold">
                 Save ID
               </button>
             </div>
@@ -205,8 +203,8 @@ export default function BackupModule() {
 
         {/* Sync Status Alert */}
         {syncStatus && (
-          <div className="p-3 rounded-xl bg-slate-900 border border-cyan-500/30 text-xs text-cyan-300 font-medium flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-cyan-400" />
+          <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-200 text-xs text-cyan-800 font-medium flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-cyan-600" />
             <span>{syncStatus}</span>
           </div>
         )}
@@ -217,17 +215,17 @@ export default function BackupModule() {
           <button
             onClick={handleGoogleDriveBackup}
             disabled={isSyncing}
-            className="p-4 rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-400 hover:to-teal-400 text-slate-950 font-extrabold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
+            className="p-4 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-extrabold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-600/20 transition-all"
           >
-            <CloudUpload className="w-5 h-5 fill-slate-950" /> ☁️ Backup to Google Drive
+            <CloudUpload className="w-5 h-5" /> ☁️ Backup to Google Drive
           </button>
 
           <button
             onClick={handleGoogleDriveRestore}
             disabled={isSyncing}
-            className="p-4 rounded-2xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-cyan-500/40 font-extrabold text-xs flex items-center justify-center gap-2 transition-all"
+            className="p-4 rounded-2xl bg-slate-100 hover:bg-slate-200 text-cyan-800 border border-slate-300 font-extrabold text-xs flex items-center justify-center gap-2 transition-all"
           >
-            <CloudDownload className="w-5 h-5 text-cyan-400" /> 🔄 Restore from Google Drive
+            <CloudDownload className="w-5 h-5 text-cyan-600" /> 🔄 Restore from Google Drive
           </button>
 
         </div>
@@ -237,32 +235,32 @@ export default function BackupModule() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Export Card */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d flex flex-col justify-between space-y-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm flex flex-col justify-between space-y-4">
           <div>
-            <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 mb-3">
               <Download className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-white">Download Offline JSON Backup</h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <h3 className="text-lg font-bold text-slate-900">Download Offline JSON Backup</h3>
+            <p className="text-xs text-slate-500 mt-1">
               Saves a complete `.json` copy of all your crop, worker, tractor, dairy, and poultry records directly to your computer.
             </p>
           </div>
           <button
             onClick={handleExport}
-            className="w-full py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+            className="w-full py-3 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all"
           >
             <Download className="w-4 h-4" /> Download JSON Backup File
           </button>
         </div>
 
         {/* Restore Card */}
-        <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d flex flex-col justify-between space-y-4">
+        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm flex flex-col justify-between space-y-4">
           <div>
-            <div className="w-12 h-12 rounded-2xl bg-cyan-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-3">
+            <div className="w-12 h-12 rounded-2xl bg-cyan-50 border border-cyan-200 flex items-center justify-center text-cyan-600 mb-3">
               <Upload className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-white">Restore Data from JSON File</h3>
-            <p className="text-xs text-slate-400 mt-1">
+            <h3 className="text-lg font-bold text-slate-900">Restore Data from JSON File</h3>
+            <p className="text-xs text-slate-500 mt-1">
               Select a previously saved `.json` backup file to restore all your farm records instantly.
             </p>
           </div>
@@ -275,7 +273,7 @@ export default function BackupModule() {
           />
           <button
             onClick={() => fileInputRef.current && fileInputRef.current.click()}
-            className="w-full py-3 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/20 transition-all"
+            className="w-full py-3 rounded-2xl bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-cyan-600/20 transition-all"
           >
             <Upload className="w-4 h-4" /> Choose Backup File
           </button>
@@ -284,32 +282,32 @@ export default function BackupModule() {
       </div>
 
       {/* Demo Data & Danger Zone */}
-      <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d space-y-6">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-amber-400" />
+      <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm space-y-6">
+        <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+          <Sparkles className="w-5 h-5 text-amber-600" />
           Sample Data & Storage Reset
         </h3>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-slate-900 border border-slate-800">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
           <div>
-            <h4 className="text-sm font-bold text-white">Load Realistic Demo Data</h4>
-            <p className="text-xs text-slate-400">Pre-populates sample crop harvests, worker attendance, diesel fills, milk logs, and poultry flocks for testing.</p>
+            <h4 className="text-sm font-bold text-slate-900">Load Realistic Demo Data</h4>
+            <p className="text-xs text-slate-500">Pre-populates sample crop harvests, worker attendance, diesel fills, milk logs, and poultry flocks for testing.</p>
           </div>
           <button
             onClick={() => {
               resetToSampleData();
               confetti({ particleCount: 60 });
             }}
-            className="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap"
+            className="px-4 py-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold flex items-center gap-2 transition-all whitespace-nowrap"
           >
-            <RefreshCw className="w-4 h-4" /> Load Sample Data
+            <RefreshCw className="w-4 h-4 text-amber-600" /> Load Sample Data
           </button>
         </div>
 
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-rose-950/30 border border-rose-500/30">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 rounded-2xl bg-rose-50 border border-rose-200">
           <div>
-            <h4 className="text-sm font-bold text-rose-300">Clear All Local Records</h4>
-            <p className="text-xs text-rose-400/80">Wipes all stored records to start completely fresh with zero entries.</p>
+            <h4 className="text-sm font-bold text-rose-800">Clear All Local Records</h4>
+            <p className="text-xs text-rose-600">Wipes all stored records to start completely fresh with zero entries.</p>
           </div>
           <button
             onClick={() => {
@@ -317,7 +315,7 @@ export default function BackupModule() {
                 clearAllData();
               }
             }}
-            className="px-4 py-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap"
+            className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap shadow-sm"
           >
             <Trash2 className="w-4 h-4" /> Clear Database
           </button>

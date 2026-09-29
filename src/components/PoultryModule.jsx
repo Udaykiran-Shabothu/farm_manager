@@ -4,7 +4,7 @@ import { Egg, Plus, Trash2, Calendar, HeartPulse, DollarSign, Activity, Edit2, A
 
 export default function PoultryModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
-  const currency = data.farmInfo.currency || '₹';
+  const currency = data?.farmInfo?.currency || '₹';
 
   // Sub-section tab
   const [activeSection, setActiveSection] = useState('flock');
@@ -156,7 +156,6 @@ export default function PoultryModule() {
     resetTradeForm();
   };
 
-  // Auto-calculate total when weight or rate changes
   const handleTradeFieldChange = (field, value) => {
     setTradeForm(prev => {
       const updated = { ...prev, [field]: value };
@@ -171,7 +170,6 @@ export default function PoultryModule() {
     });
   };
 
-  // Category Change Handler - Auto sets Type (Income vs Expense)
   const handleCategorySelectChange = (catName) => {
     let isIncome = catName === 'Hen Sale' || catName === 'Other Income';
     setTradeForm(prev => ({
@@ -182,7 +180,7 @@ export default function PoultryModule() {
   };
 
   // === HEN TRADING COMPUTED DATA ===
-  const henTrades = data.poultryHenTrades || [];
+  const henTrades = data?.poultryHenTrades || [];
 
   const filteredTrades = useMemo(() => {
     let trades = [...henTrades];
@@ -215,7 +213,6 @@ export default function PoultryModule() {
     const totalPurchasedHens = purchases.reduce((acc, t) => acc + Number(t.henCount || 0), 0);
     const netProfit = totalSalesIncome - totalPurchaseExpense;
 
-    // Unique customers
     const uniqueCustomers = new Set(henTrades.map(t => (t.customerName || '').toLowerCase().trim())).size;
 
     return {
@@ -226,7 +223,6 @@ export default function PoultryModule() {
     };
   }, [henTrades]);
 
-  // Get unique customer names for suggestions
   const uniqueCustomerNames = useMemo(() => {
     const names = new Set();
     henTrades.forEach(t => { if (t.customerName) names.add(t.customerName); });
@@ -237,28 +233,28 @@ export default function PoultryModule() {
     <div className="space-y-6 pb-12">
 
       {/* Module Header with Sub-Section Tabs */}
-      <div className="glass-panel-glow rounded-3xl border border-rose-500/30 card-3d overflow-hidden">
+      <div className="bg-white rounded-3xl border border-slate-200 card-3d shadow-sm overflow-hidden">
         {/* Banner */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6">
           <div>
             <div className="flex items-center space-x-2">
-              <div className="p-2.5 rounded-xl bg-rose-500/20 text-rose-400">
+              <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700">
                 <Egg className="w-6 h-6" />
               </div>
-              <h2 className="text-2xl font-extrabold text-white">Poultry Management</h2>
+              <h2 className="text-2xl font-extrabold text-slate-900">Poultry Management</h2>
             </div>
-            <p className="text-xs text-slate-400 mt-1 truncate">Manage flocks, mortality logs, health records, and individual hen trading.</p>
+            <p className="text-xs text-slate-500 mt-1 truncate">Manage flocks, mortality logs, health records, and individual hen trading.</p>
           </div>
         </div>
 
         {/* Sub-Section Tabs */}
-        <div className="flex border-t border-slate-800">
+        <div className="flex border-t border-slate-200 bg-slate-50">
           <button
             onClick={() => setActiveSection('flock')}
             className={`flex-1 py-3 px-4 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
               activeSection === 'flock'
-                ? 'bg-rose-500/15 text-rose-300 border-b-2 border-rose-400'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ? 'bg-white text-rose-700 border-b-2 border-rose-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <Package className="w-4 h-4" />
@@ -268,8 +264,8 @@ export default function PoultryModule() {
             onClick={() => setActiveSection('trading')}
             className={`flex-1 py-3 px-4 text-sm font-bold transition-all flex items-center justify-center gap-2 ${
               activeSection === 'trading'
-                ? 'bg-amber-500/15 text-amber-300 border-b-2 border-amber-400'
-                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/50'
+                ? 'bg-white text-amber-700 border-b-2 border-amber-600 shadow-sm'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
             <ShoppingCart className="w-4 h-4" />
@@ -278,54 +274,52 @@ export default function PoultryModule() {
         </div>
       </div>
 
-      {/* ============================================================== */}
-      {/* SECTION 1: FLOCK MANAGEMENT (existing functionality preserved) */}
-      {/* ============================================================== */}
+      {/* SECTION 1: FLOCK MANAGEMENT */}
       {activeSection === 'flock' && (
         <>
           {/* Action Buttons */}
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => setShowBatchModal(true)}
-              className="px-3.5 py-2 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-rose-500/20 transition-all"
+              className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-rose-600/20 transition-all"
             >
               <Plus className="w-4 h-4" /> Start New Flock Batch
             </button>
             <button
               onClick={() => {
-                if (data.poultryBatches.length > 0) setDailyForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
+                if ((data?.poultryBatches || []).length > 0) setDailyForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
                 setShowDailyLogModal(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300 hover:bg-amber-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 rounded-xl bg-amber-50 border border-amber-200 text-amber-800 hover:bg-amber-100 text-xs font-bold flex items-center gap-1.5 transition-all"
             >
-              <Activity className="w-4 h-4" /> Log Mortality & Feed
+              <Activity className="w-4 h-4 text-amber-600" /> Log Mortality & Feed
             </button>
             <button
               onClick={() => {
-                if (data.poultryBatches.length > 0) setHealthForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
+                if ((data?.poultryBatches || []).length > 0) setHealthForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
                 setShowHealthModal(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 hover:bg-indigo-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-800 hover:bg-indigo-100 text-xs font-bold flex items-center gap-1.5 transition-all"
             >
-              <HeartPulse className="w-4 h-4" /> Log Vaccination/Disease
+              <HeartPulse className="w-4 h-4 text-indigo-600" /> Log Vaccination/Disease
             </button>
             <button
               onClick={() => {
-                if (data.poultryBatches.length > 0) setSalesForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
+                if ((data?.poultryBatches || []).length > 0) setSalesForm(prev => ({ ...prev, batchId: data.poultryBatches[0].id }));
                 setShowSalesModal(true);
               }}
-              className="px-3.5 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 hover:bg-emerald-100 text-xs font-bold flex items-center gap-1.5 transition-all"
             >
-              <DollarSign className="w-4 h-4" /> Log Bird/Egg Sale
+              <DollarSign className="w-4 h-4 text-emerald-600" /> Log Bird/Egg Sale
             </button>
           </div>
 
           {/* Poultry Batches Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {data.poultryBatches.map((batch) => {
-              const dailyLogs = data.poultryDailyLogs.filter(l => l.batchId === batch.id);
-              const healthLogs = data.poultryHealthLogs.filter(h => h.batchId === batch.id);
-              const salesLogs = data.poultrySales.filter(s => s.batchId === batch.id);
+            {(data?.poultryBatches || []).map((batch) => {
+              const dailyLogs = (data?.poultryDailyLogs || []).filter(l => l.batchId === batch.id);
+              const healthLogs = (data?.poultryHealthLogs || []).filter(h => h.batchId === batch.id);
+              const salesLogs = (data?.poultrySales || []).filter(s => s.batchId === batch.id);
 
               const totalDead = dailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
               const totalAlive = Math.max(0, batch.initialBirdCount - totalDead);
@@ -337,55 +331,55 @@ export default function PoultryModule() {
               const totalEggs = dailyLogs.reduce((acc, curr) => acc + Number(curr.eggCount || 0), 0);
 
               return (
-                <div key={batch.id} className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d flex flex-col justify-between space-y-4">
+                <div key={batch.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
                   <div>
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
                           {batch.breed}
                         </span>
-                        <h3 className="text-xl font-bold text-white mt-1.5">{batch.batchName}</h3>
+                        <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{batch.batchName}</h3>
                       </div>
-                      <button onClick={() => deleteRecord('poultryBatches', batch.id)} className="p-1.5 text-slate-500 hover:text-rose-400">
+                      <button onClick={() => deleteRecord('poultryBatches', batch.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors">
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     {/* Mortality Visual Widget */}
-                    <div className="mt-4 p-3 rounded-2xl bg-slate-900/90 border border-slate-800 grid grid-cols-3 text-center gap-2">
+                    <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-3 text-center gap-2">
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase">Initial</p>
-                        <p className="text-base font-bold text-white">{batch.initialBirdCount}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">Initial</p>
+                        <p className="text-base font-extrabold text-slate-900">{batch.initialBirdCount}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase">Alive</p>
-                        <p className="text-base font-bold text-emerald-400">{totalAlive}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">Alive</p>
+                        <p className="text-base font-extrabold text-emerald-700">{totalAlive}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase">Dead</p>
-                        <p className="text-base font-bold text-rose-400">{totalDead}</p>
+                        <p className="text-[10px] text-slate-500 uppercase font-bold">Dead</p>
+                        <p className="text-base font-extrabold text-rose-700">{totalDead}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Financial & Production Box */}
-                  <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2 text-xs">
+                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Mortality Loss Rate:</span>
-                      <span className="text-rose-400 font-bold">{mortalityRate}%</span>
+                      <span className="text-slate-500 font-medium">Mortality Loss Rate:</span>
+                      <span className="text-rose-700 font-bold">{mortalityRate}%</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Total Feed & Health Cost:</span>
-                      <span className="text-amber-400 font-bold">{currency}{(totalFeedCost + totalHealthCost).toLocaleString('en-IN')}</span>
+                      <span className="text-slate-500 font-medium">Total Feed & Health Cost:</span>
+                      <span className="text-amber-700 font-bold">{currency}{(totalFeedCost + totalHealthCost).toLocaleString('en-IN')}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-400">Total Sales Revenue:</span>
-                      <span className="text-emerald-400 font-bold">{currency}{totalIncome.toLocaleString('en-IN')}</span>
+                      <span className="text-slate-500 font-medium">Total Sales Revenue:</span>
+                      <span className="text-emerald-700 font-bold">{currency}{totalIncome.toLocaleString('en-IN')}</span>
                     </div>
                     {totalEggs > 0 && (
                       <div className="flex justify-between">
-                        <span className="text-slate-400">Egg Collection Total:</span>
-                        <span className="text-cyan-400 font-bold">{totalEggs} Eggs</span>
+                        <span className="text-slate-500 font-medium">Egg Collection Total:</span>
+                        <span className="text-cyan-700 font-bold">{totalEggs} Eggs</span>
                       </div>
                     )}
                   </div>
@@ -397,37 +391,37 @@ export default function PoultryModule() {
           {/* Daily Poultry Log & Health Tracker Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {/* Daily Mortality & Feed Log Table */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Activity className="w-5 h-5 text-amber-400" />
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Activity className="w-5 h-5 text-amber-600" />
                 Daily Mortality & Feed Log
               </h3>
               <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-3">Date</th>
                       <th className="p-3">Flock</th>
-                      <th className="p-3">Mortality (Dead)</th>
+                      <th className="p-3">Mortality</th>
                       <th className="p-3">Feed Bags / Cost</th>
                       <th className="p-3">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {data.poultryDailyLogs.map((log) => {
-                      const batch = data.poultryBatches.find(b => b.id === log.batchId);
+                  <tbody className="divide-y divide-slate-100">
+                    {(data?.poultryDailyLogs || []).map((log) => {
+                      const batch = (data?.poultryBatches || []).find(b => b.id === log.batchId);
                       return (
-                        <tr key={log.id} className="hover:bg-slate-800/40">
-                          <td className="p-3">{log.date}</td>
-                          <td className="p-3 font-medium text-white">{batch ? batch.batchName : 'Flock'}</td>
+                        <tr key={log.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 font-medium text-slate-600">{log.date}</td>
+                          <td className="p-3 font-bold text-slate-900">{batch ? batch.batchName : 'Flock'}</td>
                           <td className="p-3">
-                            <span className={`px-2 py-0.5 rounded font-bold ${log.deadCount > 0 ? 'bg-rose-500/20 text-rose-300' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                            <span className={`px-2 py-0.5 rounded font-bold ${log.deadCount > 0 ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'}`}>
                               {log.deadCount} Dead
                             </span>
                           </td>
                           <td className="p-3">{log.feedBagsCount} Bags ({currency}{log.feedCost})</td>
                           <td className="p-3">
-                            <button onClick={() => deleteRecord('poultryDailyLogs', log.id)} className="text-slate-500 hover:text-rose-400">
+                            <button onClick={() => deleteRecord('poultryDailyLogs', log.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </td>
@@ -440,14 +434,14 @@ export default function PoultryModule() {
             </div>
 
             {/* Health & Disease Tracker Table */}
-            <div className="glass-panel p-6 rounded-3xl border border-slate-800 card-3d">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-rose-400" />
+            <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <HeartPulse className="w-5 h-5 text-rose-600" />
                 Vaccination & Disease Tracker
               </h3>
               <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-3">Date</th>
                       <th className="p-3">Vaccine / Symptom</th>
@@ -455,17 +449,17 @@ export default function PoultryModule() {
                       <th className="p-3">Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {data.poultryHealthLogs.map((h) => (
-                      <tr key={h.id} className="hover:bg-slate-800/40">
-                        <td className="p-3">{h.date}</td>
-                        <td className="p-3 font-medium text-white">
+                  <tbody className="divide-y divide-slate-100">
+                    {(data?.poultryHealthLogs || []).map((h) => (
+                      <tr key={h.id} className="hover:bg-slate-50 transition-colors">
+                        <td className="p-3 font-medium text-slate-600">{h.date}</td>
+                        <td className="p-3 font-bold text-slate-900">
                           <div>{h.vaccineName || 'Checkup'}</div>
-                          <div className="text-[10px] text-slate-400">{h.diseaseSymptoms || 'Routine'}</div>
+                          <div className="text-[10px] text-slate-400 font-normal">{h.diseaseSymptoms || 'Routine'}</div>
                         </td>
-                        <td className="p-3 font-semibold text-rose-400">{currency}{(h.medicineCost + h.doctorFee).toLocaleString('en-IN')}</td>
+                        <td className="p-3 font-bold text-rose-700">{currency}{((h.medicineCost || 0) + (h.doctorFee || 0)).toLocaleString('en-IN')}</td>
                         <td className="p-3">
-                          <button onClick={() => deleteRecord('poultryHealthLogs', h.id)} className="text-slate-500 hover:text-rose-400">
+                          <button onClick={() => deleteRecord('poultryHealthLogs', h.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -479,88 +473,85 @@ export default function PoultryModule() {
         </>
       )}
 
-      {/* ============================================================== */}
-      {/* SECTION 2: HEN TRADING & GENERAL POULTRY LEDGER               */}
-      {/* ============================================================== */}
+      {/* SECTION 2: HEN TRADING & GENERAL POULTRY LEDGER */}
       {activeSection === 'trading' && (
         <>
           {/* KPI Summary Cards */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            <div className="glass-panel p-4 rounded-2xl border border-emerald-500/20 text-center">
-              <TrendingUp className="w-5 h-5 text-emerald-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Sales Income</p>
-              <p className="text-lg font-extrabold text-emerald-400">{currency}{tradeSummary.totalSalesIncome.toLocaleString('en-IN')}</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <TrendingUp className="w-5 h-5 text-emerald-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Sales Income</p>
+              <p className="text-lg font-black text-emerald-700">{currency}{tradeSummary.totalSalesIncome.toLocaleString('en-IN')}</p>
             </div>
-            <div className="glass-panel p-4 rounded-2xl border border-rose-500/20 text-center">
-              <TrendingDown className="w-5 h-5 text-rose-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Purchase Cost</p>
-              <p className="text-lg font-extrabold text-rose-400">{currency}{tradeSummary.totalPurchaseExpense.toLocaleString('en-IN')}</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <TrendingDown className="w-5 h-5 text-rose-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Purchase Cost</p>
+              <p className="text-lg font-black text-rose-700">{currency}{tradeSummary.totalPurchaseExpense.toLocaleString('en-IN')}</p>
             </div>
-            <div className="glass-panel p-4 rounded-2xl border border-amber-500/20 text-center">
-              <DollarSign className="w-5 h-5 text-amber-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Net Profit</p>
-              <p className={`text-lg font-extrabold ${tradeSummary.netProfit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <DollarSign className="w-5 h-5 text-amber-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Net Profit</p>
+              <p className={`text-lg font-black ${tradeSummary.netProfit >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                 {tradeSummary.netProfit >= 0 ? '+' : ''}{currency}{tradeSummary.netProfit.toLocaleString('en-IN')}
               </p>
             </div>
-            <div className="glass-panel p-4 rounded-2xl border border-cyan-500/20 text-center">
-              <ArrowUpRight className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Hens Sold</p>
-              <p className="text-lg font-extrabold text-cyan-400">{tradeSummary.totalSalesHens}</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <ArrowUpRight className="w-5 h-5 text-cyan-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Hens Sold</p>
+              <p className="text-lg font-black text-cyan-700">{tradeSummary.totalSalesHens}</p>
             </div>
-            <div className="glass-panel p-4 rounded-2xl border border-violet-500/20 text-center">
-              <ArrowDownLeft className="w-5 h-5 text-violet-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Hens Bought</p>
-              <p className="text-lg font-extrabold text-violet-400">{tradeSummary.totalPurchasedHens}</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <ArrowDownLeft className="w-5 h-5 text-indigo-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Hens Bought</p>
+              <p className="text-lg font-black text-indigo-700">{tradeSummary.totalPurchasedHens}</p>
             </div>
-            <div className="glass-panel p-4 rounded-2xl border border-orange-500/20 text-center">
-              <Users className="w-5 h-5 text-orange-400 mx-auto mb-1" />
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">Customers</p>
-              <p className="text-lg font-extrabold text-orange-400">{tradeSummary.uniqueCustomers}</p>
+            <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm text-center">
+              <Users className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+              <p className="text-[10px] text-slate-500 uppercase font-bold">Customers</p>
+              <p className="text-lg font-black text-orange-700">{tradeSummary.uniqueCustomers}</p>
             </div>
           </div>
-          {/* Action Bar: Record Sale / Record Expense + Category Filter */}
+
+          {/* Action Bar */}
           <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={() => handleOpenTradeModal('Sale', 'Hen Sale')}
-                className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-emerald-500/20 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-600/20 transition-all"
               >
                 <ArrowUpRight className="w-4 h-4" /> Record Hen Sale / Income
               </button>
               <button
                 onClick={() => handleOpenTradeModal('Purchase', 'Hen Buy / Purchase')}
-                className="px-4 py-2.5 rounded-xl bg-violet-500 hover:bg-violet-400 text-white font-bold text-xs flex items-center gap-1.5 shadow-lg shadow-violet-500/20 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-indigo-600/20 transition-all"
               >
                 <ArrowDownLeft className="w-4 h-4" /> Record Hen Purchase
               </button>
               <button
                 onClick={() => handleOpenTradeModal('Purchase', 'Incubator Expenses')}
-                className="px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-500/40 text-cyan-300 hover:bg-cyan-500/30 text-xs font-semibold flex items-center gap-1.5 transition-all"
+                className="px-4 py-2.5 rounded-xl bg-cyan-50 border border-cyan-200 text-cyan-800 hover:bg-cyan-100 text-xs font-bold flex items-center gap-1.5 transition-all"
               >
-                <Plus className="w-4 h-4" /> Log Incubator / Feed / Expense
+                <Plus className="w-4 h-4 text-cyan-600" /> Log Incubator / Feed / Expense
               </button>
             </div>
 
             <div className="flex gap-2 w-full sm:w-auto">
-              {/* Search */}
               <div className="relative flex-1 sm:flex-none">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                 <input
                   type="text"
                   placeholder="Search customer / item..."
                   value={tradeSearch}
                   onChange={(e) => setTradeSearch(e.target.value)}
-                  className="w-full sm:w-48 pl-9 pr-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs placeholder-slate-500 focus:border-amber-500/50 focus:outline-none"
+                  className="w-full sm:w-48 pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs placeholder-slate-400 focus:bg-white focus:border-rose-600 focus:outline-none"
                 />
               </div>
-              {/* Filter */}
               <div className="relative">
-                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
+                <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
                 <select
                   value={tradeFilter}
                   onChange={(e) => setTradeFilter(e.target.value)}
-                  className="pl-9 pr-6 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs appearance-none cursor-pointer focus:border-amber-500/50 focus:outline-none"
+                  className="pl-9 pr-6 py-2 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 text-xs font-medium appearance-none cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
                 >
                   <option value="All">All Categories</option>
                   <option value="Sale">Sales / Income Only</option>
@@ -577,26 +568,26 @@ export default function PoultryModule() {
             </div>
           </div>
 
-          {/* Hen Trading & Poultry Financial Ledger Table */}
-          <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800 card-3d">
-            <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-amber-400" />
+          {/* Hen Trading Table */}
+          <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+            <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <ShoppingCart className="w-5 h-5 text-amber-600" />
               Poultry Financial Ledger & Trading
-              <span className="ml-auto text-[10px] font-semibold text-slate-500 bg-slate-800 px-2.5 py-1 rounded-full">
+              <span className="ml-auto text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-full">
                 {filteredTrades.length} records
               </span>
             </h3>
 
             {filteredTrades.length === 0 ? (
               <div className="text-center py-16">
-                <ShoppingCart className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-                <p className="text-slate-400 text-sm">No poultry transaction records found.</p>
-                <p className="text-slate-500 text-xs mt-1">Click "Record Hen Sale" or "Log Incubator / Feed / Expense" to get started.</p>
+                <ShoppingCart className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-600 text-sm font-medium">No poultry transaction records found.</p>
+                <p className="text-slate-400 text-xs mt-1">Click "Record Hen Sale" or "Log Incubator / Feed / Expense" to get started.</p>
               </div>
             ) : (
               <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
-                <table className="w-full text-left text-xs text-slate-300">
-                  <thead className="bg-slate-900 sticky top-0 z-10 uppercase text-[10px] text-slate-400 border-b border-slate-800">
+                <table className="w-full text-left text-xs text-slate-700">
+                  <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
                     <tr>
                       <th className="p-3">Date</th>
                       <th className="p-3">Category</th>
@@ -610,48 +601,48 @@ export default function PoultryModule() {
                       <th className="p-3 text-center">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800">
+                  <tbody className="divide-y divide-slate-100">
                     {filteredTrades.map((trade) => {
                       const catName = trade.category || (trade.type === 'Sale' ? 'Hen Sale' : 'Hen Buy / Purchase');
-                      let catColor = 'bg-slate-800 text-slate-300 border-slate-700';
-                      if (catName === 'Hen Sale') catColor = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30';
-                      else if (catName === 'Hen Buy / Purchase') catColor = 'bg-violet-500/20 text-violet-300 border-violet-500/30';
-                      else if (catName === 'Incubator Expenses') catColor = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/30';
-                      else if (catName === 'Feed Expenses') catColor = 'bg-amber-500/20 text-amber-300 border-amber-500/30';
-                      else if (catName === 'Medicine & Vaccine') catColor = 'bg-rose-500/20 text-rose-300 border-rose-500/30';
-                      else if (catName === 'Other Income') catColor = 'bg-teal-500/20 text-teal-300 border-teal-500/30';
-                      else if (catName === 'Other Expense') catColor = 'bg-orange-500/20 text-orange-300 border-orange-500/30';
+                      let catColor = 'bg-slate-100 text-slate-700 border-slate-200';
+                      if (catName === 'Hen Sale') catColor = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                      else if (catName === 'Hen Buy / Purchase') catColor = 'bg-indigo-50 text-indigo-800 border-indigo-200';
+                      else if (catName === 'Incubator Expenses') catColor = 'bg-cyan-50 text-cyan-800 border-cyan-200';
+                      else if (catName === 'Feed Expenses') catColor = 'bg-amber-50 text-amber-800 border-amber-200';
+                      else if (catName === 'Medicine & Vaccine') catColor = 'bg-rose-50 text-rose-800 border-rose-200';
+                      else if (catName === 'Other Income') catColor = 'bg-teal-50 text-teal-800 border-teal-200';
+                      else if (catName === 'Other Expense') catColor = 'bg-orange-50 text-orange-800 border-orange-200';
 
                       return (
-                        <tr key={trade.id} className="hover:bg-slate-800/40 transition-colors">
-                          <td className="p-3 whitespace-nowrap">{trade.date}</td>
+                        <tr key={trade.id} className="hover:bg-slate-50 transition-colors">
+                          <td className="p-3 whitespace-nowrap font-medium text-slate-600">{trade.date}</td>
                           <td className="p-3">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${catColor}`}>
-                              {trade.type === 'Sale' ? <ArrowUpRight className="w-3 h-3 text-emerald-400" /> : <ArrowDownLeft className="w-3 h-3 text-rose-400" />}
+                              {trade.type === 'Sale' ? <ArrowUpRight className="w-3 h-3 text-emerald-600" /> : <ArrowDownLeft className="w-3 h-3 text-rose-600" />}
                               {catName}
                             </span>
                           </td>
-                          <td className="p-3 font-medium text-white">{trade.customerName}</td>
-                          <td className="p-3 text-slate-400">{trade.breed || '—'}</td>
-                          <td className="p-3 text-right font-bold text-white">{trade.henCount || '—'}</td>
-                          <td className="p-3 text-right font-semibold text-cyan-300">{trade.weightKg ? `${trade.weightKg} kg` : '—'}</td>
+                          <td className="p-3 font-bold text-slate-900">{trade.customerName}</td>
+                          <td className="p-3 text-slate-600">{trade.breed || '—'}</td>
+                          <td className="p-3 text-right font-bold text-slate-900">{trade.henCount || '—'}</td>
+                          <td className="p-3 text-right font-semibold text-cyan-700">{trade.weightKg ? `${trade.weightKg} kg` : '—'}</td>
                           <td className="p-3 text-right">{trade.ratePerKg ? `${currency}${Number(trade.ratePerKg || 0).toLocaleString('en-IN')}` : '—'}</td>
-                          <td className={`p-3 text-right font-extrabold ${trade.type === 'Sale' ? 'text-emerald-400' : 'text-rose-400'}`}>
+                          <td className={`p-3 text-right font-extrabold ${trade.type === 'Sale' ? 'text-emerald-700' : 'text-rose-700'}`}>
                             {trade.type === 'Sale' ? '+' : '-'}{currency}{Number(trade.totalAmount || 0).toLocaleString('en-IN')}
                           </td>
-                          <td className="p-3 text-slate-400 max-w-[120px] truncate">{trade.notes || '—'}</td>
+                          <td className="p-3 text-slate-500 max-w-[120px] truncate">{trade.notes || '—'}</td>
                           <td className="p-3">
-                            <div className="flex items-center justify-center gap-1.5">
+                            <div className="flex items-center justify-center gap-1">
                               <button
                                 onClick={() => handleEditTrade(trade)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-all"
+                                className="p-1 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded transition-colors"
                                 title="Edit"
                               >
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
                                 onClick={() => deleteRecord('poultryHenTrades', trade.id)}
-                                className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
                                 title="Delete"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -667,11 +658,11 @@ export default function PoultryModule() {
             )}
           </div>
 
-          {/* Customer-wise Breakdown */}
+          {/* Customer Breakdown */}
           {henTrades.length > 0 && (
-            <div className="glass-panel p-5 sm:p-6 rounded-3xl border border-slate-800 card-3d">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-orange-400" />
+            <div className="bg-white p-5 sm:p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
+              <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
+                <Users className="w-5 h-5 text-orange-600" />
                 Customer / Vendor Summary
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -692,26 +683,26 @@ export default function PoultryModule() {
                     }
                   });
                   return Object.entries(customerMap).map(([name, info]) => (
-                    <div key={name} className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-2">
+                    <div key={name} className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">
                       <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-bold text-white truncate">{name}</h4>
-                        <span className="text-[10px] text-slate-500 bg-slate-800 px-2 py-0.5 rounded-full">{info.transactions} trades</span>
+                        <h4 className="text-sm font-bold text-slate-900 truncate">{name}</h4>
+                        <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full">{info.transactions} trades</span>
                       </div>
                       {info.salesAmount > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Received Income ({info.salesHens ? `${info.salesHens} hens` : 'Items'}):</span>
-                          <span className="text-emerald-400 font-bold">+{currency}{info.salesAmount.toLocaleString('en-IN')}</span>
+                          <span className="text-slate-500 font-medium">Received Income ({info.salesHens ? `${info.salesHens} hens` : 'Items'}):</span>
+                          <span className="text-emerald-700 font-bold">+{currency}{info.salesAmount.toLocaleString('en-IN')}</span>
                         </div>
                       )}
                       {info.purchaseAmount > 0 && (
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Paid Expense ({info.purchaseHens ? `${info.purchaseHens} hens` : 'Items'}):</span>
-                          <span className="text-rose-400 font-bold">-{currency}{info.purchaseAmount.toLocaleString('en-IN')}</span>
+                          <span className="text-slate-500 font-medium">Paid Expense ({info.purchaseHens ? `${info.purchaseHens} hens` : 'Items'}):</span>
+                          <span className="text-rose-700 font-bold">-{currency}{info.purchaseAmount.toLocaleString('en-IN')}</span>
                         </div>
                       )}
-                      <div className="flex justify-between text-xs pt-1 border-t border-slate-700">
-                        <span className="text-slate-300 font-semibold">Net:</span>
-                        <span className={`font-extrabold ${(info.salesAmount - info.purchaseAmount) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      <div className="flex justify-between text-xs pt-1 border-t border-slate-200">
+                        <span className="text-slate-700 font-bold">Net:</span>
+                        <span className={`font-extrabold ${(info.salesAmount - info.purchaseAmount) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                           {(info.salesAmount - info.purchaseAmount) >= 0 ? '+' : ''}{currency}{(info.salesAmount - info.purchaseAmount).toLocaleString('en-IN')}
                         </span>
                       </div>
@@ -724,53 +715,60 @@ export default function PoultryModule() {
         </>
       )}
 
-      {/* ============================================================== */}
-      {/* MODALS (shared across sections)                                */}
-      {/* ============================================================== */}
-
       {/* Add Batch Modal */}
       {showBatchModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Start New Poultry Flock</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">Start New Poultry Flock</h3>
             <form onSubmit={handleAddBatch} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Batch / Flock Name</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Batch / Flock Name</label>
                 <input
                   type="text"
                   required
                   placeholder="e.g. Batch 25 - Cobb 500"
                   value={batchForm.batchName}
                   onChange={(e) => setBatchForm({ ...batchForm, batchName: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Start Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-rose-600" /> Start Date
                   </label>
                   <input
                     type="date"
                     required
                     value={batchForm.startDate}
                     onChange={(e) => setBatchForm({ ...batchForm, startDate: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Breed / Type</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Breed / Type</label>
                   <input
                     type="text"
                     value={batchForm.breed}
                     onChange={(e) => setBatchForm({ ...batchForm, breed: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
               </div>
+              <div>
+                <label className="block text-slate-600 mb-1 font-semibold">Initial Bird Count</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="1000"
+                  value={batchForm.initialBirdCount}
+                  onChange={(e) => setBatchForm({ ...batchForm, initialBirdCount: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-rose-600 focus:outline-none"
+                />
+              </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowBatchModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-rose-500 text-white font-bold">Start Flock</button>
+                <button type="button" onClick={() => setShowBatchModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-sm">Start Flock</button>
               </div>
             </form>
           </div>
@@ -779,60 +777,60 @@ export default function PoultryModule() {
 
       {/* Log Daily Mortality Modal */}
       {showDailyLogModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Log Daily Mortality & Feed</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">Log Daily Mortality & Feed</h3>
             <form onSubmit={handleAddDailyLog} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Flock</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Flock</label>
                 <select
                   value={dailyForm.batchId}
                   onChange={(e) => setDailyForm({ ...dailyForm, batchId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
                 >
-                  {data.poultryBatches.map(b => (
+                  {(data?.poultryBatches || []).map(b => (
                     <option key={b.id} value={b.id}>{b.batchName}</option>
                   ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date
                   </label>
                   <input
                     type="date"
                     required
                     value={dailyForm.date}
                     onChange={(e) => setDailyForm({ ...dailyForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-amber-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Dead Count Today</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Dead Count Today</label>
                   <input
                     type="number"
                     required
                     placeholder="0"
                     value={dailyForm.deadCount}
                     onChange={(e) => setDailyForm({ ...dailyForm, deadCount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Feed Cost ({currency})</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Feed Cost ({currency})</label>
                 <input
                   type="number"
                   placeholder="3900"
                   value={dailyForm.feedCost}
                   onChange={(e) => setDailyForm({ ...dailyForm, feedCost: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
                 />
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowDailyLogModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold">Save Log</button>
+                <button type="button" onClick={() => setShowDailyLogModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm">Save Log</button>
               </div>
             </form>
           </div>
@@ -841,81 +839,81 @@ export default function PoultryModule() {
 
       {/* Log Health Modal */}
       {showHealthModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Log Vaccination / Disease</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">Log Vaccination / Disease</h3>
             <form onSubmit={handleAddHealthLog} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Flock</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Flock</label>
                 <select
                   value={healthForm.batchId}
                   onChange={(e) => setHealthForm({ ...healthForm, batchId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                 >
-                  {data.poultryBatches.map(b => (
+                  {(data?.poultryBatches || []).map(b => (
                     <option key={b.id} value={b.id}>{b.batchName}</option>
                   ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-indigo-600" /> Select Date
                   </label>
                   <input
                     type="date"
                     required
                     value={healthForm.date}
                     onChange={(e) => setHealthForm({ ...healthForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Vaccine / Medicine Name</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Vaccine / Medicine Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Lasota Newcastle Vaccine"
                     value={healthForm.vaccineName}
                     onChange={(e) => setHealthForm({ ...healthForm, vaccineName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div>
-                <label className="block text-slate-400 mb-1">Disease Symptoms (if any)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Disease Symptoms (if any)</label>
                 <input
                   type="text"
                   placeholder="e.g. Minor coughing / lethargy"
                   value={healthForm.diseaseSymptoms}
                   onChange={(e) => setHealthForm({ ...healthForm, diseaseSymptoms: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
                 />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Medicine Cost ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Medicine Cost ({currency})</label>
                   <input
                     type="number"
                     placeholder="1200"
                     value={healthForm.medicineCost}
                     onChange={(e) => setHealthForm({ ...healthForm, medicineCost: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Doctor Fee ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Doctor Fee ({currency})</label>
                   <input
                     type="number"
                     placeholder="500"
                     value={healthForm.doctorFee}
                     onChange={(e) => setHealthForm({ ...healthForm, doctorFee: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowHealthModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-500 text-white font-bold">Save Health Record</button>
+                <button type="button" onClick={() => setShowHealthModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">Save Health Record</button>
               </div>
             </form>
           </div>
@@ -924,41 +922,41 @@ export default function PoultryModule() {
 
       {/* Log Sales Modal */}
       {showSalesModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white">Log Poultry Sales Revenue</h3>
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900">Log Poultry Sales Revenue</h3>
             <form onSubmit={handleAddSalesLog} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-400 mb-1">Select Flock</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Flock</label>
                 <select
                   value={salesForm.batchId}
                   onChange={(e) => setSalesForm({ ...salesForm, batchId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                 >
-                  {data.poultryBatches.map(b => (
+                  {(data?.poultryBatches || []).map(b => (
                     <option key={b.id} value={b.id}>{b.batchName}</option>
                   ))}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Select Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
                   </label>
                   <input
                     type="date"
                     required
                     value={salesForm.date}
                     onChange={(e) => setSalesForm({ ...salesForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Sale Category</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Sale Category</label>
                   <select
                     value={salesForm.category}
                     onChange={(e) => setSalesForm({ ...salesForm, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
                   >
                     <option value="Birds">Live Birds Sale</option>
                     <option value="Eggs">Eggs Sale</option>
@@ -968,31 +966,31 @@ export default function PoultryModule() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Quantity</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Quantity</label>
                   <input
                     type="number"
                     required
                     placeholder="300"
                     value={salesForm.quantity}
                     onChange={(e) => setSalesForm({ ...salesForm, quantity: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Rate per Unit ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Rate per Unit ({currency})</label>
                   <input
                     type="number"
                     required
                     placeholder="120"
                     value={salesForm.ratePerUnit}
                     onChange={(e) => setSalesForm({ ...salesForm, ratePerUnit: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
               </div>
               <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowSalesModal(false)} className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold">Save Sale</button>
+                <button type="button" onClick={() => setShowSalesModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
+                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm">Save Sale</button>
               </div>
             </form>
           </div>
@@ -1001,24 +999,23 @@ export default function PoultryModule() {
 
       {/* Hen Trade & Poultry Expense Modal (Add/Edit) */}
       {showTradeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-          <div className="glass-panel-glow p-5 sm:p-7 rounded-3xl border border-slate-700 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
-            <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               {tradeForm.type === 'Sale' ? (
-                <><ArrowUpRight className="w-5 h-5 text-emerald-400" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Sale'}</>
+                <><ArrowUpRight className="w-5 h-5 text-emerald-600" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Sale'}</>
               ) : (
-                <><ArrowDownLeft className="w-5 h-5 text-rose-400" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Expense'}</>
+                <><ArrowDownLeft className="w-5 h-5 text-rose-600" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Expense'}</>
               )}
             </h3>
 
             <form onSubmit={handleSaveTrade} className="space-y-3 text-xs">
-              {/* Category Selection */}
               <div>
-                <label className="block text-slate-400 mb-1 font-semibold text-amber-400">Select Category</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Select Category</label>
                 <select
                   value={tradeForm.category || 'Hen Sale'}
                   onChange={(e) => handleCategorySelectChange(e.target.value)}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-amber-500/40 text-white font-medium focus:outline-none focus:border-amber-400"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                 >
                   <option value="Hen Sale">🐔 Hen Sale (Income)</option>
                   <option value="Hen Buy / Purchase">🐣 Hen Buy / Purchase (Expense)</option>
@@ -1030,9 +1027,8 @@ export default function PoultryModule() {
                 </select>
               </div>
 
-              {/* Type Toggle */}
               <div>
-                <label className="block text-slate-400 mb-1.5 font-semibold">Ledger Type</label>
+                <label className="block text-slate-600 mb-1.5 font-semibold">Ledger Type</label>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
@@ -1045,8 +1041,8 @@ export default function PoultryModule() {
                     }}
                     className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       tradeForm.type === 'Sale'
-                        ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        ? 'bg-emerald-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <ArrowUpRight className="w-3.5 h-3.5" /> Income / Revenue
@@ -1062,8 +1058,8 @@ export default function PoultryModule() {
                     }}
                     className={`py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                       tradeForm.type === 'Purchase'
-                        ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        ? 'bg-rose-600 text-white shadow-sm'
+                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <ArrowDownLeft className="w-3.5 h-3.5" /> Expense / Purchase
@@ -1071,22 +1067,21 @@ export default function PoultryModule() {
                 </div>
               </div>
 
-              {/* Date & Customer / Supplier */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1 font-semibold text-emerald-400 flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" /> Date
+                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5 text-rose-600" /> Date
                   </label>
                   <input
                     type="date"
                     required
                     value={tradeForm.date}
                     onChange={(e) => setTradeForm({ ...tradeForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white cursor-pointer"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">
+                  <label className="block text-slate-600 mb-1 font-semibold">
                     {tradeForm.type === 'Sale' ? 'Buyer / Customer' : 'Supplier / Vendor'}
                   </label>
                   <input
@@ -1095,7 +1090,7 @@ export default function PoultryModule() {
                     placeholder={tradeForm.type === 'Sale' ? 'e.g. Ramesh' : 'e.g. Vet Store / Supplier'}
                     value={tradeForm.customerName}
                     onChange={(e) => setTradeForm({ ...tradeForm, customerName: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                     list="customer-suggestions"
                   />
                   <datalist id="customer-suggestions">
@@ -1104,80 +1099,76 @@ export default function PoultryModule() {
                 </div>
               </div>
 
-              {/* Breed / Item Details */}
               <div>
-                <label className="block text-slate-400 mb-1">Breed / Item Details (optional)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Breed / Item Details (optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Nati Hen, Egg Incubator 200 Cap, Layer Feed"
                   value={tradeForm.breed}
                   onChange={(e) => setTradeForm({ ...tradeForm, breed: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                 />
               </div>
 
-              {/* Count, Weight & Rate per Kg (Optional for general expenses) */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-slate-400 mb-1">Hens Count</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Hens Count</label>
                   <input
                     type="number"
                     min="0"
                     placeholder="10 (opt)"
                     value={tradeForm.henCount}
                     onChange={(e) => handleTradeFieldChange('henCount', e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Weight (Kg)</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Weight (Kg)</label>
                   <input
                     type="number"
                     step="0.1"
                     placeholder="25.5 (opt)"
                     value={tradeForm.weightKg}
                     onChange={(e) => handleTradeFieldChange('weightKg', e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-cyan-300 font-semibold"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-cyan-700 font-semibold focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-400 mb-1">Rate/Kg ({currency})</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Rate/Kg ({currency})</label>
                   <input
                     type="number"
                     placeholder="180 (opt)"
                     value={tradeForm.ratePerKg}
                     onChange={(e) => handleTradeFieldChange('ratePerKg', e.target.value)}
-                    className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                   />
                 </div>
               </div>
 
-              {/* Total Amount */}
               <div>
-                <label className="block text-slate-400 mb-1 font-semibold">Total Amount ({currency})</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Total Amount ({currency})</label>
                 <input
                   type="number"
                   required
                   placeholder="Enter total amount or auto-calc from Weight x Rate"
                   value={tradeForm.totalAmount}
                   onChange={(e) => setTradeForm({ ...tradeForm, totalAmount: e.target.value })}
-                  className={`w-full p-2.5 rounded-xl border text-white font-bold text-base ${
+                  className={`w-full p-2.5 rounded-xl border text-slate-900 font-bold text-base focus:bg-white focus:outline-none ${
                     tradeForm.type === 'Sale'
-                      ? 'bg-emerald-950/40 border-emerald-500/40 text-emerald-300'
-                      : 'bg-rose-950/40 border-rose-500/40 text-rose-300'
+                      ? 'bg-emerald-50 border-emerald-300 text-emerald-800'
+                      : 'bg-rose-50 border-rose-300 text-rose-800'
                   }`}
                 />
               </div>
 
-              {/* Notes */}
               <div>
-                <label className="block text-slate-400 mb-1">Notes (optional)</label>
+                <label className="block text-slate-600 mb-1 font-semibold">Notes (optional)</label>
                 <input
                   type="text"
                   placeholder="e.g. Incubator tray maintenance / Feed bag order"
                   value={tradeForm.notes}
                   onChange={(e) => setTradeForm({ ...tradeForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-900 border border-slate-700 text-white"
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
                 />
               </div>
 
@@ -1185,16 +1176,16 @@ export default function PoultryModule() {
                 <button
                   type="button"
                   onClick={() => { setShowTradeModal(false); resetTradeForm(); }}
-                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300"
+                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className={`px-4 py-2 rounded-xl font-bold ${
+                  className={`px-4 py-2 rounded-xl font-bold shadow-sm ${
                     tradeForm.type === 'Sale'
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-rose-500 text-white'
+                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      : 'bg-rose-600 hover:bg-rose-700 text-white'
                   }`}
                 >
                   {editingTrade ? 'Update' : 'Save'} Record
