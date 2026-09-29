@@ -111,7 +111,6 @@ export const generateDairyBillPDF = (summary, farmInfo = {}) => {
     columnStyles: { 3: { fontStyle: 'bold', halign: 'right' } }
   });
 
-  // Save PDF
   doc.save(`${customer.name.replace(/\s+/g, '_')}_Milk_Bill_${startDateStr}.pdf`);
 };
 
@@ -312,4 +311,119 @@ export const generateCropReportPDF = (crop, cropExpenses, cropIncomes, farmInfo 
   });
 
   doc.save(`${crop.name.replace(/\s+/g, '_')}_Financial_Report.pdf`);
+};
+
+// 4. MASTER CONSOLIDATED MULTI-SECTOR FINANCIAL P&L STATEMENT PDF GENERATOR
+export const generateMasterFinancialPDF = (summaryData, farmInfo = {}) => {
+  const { label, startStr, endStr, currency, totalIncome, totalExpenses, netProfit, profitMarginPercent, roiPercent, crops, workers, equipment, dairy, poultry } = summaryData;
+  const farmName = farmInfo.name || 'Samagra Jeeva Vyavasayam & Farm Management';
+
+  const doc = new jsPDF();
+
+  // Header Banner
+  doc.setFillColor(15, 23, 42); // slate-900
+  doc.rect(0, 0, 210, 42, 'F');
+
+  doc.setTextColor(22, 163, 74); // green-600 / emerald
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.text(farmName, 14, 16);
+
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.text('MASTER MULTI-SECTOR PROFIT & LOSS STATEMENT', 14, 27);
+
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(148, 163, 184);
+  doc.text(`Financial Period: ${label} (${startStr} to ${endStr}) | Report Date: ${new Date().toISOString().split('T')[0]}`, 14, 35);
+
+  // Executive KPI Summary Box
+  doc.setFillColor(241, 245, 249);
+  doc.roundedRect(14, 48, 182, 30, 3, 3, 'F');
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.text(`Gross Total Revenue: ${currency}${totalIncome.toLocaleString('en-IN')}`, 18, 56);
+  doc.text(`Gross Total Expenses: ${currency}${totalExpenses.toLocaleString('en-IN')}`, 18, 65);
+
+  doc.setTextColor(netProfit >= 0 ? 22 : 225, netProfit >= 0 ? 163 : 29, netProfit >= 0 ? 74 : 72);
+  doc.setFontSize(12);
+  doc.text(`NET FARM PROFIT: ${currency}${netProfit.toLocaleString('en-IN')}`, 110, 56);
+  
+  doc.setFontSize(9);
+  doc.setTextColor(71, 85, 105);
+  doc.text(`Profit Margin: ${profitMarginPercent}%  |  ROI: ${roiPercent}%`, 110, 65);
+
+  // Sector Breakdown Table
+  const sectorRows = [
+    ['Crops & Fields Enterprise', `${currency}${crops.income.toLocaleString('en-IN')}`, `${currency}${crops.expense.toLocaleString('en-IN')}`, `${currency}${crops.profit.toLocaleString('en-IN')}`],
+    ['Workers & Field Labor', `${currency}0`, `${currency}${workers.expense.toLocaleString('en-IN')}`, `-${currency}${workers.expense.toLocaleString('en-IN')}`],
+    ['Tractors & Equipment Hired', `${currency}${equipment.income.toLocaleString('en-IN')}`, `${currency}${equipment.expense.toLocaleString('en-IN')}`, `${currency}${equipment.profit.toLocaleString('en-IN')}`],
+    ['Dairy Farm & Milk Sales', `${currency}${dairy.income.toLocaleString('en-IN')}`, `${currency}${dairy.expense.toLocaleString('en-IN')}`, `${currency}${dairy.profit.toLocaleString('en-IN')}`],
+    ['Poultry & Hen Trading', `${currency}${poultry.income.toLocaleString('en-IN')}`, `${currency}${poultry.expense.toLocaleString('en-IN')}`, `${currency}${poultry.profit.toLocaleString('en-IN')}`],
+    ['TOTAL CONSOLIDATED P&L', `${currency}${totalIncome.toLocaleString('en-IN')}`, `${currency}${totalExpenses.toLocaleString('en-IN')}`, `${currency}${netProfit.toLocaleString('en-IN')}`]
+  ];
+
+  doc.setTextColor(15, 23, 42);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('1. Sector-by-Sector Consolidated P&L Summary', 14, 86);
+
+  autoTable(doc, {
+    startY: 90,
+    head: [['Sector Enterprise', 'Total Income', 'Total Expense', 'Net Profit / Loss']],
+    body: sectorRows,
+    theme: 'grid',
+    headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 9, cellPadding: 3 },
+    columnStyles: { 
+      1: { halign: 'right' },
+      2: { halign: 'right' },
+      3: { fontStyle: 'bold', halign: 'right' }
+    }
+  });
+
+  // Section 2: Detailed Line-Item Metrics
+  const itemRows = [
+    ['Crops Self-Work Value', `${currency}${crops.selfWork.toLocaleString('en-IN')}`, 'Valuation of self-labor on crop fields'],
+    ['Worker Labor Wages Accrued', `${currency}${workers.accrued.toLocaleString('en-IN')}`, 'Total wage liabilities owed to laborers'],
+    ['Worker Cash Payouts Paid', `${currency}${workers.paid.toLocaleString('en-IN')}`, 'Actual cash payouts disbursed'],
+    ['Equipment Fuel Expense', `${currency}${equipment.fuel.toLocaleString('en-IN')}`, 'Diesel fuel cost for tractors & pumps'],
+    ['Equipment Service & Repairs', `${currency}${equipment.maint.toLocaleString('en-IN')}`, 'Mechanic & workshop maintenance cost'],
+    ['Dairy Milk Volume Delivered', `${dairy.liters.toLocaleString('en-IN')} Liters`, 'Total morning & evening milk yield'],
+    ['Dairy Payments Collected', `${currency}${dairy.cashReceived.toLocaleString('en-IN')}`, 'Actual customer payment receipts'],
+    ['Poultry Feed Expense', `${currency}${poultry.feed.toLocaleString('en-IN')}`, 'Feed bags purchase cost'],
+    ['Poultry Health & Doctor Fee', `${currency}${poultry.health.toLocaleString('en-IN')}`, 'Vaccinations and vet doctor fees']
+  ];
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.text('2. Sector Operational Breakdown & Key Metrics', 14, doc.lastAutoTable.finalY + 12);
+
+  autoTable(doc, {
+    startY: doc.lastAutoTable.finalY + 16,
+    head: [['Operational Metric', 'Recorded Value', 'Notes / Remarks']],
+    body: itemRows,
+    theme: 'striped',
+    headStyles: { fillColor: [22, 163, 74], textColor: [255, 255, 255], fontStyle: 'bold' },
+    styles: { fontSize: 8.5, cellPadding: 2.5 },
+    columnStyles: { 1: { fontStyle: 'bold', halign: 'right' } }
+  });
+
+  // Footer Signature Block
+  const finalY = doc.lastAutoTable.finalY + 20;
+  if (finalY < 270) {
+    doc.setDrawColor(203, 213, 225);
+    doc.line(14, finalY, 80, finalY);
+    doc.line(130, finalY, 196, finalY);
+
+    doc.setFontSize(8);
+    doc.setTextColor(100, 116, 139);
+    doc.text('Farm Owner Signature', 14, finalY + 5);
+    doc.text('Accountant / Auditor Stamp', 130, finalY + 5);
+  }
+
+  doc.save(`${farmName.replace(/\s+/g, '_')}_Master_P&L_${startStr}_to_${endStr}.pdf`);
 };
