@@ -729,19 +729,19 @@ export default function DairyModule() {
     document.body.removeChild(link);
   };
 
-  // Send WhatsApp Monthly Bill Statement
+  // Send WhatsApp Monthly Bill Statement & Direct UPI Link
   const sendWhatsAppRangeBill = (customerId, startDateStr, endDateStr) => {
     const summary = getCustomRangeData(customerId, startDateStr, endDateStr);
     if (!summary) return;
 
     const { customer, totalDaysInCycle, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull, dayList } = summary;
 
-    let text = `🥛 *${data?.farmInfo?.name || 'Daily Farm'} - ${isPaidInFull ? 'MONTHLY STATEMENT' : 'MONTHLY BILL NOTICE'}*\n\n`;
+    let text = `🥛 *${data?.farmInfo?.name || 'Daily Farm'} - ${isPaidInFull ? 'MONTHLY STATEMENT' : 'MONTHLY MILK BILL NOTICE'}*\n\n`;
     text += `👤 *Customer:* ${customer.name}\n📞 *Phone:* ${customer.phone || 'N/A'}\n🗓️ *Cycle Period:* ${startDateStr} to ${endDateStr}\n💵 *Rate:* ${currency}${customer.ratePerLiter} / Liter\n`;
     text += `💳 *STATUS:* ${isPaidInFull ? '✅ PAID IN FULL' : '⚠️ BILL PENDING'}\n\n`;
 
     text += `📊 *FINANCIAL BILL LEDGER:*
-• Total Days: ${totalDaysInCycle} Days (${daysTakenCount} Taken / ${daysNotTakenCount} Off)
+• Total Days: ${totalDaysInCycle} Days (${daysTakenCount} Delivered / ${daysNotTakenCount} Off)
 • Total Milk Delivered: ${totalLitersTaken} Liters
 • 🥛 Current Month Bill: ${currency}${(totalMonthBill || 0).toLocaleString('en-IN')}\n`;
 
@@ -753,11 +753,20 @@ export default function DairyModule() {
     }
 
     text += `• 💰 Gross Total Payable: ${currency}${(grossTotalPayable || 0).toLocaleString('en-IN')}
-• 💳 Payments Paid: ${currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}
+• 💳 Payments Received: ${currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}
 • ‼️ *NET REMAINING DUE TO PAY:* ${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}\n\n`;
 
+    // Direct UPI Payment Section (PhonePe / GPay / Paytm)
     if (pendingBalanceDue > 0) {
-      text += `Kindly pay the remaining balance of ${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')} via Cash/UPI. Thank you!\n\n`;
+      const upiId = data?.farmInfo?.upiId || '7995123456@ybl';
+      const farmName = data?.farmInfo?.name || 'Samagra Organic Farm';
+      const upiDeepLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(farmName)}&am=${pendingBalanceDue}&cu=INR&tn=${encodeURIComponent('Milk Bill ' + customer.name)}`;
+
+      text += `📲 *INSTANT UPI PAYMENT (GPay / PhonePe / Paytm):*\n`;
+      text += `• Pay Amount: *${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}*\n`;
+      text += `• Farm UPI ID: *${upiId}*\n`;
+      text += `• Tap to Pay Link: ${upiDeepLink}\n\n`;
+      text += `Kindly settle the balance of ${currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')} via Cash/UPI. Thank you!\n\n`;
     }
 
     text += `📋 *DAY-BY-DAY MILK LEDGER:*\n`;
@@ -771,8 +780,13 @@ export default function DairyModule() {
 
     text += `\nSent via Daily Farm Manager 3D.`;
 
+    // Direct Phone Number WhatsApp Targeting
+    let rawPhone = (customer.phone || '').replace(/[^0-9]/g, '');
+    if (rawPhone.length === 10) rawPhone = '91' + rawPhone;
+    const phoneParam = rawPhone.length >= 10 ? `phone=${rawPhone}&` : '';
+
     const encoded = encodeURIComponent(text);
-    window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    window.open(`https://api.whatsapp.com/send?${phoneParam}text=${encoded}`, '_blank');
   };
 
   // Download PDF Bill Statement
