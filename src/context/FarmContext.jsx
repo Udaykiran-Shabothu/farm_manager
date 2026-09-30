@@ -56,7 +56,9 @@ const INITIAL_DATA = {
   poultryDailyLogs: [],
   poultryHealthLogs: [],
   poultrySales: [],
-  poultryHenTrades: []
+  poultryHenTrades: [],
+  inventoryItems: [],
+  inventoryLogs: []
 };
 
 const ARRAY_KEYS = [
@@ -64,7 +66,8 @@ const ARRAY_KEYS = [
   'workers', 'attendance', 'workerPayments',
   'equipment', 'equipmentMaintenance', 'equipmentFuel', 'equipmentUsage',
   'dairyCustomers', 'dairyMilkLogs', 'dairyPayments', 'cattleHerd', 'dairyExpenses',
-  'poultryBatches', 'poultryDailyLogs', 'poultryHealthLogs', 'poultrySales', 'poultryHenTrades'
+  'poultryBatches', 'poultryDailyLogs', 'poultryHealthLogs', 'poultrySales', 'poultryHenTrades',
+  'inventoryItems', 'inventoryLogs'
 ];
 
 const ensureDataIntegrity = (obj) => {
@@ -175,7 +178,7 @@ export const FarmProvider = ({ children }) => {
       equipment: [], equipmentMaintenance: [], equipmentFuel: [], equipmentUsage: [],
       dairyCustomers: [], dairyMilkLogs: [], dairyPayments: [], cattleHerd: [], dairyExpenses: [],
       poultryBatches: [], poultryDailyLogs: [], poultryHealthLogs: [], poultrySales: [],
-      poultryHenTrades: []
+      poultryHenTrades: [], inventoryItems: [], inventoryLogs: []
     };
     setData(emptyData);
     localStorage.setItem('agri_farm_manager_db', JSON.stringify(emptyData));
