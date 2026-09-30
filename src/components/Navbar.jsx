@@ -3,6 +3,7 @@ import {
   Sprout, 
   Leaf,
   Sun,
+  CloudSun,
   Users, 
   Tractor, 
   Milk, 
@@ -18,6 +19,7 @@ import confetti from 'canvas-confetti';
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard, gradient: 'from-emerald-600 to-teal-700' },
   { id: 'crops', label: 'Crops & Fields', shortLabel: 'Crops', icon: Sprout, gradient: 'from-green-600 to-emerald-700' },
+  { id: 'weather', label: 'Weather & Advisory', shortLabel: 'Weather', icon: CloudSun, gradient: 'from-sky-600 to-teal-700' },
   { id: 'workers', label: 'Workers & Wages', shortLabel: 'Workers', icon: Users, gradient: 'from-amber-600 to-yellow-700' },
   { id: 'equipment', label: 'Tractors & Machinery', shortLabel: 'Tractors', icon: Tractor, gradient: 'from-blue-600 to-indigo-700' },
   { id: 'dairy', label: 'Dairy & Milk', shortLabel: 'Dairy', icon: Milk, gradient: 'from-cyan-600 to-blue-700' },

@@ -4,6 +4,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import CropsModule from './components/CropsModule';
+import WeatherModule from './components/WeatherModule';
 import WorkersModule from './components/WorkersModule';
 import EquipmentModule from './components/EquipmentModule';
 import DairyModule from './components/DairyModule';
@@ -40,6 +41,7 @@ function MainApp() {
         <main className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 lg:pb-8 animate-fadeIn">
           {activeTab === 'dashboard' && <Dashboard setActiveTab={setActiveTab} />}
           {activeTab === 'crops' && <CropsModule />}
+          {activeTab === 'weather' && <WeatherModule />}
           {activeTab === 'workers' && <WorkersModule />}
           {activeTab === 'equipment' && <EquipmentModule />}
           {activeTab === 'dairy' && <DairyModule />}
