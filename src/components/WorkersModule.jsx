@@ -81,8 +81,7 @@ export default function WorkersModule() {
       dailyRate: worker.dailyRate || 600
     });
     setShowWorkerModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Open Edit Attendance Modal
   const handleEditAttendance = (att) => {
@@ -95,8 +94,7 @@ export default function WorkersModule() {
       wageEarned: att.wageEarned || 600
     });
     setShowAttendanceModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Open Edit Payment Modal
   const handleEditPayment = (pay) => {
@@ -109,8 +107,7 @@ export default function WorkersModule() {
       notes: pay.notes || ''
     });
     setShowPaymentModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Save Worker Profile
   const handleSaveWorker = (e) => {
@@ -565,8 +562,8 @@ export default function WorkersModule() {
         const pendingBalance = totalEarned - totalPaid;
 
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-            <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 max-w-2xl w-full my-auto space-y-6 max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+            <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 max-w-2xl w-full my-auto space-y-6 max-h-[85vh] overflow-y-auto shadow-2xl">
               
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-200 pb-4">
@@ -691,8 +688,8 @@ export default function WorkersModule() {
 
       {/* Add / Edit Worker Modal */}
       {showWorkerModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">{editingWorker ? 'Edit Worker / Group Profile' : 'Add Worker / Group Team'}</h3>
             <form onSubmit={handleSaveWorker} className="space-y-3 text-xs">
               
@@ -796,8 +793,8 @@ export default function WorkersModule() {
 
       {/* Log Labor Field Work Modal */}
       {showAttendanceModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">{editingAttendance ? 'Edit Field Work Log' : 'Log Labor Field Work Attendance'}</h3>
             <form onSubmit={handleSaveAttendance} className="space-y-3 text-xs">
               <div>
@@ -883,8 +880,8 @@ export default function WorkersModule() {
 
       {/* Record Labor Wage Payout Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">{editingPayment ? 'Edit Wage Payout' : 'Pay Laborer / Record Payout'}</h3>
             <form onSubmit={handleSavePayment} className="space-y-3 text-xs">
               <div>

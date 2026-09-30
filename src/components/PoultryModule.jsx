@@ -717,8 +717,8 @@ export default function PoultryModule() {
 
       {/* Add Batch Modal */}
       {showBatchModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">Start New Poultry Flock</h3>
             <form onSubmit={handleAddBatch} className="space-y-3 text-xs">
               <div>
@@ -777,8 +777,8 @@ export default function PoultryModule() {
 
       {/* Log Daily Mortality Modal */}
       {showDailyLogModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">Log Daily Mortality & Feed</h3>
             <form onSubmit={handleAddDailyLog} className="space-y-3 text-xs">
               <div>
@@ -839,8 +839,8 @@ export default function PoultryModule() {
 
       {/* Log Health Modal */}
       {showHealthModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">Log Vaccination / Disease</h3>
             <form onSubmit={handleAddHealthLog} className="space-y-3 text-xs">
               <div>
@@ -922,8 +922,8 @@ export default function PoultryModule() {
 
       {/* Log Sales Modal */}
       {showSalesModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900">Log Poultry Sales Revenue</h3>
             <form onSubmit={handleAddSalesLog} className="space-y-3 text-xs">
               <div>
@@ -999,8 +999,8 @@ export default function PoultryModule() {
 
       {/* Hen Trade & Poultry Expense Modal (Add/Edit) */}
       {showTradeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
             <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
               {tradeForm.type === 'Sale' ? (
                 <><ArrowUpRight className="w-5 h-5 text-emerald-600" /> {editingTrade ? 'Edit' : 'Record'} {tradeForm.category || 'Poultry Sale'}</>

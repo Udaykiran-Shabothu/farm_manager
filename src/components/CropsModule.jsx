@@ -129,8 +129,7 @@ export default function CropsModule() {
       status: crop.status
     });
     setShowCropModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Open Edit Expense Modal
   const handleEditExpense = (expense) => {
@@ -146,8 +145,7 @@ export default function CropsModule() {
       amount: expense.amount
     });
     setShowExpenseModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Open Edit Income Modal
   const handleEditIncome = (income) => {
@@ -161,8 +159,7 @@ export default function CropsModule() {
       ratePerQuintal: income.ratePerQuintal || ''
     });
     setShowIncomeModal(true);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   // Save Crop
   const handleSaveCrop = (e) => {
@@ -644,8 +641,8 @@ export default function CropsModule() {
         const netProfit = totalInc - totalExp;
 
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl overflow-y-auto animate-fadeIn">
-            <div className="glass-panel-glow p-5 sm:p-8 rounded-3xl border border-slate-700 max-w-2xl w-full my-auto space-y-6 max-h-[90vh] overflow-y-auto card-3d shadow-2xl">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-950/90 backdrop-blur-xl  animate-fadeIn">
+            <div className="glass-panel-glow p-5 sm:p-8 rounded-3xl border border-slate-700 max-w-2xl w-full my-auto space-y-6 max-h-[85vh] overflow-y-auto card-3d shadow-2xl">
               
               {/* Header */}
               <div className="flex items-center justify-between border-b border-slate-800 pb-4">
@@ -791,8 +788,8 @@ export default function CropsModule() {
 
       {/* Add / Edit Crop Modal */}
       {showCropModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
             <h3 className="text-lg font-extrabold text-slate-900">{editingCrop ? 'Edit Crop Details' : 'Add New Crop / Field Block'}</h3>
             <form onSubmit={handleSaveCrop} className="space-y-3 text-xs">
               <div>
@@ -866,8 +863,8 @@ export default function CropsModule() {
 
       {/* Add / Edit Crop Expense Modal */}
       {showExpenseModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
             <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
               <Calculator className="w-5 h-5 text-rose-600" />
               {editingExpense ? 'Edit Crop Expense' : 'Record Crop Expenditure'}
@@ -1013,8 +1010,8 @@ export default function CropsModule() {
 
       {/* Add / Edit Crop Income Modal */}
       {showIncomeModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[90vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
+          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto card-3d shadow-2xl text-slate-900">
             <h3 className="text-lg font-extrabold text-slate-900">{editingIncome ? 'Edit Crop Income' : 'Log Crop Revenue / Income'}</h3>
             <form onSubmit={handleSaveIncome} className="space-y-3 text-xs">
               <div>

@@ -43,8 +43,7 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency }) 
   const handleTabClick = (tabId) => {
     setActiveTab(tabId);
     setMobileMenuOpen(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+    };
 
   return (
     <>
