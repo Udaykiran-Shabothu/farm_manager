@@ -6,6 +6,7 @@ import {
   downloadMasterFinancialCSV 
 } from '../services/financialAnalytics';
 import { generateMasterFinancialPDF } from '../services/pdfGenerator';
+import WhatsAppDigestModal from './WhatsAppDigestModal';
 import { 
   TrendingUp, 
   TrendingDown, 
@@ -35,7 +36,8 @@ import {
   FileText,
   Filter,
   PieChart as PieIcon,
-  BarChart2
+  BarChart2,
+  MessageCircle
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -61,6 +63,7 @@ export default function Dashboard({ setActiveTab }) {
   const [datePreset, setDatePreset] = useState('ALL');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+  const [showDigestModal, setShowDigestModal] = useState(false);
 
   // Compute Full Multi-Sector Analytics Engine
   const analytics = useMemo(() => {
@@ -144,12 +147,18 @@ export default function Dashboard({ setActiveTab }) {
             </div>
           </div>
 
-          <div className="flex items-center space-x-2 self-start sm:self-auto">
+          <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+            <button
+              onClick={() => setShowDigestModal(true)}
+              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-emerald-700/20 transition-all"
+            >
+              <MessageCircle className="w-4 h-4" /> Daily WhatsApp Digest
+            </button>
             <button
               onClick={handleDownloadPDF}
               className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
             >
-              <FileText className="w-4 h-4" /> Download Master PDF Report
+              <FileText className="w-4 h-4" /> Master PDF Report
             </button>
             <button
               onClick={handleDownloadCSV}
@@ -651,6 +660,12 @@ export default function Dashboard({ setActiveTab }) {
         </div>
 
       </div>
+
+      {/* WhatsApp Executive Digest Modal */}
+      <WhatsAppDigestModal 
+        isOpen={showDigestModal} 
+        onClose={() => setShowDigestModal(false)} 
+      />
 
     </div>
   );
