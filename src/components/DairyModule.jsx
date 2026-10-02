@@ -150,6 +150,9 @@ export default function DairyModule() {
     if (!data?.dairyCustomers || data.dairyCustomers.length === 0) return;
 
     data.dairyCustomers.forEach(customer => {
+      // STOP AUTO-ROLLOVER FOR STOPPED CUSTOMERS (no new statements generated)
+      if (customer.status === 'Stopped & Bill Pending' || customer.status === 'Stopped') return;
+
       let start = customer.cycleStartDate || customer.startDate || todayStr;
       let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
 
@@ -234,17 +237,30 @@ export default function DairyModule() {
 
   // 1-Click Action: Stop Milk Delivery & Move to Stopped & Pending Bills Section
   const handleStopCustomerMilk = (customer) => {
+    const currentStart = customer.cycleStartDate || customer.startDate || todayStr;
+    const currentEnd = customer.cycleEndDate || getDefaultCycleEndDate(currentStart);
+
+    // Lock cycle end date so no future statement cycles are generated
+    const lockedEnd = todayStr < currentEnd ? todayStr : currentEnd;
+
     updateRecord('dairyCustomers', {
       ...customer,
-      status: 'Stopped & Bill Pending'
+      status: 'Stopped & Bill Pending',
+      cycleEndDate: lockedEnd,
+      stoppedDate: todayStr
     });
   };
 
   // 1-Click Action: Reactivate Customer back to Active Milk Buyers
   const handleReactivateCustomer = (customer) => {
+    const newStart = todayStr;
+    const newEnd = getDefaultCycleEndDate(newStart);
+
     updateRecord('dairyCustomers', {
       ...customer,
-      status: 'Active'
+      status: 'Active',
+      cycleStartDate: newStart,
+      cycleEndDate: newEnd
     });
   };
 
@@ -630,12 +646,17 @@ export default function DairyModule() {
     const customer = (data?.dairyCustomers || []).find(c => c.id === customerId);
     if (!customer) return null;
 
+    const isStopped = customer.status === 'Stopped & Bill Pending' || customer.status === 'Stopped';
+
     let start = customer.cycleStartDate || customer.startDate || todayStr;
     let end = customer.cycleEndDate || getDefaultCycleEndDate(start);
 
-    while (end && end < todayStr) {
-      start = getNextDayStr(end);
-      end = getDefaultCycleEndDate(start);
+    // Only auto-roll over active customers! Stopped customers keep their locked end date.
+    if (!isStopped) {
+      while (end && end < todayStr) {
+        start = getNextDayStr(end);
+        end = getDefaultCycleEndDate(start);
+      }
     }
 
     return getCustomRangeData(customerId, start, end);
@@ -643,6 +664,8 @@ export default function DairyModule() {
 
   // Helper Engine: Calculate All Completed & Active Monthly Cycles for a Customer
   const getCustomerAllCycles = (customer) => {
+    const isStopped = customer.status === 'Stopped & Bill Pending' || customer.status === 'Stopped';
+
     const activeStartStr = customer.cycleStartDate || customer.startDate || todayStr;
     const activeEndStr = customer.cycleEndDate || getDefaultCycleEndDate(activeStartStr);
     
@@ -660,7 +683,12 @@ export default function DairyModule() {
     let currStartObj = new Date(earliestDateStr);
     const today = new Date();
 
-    while (currStartObj <= today || currStartObj <= new Date(activeStartStr)) {
+    // For stopped customers, stop generating cycles at activeEndStr (no future cycles)
+    const maxLimitObj = isStopped 
+      ? new Date(activeEndStr) 
+      : (new Date(activeStartStr) > today ? new Date(activeStartStr) : today);
+
+    while (currStartObj <= maxLimitObj) {
       const nextStartObj = new Date(currStartObj);
       nextStartObj.setMonth(nextStartObj.getMonth() + 1);
 
@@ -670,7 +698,7 @@ export default function DairyModule() {
       const startDateStr = currStartObj.toISOString().split('T')[0];
       const endDateStr = currEndObj.toISOString().split('T')[0];
       
-      const isCompleted = endDateStr < activeStartStr || endDateStr < todayStr;
+      const isCompleted = isStopped ? true : (endDateStr < activeStartStr || endDateStr < todayStr);
 
       const summary = getCustomRangeData(customer.id, startDateStr, endDateStr);
       
@@ -680,7 +708,7 @@ export default function DairyModule() {
           startDateStr,
           endDateStr,
           isCompleted,
-          isCurrentActive: !isCompleted,
+          isCurrentActive: !isStopped && !isCompleted,
           ...summary
         });
       }
