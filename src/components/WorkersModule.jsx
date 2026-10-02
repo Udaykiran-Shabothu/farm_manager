@@ -107,7 +107,21 @@ export default function WorkersModule() {
       notes: pay.notes || ''
     });
     setShowPaymentModal(true);
-    };
+  };
+
+  // Open Direct Payment Payout Modal for specific worker
+  const handleOpenPaymentForWorker = (workerId = '', defaultAmount = 0) => {
+    const targetId = workerId || (data?.workers?.[0]?.id || '');
+    setPaymentForm({
+      workerId: targetId,
+      date: todayStr,
+      type: 'Weekly Settlement',
+      amount: defaultAmount > 0 ? defaultAmount : '',
+      notes: 'Labor Wage Payout'
+    });
+    setEditingPayment(null);
+    setShowPaymentModal(true);
+  };
 
   // Save Worker Profile
   const handleSaveWorker = (e) => {
@@ -421,12 +435,21 @@ export default function WorkersModule() {
                   </span>
                 </div>
 
-                <button
-                  onClick={() => setSelectedStatementWorker(worker)}
-                  className="w-full mt-2 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
-                >
-                  <FileText className="w-3.5 h-3.5" /> View / Download Wage Slip
-                </button>
+                <div className="pt-2 flex items-center gap-2">
+                  <button
+                    onClick={() => handleOpenPaymentForWorker(worker.id, pendingBalance)}
+                    className="flex-1 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-md shadow-emerald-600/20"
+                  >
+                    <Wallet className="w-3.5 h-3.5" /> Pay Worker / Payout
+                  </button>
+                  <button
+                    onClick={() => setSelectedStatementWorker(worker)}
+                    className="px-3 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-400 font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shadow-sm"
+                    title="View & Download Wage Voucher"
+                  >
+                    <FileText className="w-3.5 h-3.5" /> Voucher
+                  </button>
+                </div>
               </div>
             </div>
           );
@@ -497,10 +520,18 @@ export default function WorkersModule() {
 
         {/* Salary & Advance Payout Log */}
         <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
-          <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <Wallet className="w-5 h-5 text-blue-600" />
-            Payouts & Advance Payments Register
-          </h3>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+              <Wallet className="w-5 h-5 text-blue-600" />
+              Payouts & Advance Payments Register
+            </h3>
+            <button
+              onClick={() => handleOpenPaymentForWorker()}
+              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5 text-blue-600" /> Record Payout
+            </button>
+          </div>
           <div className="overflow-x-auto max-h-[440px] overflow-y-auto">
             <table className="w-full text-left text-xs text-slate-700">
               <thead className="bg-slate-50 sticky top-0 z-10 uppercase text-[10px] text-slate-500 font-bold border-b border-slate-200">
