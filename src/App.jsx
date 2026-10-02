@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FarmProvider, useFarm } from './context/FarmContext';
 import ErrorBoundary from './components/ErrorBoundary';
+import LoginPage from './components/LoginPage';
 import Navbar from './components/Navbar';
 import Dashboard from './components/Dashboard';
 import CropsModule from './components/CropsModule';
@@ -13,7 +14,7 @@ import PoultryModule from './components/PoultryModule';
 import BackupModule from './components/BackupModule';
 import { HardDrive } from 'lucide-react';
 
-function MainApp() {
+function MainApp({ currentUser, onLogout }) {
   const { data } = useFarm();
   const [activeTab, setActiveTab] = useState('dashboard');
 
@@ -37,6 +38,8 @@ function MainApp() {
           setActiveTab={setActiveTab} 
           farmName={farmName} 
           currency={currency}
+          currentUser={currentUser}
+          onLogout={onLogout}
         />
 
         <main className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-24 lg:pb-8 animate-fadeIn">
@@ -80,10 +83,42 @@ function MainApp() {
 }
 
 export default function App() {
+  const [user, setUser] = useState(() => {
+    try {
+      const storedLocal = localStorage.getItem('farm_manager_user');
+      if (storedLocal) {
+        const parsed = JSON.parse(storedLocal);
+        return parsed?.username || null;
+      }
+      const storedSession = sessionStorage.getItem('farm_manager_user');
+      if (storedSession) {
+        const parsed = JSON.parse(storedSession);
+        return parsed?.username || null;
+      }
+    } catch (e) {
+      console.error('Error reading auth state from storage', e);
+    }
+    return null;
+  });
+
+  const handleLoginSuccess = (username) => {
+    setUser(username);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('farm_manager_user');
+    sessionStorage.removeItem('farm_manager_user');
+    setUser(null);
+  };
+
   return (
     <ErrorBoundary>
       <FarmProvider>
-        <MainApp />
+        {user ? (
+          <MainApp currentUser={user} onLogout={handleLogout} />
+        ) : (
+          <LoginPage onLoginSuccess={handleLoginSuccess} />
+        )}
       </FarmProvider>
     </ErrorBoundary>
   );
