@@ -12,7 +12,8 @@ import {
   Menu,
   X,
   UserCheck,
-  LogOut
+  LogOut,
+  Sparkles
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -54,26 +55,32 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 sm:h-20 gap-2 w-full">
             
-            {/* YouTube Channel Profile Image Logo (No text name beside logo as requested) */}
+            {/* YouTube Channel Profile Image Logo + Ultra-Compact Brand Name */}
             <div 
               onClick={triggerCelebration}
               title="Samagra Jeeva Vyavasayam & Farms"
-              className="flex items-center cursor-pointer group transform transition-all duration-300 hover:scale-105 shrink-0"
+              className="flex items-center space-x-2 cursor-pointer group transform transition-all duration-300 hover:scale-105 shrink-0 min-w-0"
             >
-              <div className="relative p-0.5 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md shadow-emerald-600/20">
+              <div className="relative p-0.5 rounded-2xl bg-gradient-to-tr from-emerald-600 via-teal-500 to-amber-400 shadow-md shadow-emerald-600/20 shrink-0">
                 <img 
                   src={YOUTUBE_CHANNEL_LOGO} 
-                  alt="Samagra Jeeva Vyavasayam & Farms YouTube Profile Logo" 
-                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-[14px] object-cover bg-white"
-                  onError={(e) => {
-                    // Fallback to stylized logo if image load fails
-                    e.target.style.display = 'none';
-                  }}
+                  alt="Samagra Jeeva Vyavasayam & Farms Logo" 
+                  className="w-9 h-9 sm:w-11 sm:h-11 rounded-[14px] object-cover bg-white"
                 />
+              </div>
+
+              {/* Compact Sleek Brand Title */}
+              <div className="flex flex-col justify-center leading-tight min-w-0">
+                <span className="font-extrabold text-xs sm:text-sm tracking-tight text-slate-900 truncate max-w-[95px] sm:max-w-[150px] xl:max-w-[190px]">
+                  Samagra Farm
+                </span>
+                <span className="text-[10px] text-emerald-700 font-bold hidden sm:inline-block tracking-tight truncate max-w-[150px]">
+                  Jeeva Vyavasayam
+                </span>
               </div>
             </div>
 
-            {/* Desktop Center Navigation Tabs (Fits cleanly within application bounds) */}
+            {/* Desktop Center Navigation Tabs (Fits cleanly within bounds) */}
             <nav className="hidden lg:flex items-center space-x-1 bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/90 shadow-inner">
               {NAV_ITEMS.map((item) => {
                 const Icon = item.icon;
@@ -83,22 +90,25 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
                     key={item.id}
                     onClick={() => handleTabClick(item.id)}
                     title={item.label}
-                    className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
+                    className={`flex items-center space-x-1.5 px-2.5 py-1.5 xl:px-3 xl:py-2 rounded-xl text-xs font-bold transition-all duration-200 ${
                       isActive
                         ? `bg-gradient-to-r ${item.gradient} text-white shadow-md shadow-emerald-700/20 scale-105`
                         : 'text-slate-600 hover:text-slate-900 hover:bg-white/80'
                     }`}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
-                    <span className="whitespace-nowrap">{item.shortLabel}</span>
+                    {/* Responsive text display to prevent overlap on 1024px-1280px viewports */}
+                    <span className={`${isActive ? 'inline' : 'hidden xl:inline'} whitespace-nowrap`}>
+                      {item.shortLabel}
+                    </span>
                   </button>
                 );
               })}
             </nav>
 
             {/* Right Controls: User Profile & Logout */}
-            <div className="flex items-center space-x-2 shrink-0">
-              <div className="hidden sm:flex items-center space-x-1.5 px-3 py-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700">
+            <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+              <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>{currentUser}</span>
               </div>
@@ -106,7 +116,7 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
                 <button
                   onClick={onLogout}
                   title="Sign Out"
-                  className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors shadow-xs"
+                  className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold transition-colors shadow-xs"
                 >
                   <LogOut className="w-3.5 h-3.5 shrink-0" />
                   <span className="hidden sm:inline">Logout</span>
@@ -114,10 +124,10 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
               )}
 
               {/* Mobile Hamburger Toggle Button */}
-              <div className="flex lg:hidden items-center ml-1">
+              <div className="flex lg:hidden items-center ml-0.5">
                 <button
                   onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  className="p-2 rounded-xl bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
+                  className="p-1.5 sm:p-2 rounded-xl bg-slate-100 text-slate-700 hover:text-slate-900 border border-slate-200"
                   aria-label="Toggle Navigation Menu"
                 >
                   {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -195,7 +205,7 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
 
       </header>
 
-      {/* Mobile Fixed Bottom App Navigation Bar (Horizontal Scrollable Pills within bounds) */}
+      {/* Mobile Fixed Bottom App Navigation Bar */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200 shadow-2xl py-1.5 px-2 flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
