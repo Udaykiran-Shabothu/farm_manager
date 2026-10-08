@@ -108,6 +108,54 @@ export default function DairyModule() {
     });
   };
 
+  // Delete a Pending Bill Card (Deletes milk logs in that cycle and clears cycle)
+  const handleDeletePendingBill = (bill) => {
+    const periodText = `${bill.startDateStr} to ${bill.endDateStr}`;
+    if (!window.confirm(`Are you sure you want to delete this pending bill for ${bill.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`)) {
+      return;
+    }
+
+    // 1. Delete milk delivery logs in this billing period for this customer
+    const logsToDelete = (data?.dairyMilkLogs || []).filter(
+      l => l.customerId === bill.customer.id && l.date >= bill.startDateStr && l.date <= bill.endDateStr
+    );
+    logsToDelete.forEach(l => {
+      deleteRecord('dairyMilkLogs', l.id);
+    });
+
+    // 2. Add to cleared cycles cache so it immediately clears from view
+    const cycleKey = bill.cycleKey || `${bill.customer.id}_${bill.startDateStr}`;
+    setClearedCycleKeys(prev => {
+      const updated = Array.from(new Set([...prev, cycleKey, `current_${bill.customer.id}`]));
+      try { localStorage.setItem('dairy_cleared_cycles', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
+  // Delete a Completed Month Cycle Card (Deletes milk logs in that cycle and clears cycle)
+  const handleDeleteCompletedCycle = (cycle) => {
+    const cycleKey = `${cycle.customer.id}_${cycle.startDateStr}`;
+    const periodText = `${cycle.startDateStr} to ${cycle.endDateStr}`;
+    if (!window.confirm(`Are you sure you want to delete this completed cycle record for ${cycle.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`)) {
+      return;
+    }
+
+    // Delete milk delivery logs in this billing period for this customer
+    const logsToDelete = (data?.dairyMilkLogs || []).filter(
+      l => l.customerId === cycle.customer.id && l.date >= cycle.startDateStr && l.date <= cycle.endDateStr
+    );
+    logsToDelete.forEach(l => {
+      deleteRecord('dairyMilkLogs', l.id);
+    });
+
+    // Add to cleared cycles cache
+    setClearedCycleKeys(prev => {
+      const updated = Array.from(new Set([...prev, cycleKey]));
+      try { localStorage.setItem('dairy_cleared_cycles', JSON.stringify(updated)); } catch {}
+      return updated;
+    });
+  };
+
   // Modal visibility states
   const [showCustomerModal, setShowCustomerModal] = useState(false);
   const [showMilkModal, setShowMilkModal] = useState(false);
@@ -843,9 +891,16 @@ export default function DairyModule() {
     const list = [];
     (data?.dairyCustomers || []).forEach(customer => {
       const summary = getCustomerMonthlyData(customer.id);
-      if (summary && summary.pendingBalanceDue > 0) {
+      const currentCycleKey = `${customer.id}_${summary?.startDateStr}`;
+      if (
+        summary && 
+        summary.pendingBalanceDue > 0 && 
+        !clearedCycleKeys.includes(currentCycleKey) && 
+        !clearedCycleKeys.includes(`current_${customer.id}`)
+      ) {
         list.push({
           id: `current_${customer.id}`,
+          cycleKey: currentCycleKey,
           customer,
           isCurrent: true,
           ...summary
@@ -858,6 +913,7 @@ export default function DairyModule() {
         if (!clearedCycleKeys.includes(key)) {
           list.push({
             id: `past_${key}`,
+            cycleKey: key,
             customer,
             isCurrent: false,
             ...c
@@ -905,10 +961,7 @@ export default function DairyModule() {
     .filter(l => l.date === todayStr && (l.status === 'Taken' || Number(l.liters) > 0))
     .reduce((acc, curr) => acc + Number(curr.liters || 0), 0);
 
-  const totalPendingDuesSum = (data?.dairyCustomers || []).reduce((acc, c) => {
-    const summary = getCustomerMonthlyData(c.id);
-    return acc + (summary ? Number(summary.pendingBalanceDue || 0) : 0);
-  }, 0);
+  const totalPendingDuesSum = pendingBillsList.reduce((acc, b) => acc + Number(b.pendingBalanceDue || 0), 0);
 
   return (
     <div className="space-y-8 pb-12 animate-fadeIn text-slate-900">
@@ -1324,9 +1377,18 @@ export default function DairyModule() {
                         </span>
                         <h4 className="text-lg font-bold text-slate-900 mt-1">{bill.customer.name}</h4>
                       </div>
-                      <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
-                        ⚠️ DUE: {currency}{bill.pendingBalanceDue}
-                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+                          ⚠️ DUE: {currency}{bill.pendingBalanceDue}
+                        </span>
+                        <button
+                          onClick={() => handleDeletePendingBill(bill)}
+                          title="Delete Pending Bill"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 hover:border-rose-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="text-xs space-y-1 text-slate-600 mt-2">
@@ -1355,7 +1417,14 @@ export default function DairyModule() {
                         onClick={() => sendWhatsAppRangeBill(bill.customer.id, bill.startDateStr, bill.endDateStr)}
                         className="flex-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-center gap-1"
                       >
-                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp Link
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp
+                      </button>
+                      <button
+                        onClick={() => handleDeletePendingBill(bill)}
+                        title="Delete Pending Bill"
+                        className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
@@ -1473,11 +1542,20 @@ export default function DairyModule() {
                         </span>
                         <h4 className="text-lg font-bold text-slate-900 mt-1">{cycle.customer.name}</h4>
                       </div>
-                      <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold border ${
-                        cycle.isPaidInFull ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200'
-                      }`}>
-                        {cycle.isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${cycle.pendingBalanceDue}`}
-                      </span>
+                      <div className="flex items-center space-x-1.5">
+                        <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold border ${
+                          cycle.isPaidInFull ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200'
+                        }`}>
+                          {cycle.isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${cycle.pendingBalanceDue}`}
+                        </span>
+                        <button
+                          onClick={() => handleDeleteCompletedCycle(cycle)}
+                          title="Delete Completed Month Cycle"
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors border border-slate-200 hover:border-rose-200"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
 
                     <div className="text-xs space-y-1 text-slate-600 mt-2">
@@ -1500,6 +1578,13 @@ export default function DairyModule() {
                       className="flex-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200"
                     >
                       <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> PDF
+                    </button>
+                    <button
+                      onClick={() => handleDeleteCompletedCycle(cycle)}
+                      title="Delete Completed Month Cycle"
+                      className="p-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
