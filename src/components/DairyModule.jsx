@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { generateDairyBillPDF } from '../services/pdfGenerator';
 import { 
@@ -834,12 +834,64 @@ export default function DairyModule() {
     return !clearedCycleKeys.includes(key);
   });
 
-  const paidCompletedCount = visibleCompletedCycles.filter(c => c.isPaidInFull).length;
-  const pendingCompletedCycles = visibleCompletedCycles.filter(c => !c.isPaidInFull);
+  // Distinct Individual Lists
+  const activeCustomers = (data?.dairyCustomers || []).filter(c => c.status !== 'Stopped & Bill Pending' && c.status !== 'Stopped');
+  const stoppedCustomers = (data?.dairyCustomers || []).filter(c => c.status === 'Stopped & Bill Pending' || c.status === 'Stopped');
 
-  // Filtered Customers list
+  // Pending Bills List: Current & Completed cycles where pendingBalanceDue > 0
+  const pendingBillsList = useMemo(() => {
+    const list = [];
+    (data?.dairyCustomers || []).forEach(customer => {
+      const summary = getCustomerMonthlyData(customer.id);
+      if (summary && summary.pendingBalanceDue > 0) {
+        list.push({
+          id: `current_${customer.id}`,
+          customer,
+          isCurrent: true,
+          ...summary
+        });
+      }
+
+      const cycles = getCustomerAllCycles(customer);
+      cycles.filter(c => c.isCompleted && c.pendingBalanceDue > 0).forEach(c => {
+        const key = `${customer.id}_${c.startDateStr}`;
+        if (!clearedCycleKeys.includes(key)) {
+          list.push({
+            id: `past_${key}`,
+            customer,
+            isCurrent: false,
+            ...c
+          });
+        }
+      });
+    });
+
+    return list.sort((a, b) => (b.pendingBalanceDue || 0) - (a.pendingBalanceDue || 0));
+  }, [data?.dairyCustomers, data?.dairyMilkLogs, data?.dairyPayments, clearedCycleKeys]);
+
+  // Paid Bills List: Completed cycles where isPaidInFull === true
+  const paidBillsList = useMemo(() => {
+    const list = [];
+    (data?.dairyCustomers || []).forEach(customer => {
+      const cycles = getCustomerAllCycles(customer);
+      cycles.filter(c => c.isPaidInFull).forEach(c => {
+        const key = `${customer.id}_${c.startDateStr}`;
+        if (!clearedCycleKeys.includes(key)) {
+          list.push({
+            id: `paid_${key}`,
+            customer,
+            ...c
+          });
+        }
+      });
+    });
+
+    return list.sort((a, b) => new Date(b.startDateStr) - new Date(a.startDateStr));
+  }, [data?.dairyCustomers, data?.dairyMilkLogs, data?.dairyPayments, clearedCycleKeys]);
+
+  // Filtered Customers list for Active / Stopped / All tabs
   const filteredCustomers = (data?.dairyCustomers || []).filter(customer => {
-    const isStopped = customer.status === 'Stopped & Bill Pending';
+    const isStopped = customer.status === 'Stopped & Bill Pending' || customer.status === 'Stopped';
     if (customerTab === 'Active') return !isStopped;
     if (customerTab === 'Stopped') return isStopped;
     return true;
@@ -1035,33 +1087,57 @@ export default function DairyModule() {
       {/* Customer Category Filter Sub-Tabs Pill Bar */}
       <div className="p-2 sm:p-2.5 bg-white rounded-2xl border border-slate-200 shadow-sm">
         <div className="overflow-x-auto no-scrollbar flex items-center space-x-2 text-nowrap snap-x py-0.5 max-w-full">
+          {/* Active Buyers */}
           <button
             onClick={() => setCustomerTab('Active')}
-            className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+            className={`flex-shrink-0 snap-start px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               customerTab === 'Active' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <Milk className="w-4 h-4" /> Active Buyers ({activeCount})
+            <Milk className="w-4 h-4" /> Active Buyers ({activeCustomers.length})
           </button>
           
+          {/* Pending Bills */}
+          <button
+            onClick={() => setCustomerTab('Pending')}
+            className={`flex-shrink-0 snap-start px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              customerTab === 'Pending' ? 'bg-amber-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
+            }`}
+          >
+            <AlertTriangle className="w-4 h-4" /> Pending Bills ({pendingBillsList.length})
+          </button>
+
+          {/* Paid Bills */}
+          <button
+            onClick={() => setCustomerTab('Paid')}
+            className={`flex-shrink-0 snap-start px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
+              customerTab === 'Paid' ? 'bg-teal-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
+            }`}
+          >
+            <CheckCircle2 className="w-4 h-4" /> Paid Bills ({paidBillsList.length})
+          </button>
+
+          {/* Completed Cycles */}
           <button
             onClick={() => setCustomerTab('Completed')}
             className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
-              customerTab === 'Completed' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
+              customerTab === 'Completed' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <FolderCheck className="w-4 h-4" /> Paid Bills / Completed ({visibleCompletedCycles.length})
+            <FolderCheck className="w-4 h-4" /> Completed Cycles ({visibleCompletedCycles.length})
           </button>
 
+          {/* Stopped Customers */}
           <button
             onClick={() => setCustomerTab('Stopped')}
             className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 ${
               customerTab === 'Stopped' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900 bg-slate-100'
             }`}
           >
-            <Octagon className="w-4 h-4" /> Stopped & Pending Bills ({stoppedCount + pendingCompletedCycles.length})
+            <Octagon className="w-4 h-4" /> Stopped Customers ({stoppedCustomers.length})
           </button>
 
+          {/* All Customers */}
           <button
             onClick={() => setCustomerTab('All')}
             className={`flex-shrink-0 snap-start px-4 py-2.5 rounded-xl text-xs font-bold transition-all ${
@@ -1073,15 +1149,15 @@ export default function DairyModule() {
         </div>
       </div>
 
-      {/* RENDER VIEW TAB 1: ACTIVE / STOPPED / ALL CUSTOMERS */}
-      {customerTab !== 'Completed' && (
+      {/* RENDER VIEW TAB 1: ACTIVE / ALL CUSTOMERS */}
+      {(customerTab === 'Active' || customerTab === 'All') && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCustomers.map((customer) => {
             const summary = getCustomerMonthlyData(customer.id);
             if (!summary) return null;
 
             const { startDateStr, endDateStr, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull } = summary;
-            const isStopped = customer.status === 'Stopped & Bill Pending';
+            const isStopped = customer.status === 'Stopped & Bill Pending' || customer.status === 'Stopped';
 
             return (
               <div key={customer.id} className={`bg-white p-6 rounded-3xl border card-3d flex flex-col justify-between space-y-4 shadow-sm ${
@@ -1217,172 +1293,312 @@ export default function DairyModule() {
         </div>
       )}
 
-      {/* RENDER VIEW TAB 3 SUB-SECTION: UNPAID COMPLETED MONTHS */}
-      {customerTab === 'Stopped' && pendingCompletedCycles.length > 0 && (
-        <div className="space-y-4 pt-4 border-t border-slate-200">
-          <div className="flex items-center space-x-2">
-            <AlertTriangle className="w-5 h-5 text-rose-600" />
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Unpaid Pending Bills from Completed Months</h3>
-              <p className="text-xs text-slate-500">Completed month statements with unpaid pending balances carried forward.</p>
+      {/* RENDER VIEW TAB 2: PENDING BILLS TAB (INDIVIDUAL UNPAID BILLS) */}
+      {customerTab === 'Pending' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+              Pending Unpaid Milk Bills ({pendingBillsList.length})
+            </h3>
+            <span className="text-xs font-bold text-amber-800 bg-amber-50 px-3 py-1 rounded-full border border-amber-200">
+              Sorted by Highest Pending Dues
+            </span>
+          </div>
+
+          {pendingBillsList.length === 0 ? (
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 card-3d text-center space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
+              <h4 className="text-base font-bold text-slate-800">All Bills Fully Paid!</h4>
+              <p className="text-xs text-slate-500">There are currently no pending or unpaid milk bills.</p>
             </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pendingCompletedCycles.map((cycle, idx) => (
-              <div key={idx} className="p-5 rounded-3xl bg-white border border-rose-200 space-y-3 shadow-sm card-3d">
-                <div className="flex items-start justify-between">
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {pendingBillsList.map((bill) => (
+                <div key={bill.id} className="p-5 rounded-3xl bg-white border border-amber-200 space-y-3 shadow-sm card-3d flex flex-col justify-between">
                   <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
-                      Completed Month Bill Pending
-                    </span>
-                    <h4 className="text-lg font-bold text-slate-900 mt-1">{cycle.customer.name}</h4>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                          {bill.isCurrent ? 'Current Cycle Unpaid' : 'Past Cycle Unpaid'}
+                        </span>
+                        <h4 className="text-lg font-bold text-slate-900 mt-1">{bill.customer.name}</h4>
+                      </div>
+                      <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-amber-100 text-amber-800 border border-amber-200">
+                        ⚠️ DUE: {currency}{bill.pendingBalanceDue}
+                      </span>
+                    </div>
+
+                    <div className="text-xs space-y-1 text-slate-600 mt-2">
+                      <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{bill.startDateStr} to {bill.endDateStr}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{bill.totalLitersTaken} Liters</strong></p>
+                      <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}${(bill.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Payments Received:</span> <strong className="text-emerald-700">{currency}${(bill.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
+                    </div>
                   </div>
-                  <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-rose-100 text-rose-800 border border-rose-200">
-                    ⚠️ NET DUE: {currency}{cycle.pendingBalanceDue}
-                  </span>
-                </div>
 
-                <div className="text-xs space-y-1 text-slate-600">
-                  <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
-                  <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
-                  <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}${(cycle.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
-                  <p><span className="text-slate-500 font-medium">Payments Paid:</span> <strong className="text-emerald-700">{currency}${(cycle.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
-                </div>
-
-                <div className="pt-2 border-t border-slate-100 space-y-2">
-                  <button
-                    onClick={() => handleOpenPaymentForCustomer(cycle.customer.id, cycle.pendingBalanceDue)}
-                    className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
-                  >
-                    <Wallet className="w-4 h-4" /> Record & Save Payment ({currency}{cycle.pendingBalanceDue})
-                  </button>
-                  <div className="flex items-center gap-2">
+                  <div className="pt-2 border-t border-slate-100 space-y-2">
                     <button
-                      onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
-                      className="flex-1 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 border border-slate-200"
+                      onClick={() => handleOpenPaymentForCustomer(bill.customer.id, bill.pendingBalanceDue)}
+                      className="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
                     >
-                      <FileText className="w-3.5 h-3.5" /> Statement
+                      <Wallet className="w-4 h-4" /> Record Payment ({currency}{bill.pendingBalanceDue})
                     </button>
-                    <button
-                      onClick={() => downloadPDFRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                      className="flex-1 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-1"
-                    >
-                      <FileText className="w-3.5 h-3.5 text-rose-600" /> PDF
-                    </button>
-                    <button
-                      onClick={() => sendWhatsAppRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                      className="flex-1 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1"
-                    >
-                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedBillCycle({ customer: bill.customer, startDateStr: bill.startDateStr, endDateStr: bill.endDateStr })}
+                        className="flex-1 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1 shadow-sm"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Statement
+                      </button>
+                      <button
+                        onClick={() => sendWhatsAppRangeBill(bill.customer.id, bill.startDateStr, bill.endDateStr)}
+                        className="flex-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center justify-center gap-1"
+                      >
+                        <MessageCircle className="w-3.5 h-3.5 text-emerald-600" /> WhatsApp Link
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* RENDER VIEW TAB 2: COMPLETED MONTHLY STATEMENTS HISTORY ARCHIVE */}
-      {customerTab === 'Completed' && (
-        <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-3">
-            <div className="flex items-center space-x-2">
-              <FolderCheck className="w-6 h-6 text-emerald-600" />
-              <div>
-                <h3 className="text-xl font-bold text-slate-900">Monthly Completed Milk Log Statements History</h3>
-                <p className="text-xs text-slate-500">Paid month bills can be deleted/cleared in 1 click; Unpaid bills stay back until paid.</p>
-              </div>
-            </div>
-
-            {paidCompletedCount > 0 && (
+      {/* RENDER VIEW TAB 3: PAID BILLS TAB (INDIVIDUAL FULLY PAID STATEMENTS) */}
+      {customerTab === 'Paid' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-teal-600" />
+              Paid Bills & Settled Statements ({paidBillsList.length})
+            </h3>
+            {paidBillsList.length > 0 && (
               <button
                 onClick={handleClearAllPaidCycles}
-                className="px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition-all self-start sm:self-auto"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs border border-slate-200 transition-colors"
               >
-                <Sparkles className="w-4 h-4 text-emerald-600" /> Clear All Paid Statements ({paidCompletedCount})
+                Archive All Paid Statements
               </button>
             )}
           </div>
 
-          {visibleCompletedCycles.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-              {visibleCompletedCycles.map((cycle, idx) => {
-                const cycleKey = `${cycle.customer.id}_${cycle.startDateStr}`;
-
+          {paidBillsList.length === 0 ? (
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 card-3d text-center space-y-2">
+              <FolderCheck className="w-8 h-8 text-slate-400 mx-auto" />
+              <h4 className="text-base font-bold text-slate-800">No Paid Bills Archived Yet</h4>
+              <p className="text-xs text-slate-500">Statements marked as paid in full will appear here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {paidBillsList.map((bill) => {
+                const key = `${bill.customer.id}_${bill.startDateStr}`;
                 return (
-                  <div key={idx} className={`p-5 rounded-2xl bg-white border space-y-3 shadow-sm ${
-                    cycle.isPaidInFull ? 'border-slate-200' : 'border-rose-200 bg-rose-50/20'
-                  }`}>
+                  <div key={bill.id} className="p-5 rounded-3xl bg-white border border-teal-200 space-y-3 shadow-sm card-3d flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
+                            Fully Settled Statement
+                          </span>
+                          <h4 className="text-lg font-bold text-slate-900 mt-1">{bill.customer.name}</h4>
+                        </div>
+                        <span className="px-2.5 py-1 rounded text-[10px] font-extrabold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                          ✅ PAID IN FULL
+                        </span>
+                      </div>
+
+                      <div className="text-xs space-y-1 text-slate-600 mt-2">
+                        <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{bill.startDateStr} to {bill.endDateStr}</strong></p>
+                        <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{bill.totalLitersTaken} Liters</strong></p>
+                        <p><span className="text-slate-500 font-medium">Total Bill Paid:</span> <strong className="text-slate-900">{currency}${(bill.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setSelectedBillCycle({ customer: bill.customer, startDateStr: bill.startDateStr, endDateStr: bill.endDateStr })}
+                        className="flex-1 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 border border-slate-200"
+                      >
+                        <FileText className="w-3.5 h-3.5 text-slate-600" /> Statement
+                      </button>
+                      <button
+                        onClick={() => downloadPDFRangeBill(bill.customer.id, bill.startDateStr, bill.endDateStr)}
+                        className="flex-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200"
+                      >
+                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> PDF
+                      </button>
+                      <button
+                        onClick={() => handleClearPaidCycle(key)}
+                        title="Archive/Hide Statement"
+                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* RENDER VIEW TAB 4: COMPLETED CYCLES ARCHIVE */}
+      {customerTab === 'Completed' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <FolderCheck className="w-5 h-5 text-indigo-600" />
+              Completed Monthly Billing Cycles Archive ({visibleCompletedCycles.length})
+            </h3>
+          </div>
+
+          {visibleCompletedCycles.length === 0 ? (
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 card-3d text-center space-y-2">
+              <FolderCheck className="w-8 h-8 text-slate-400 mx-auto" />
+              <h4 className="text-base font-bold text-slate-800">No Completed Cycles Yet</h4>
+              <p className="text-xs text-slate-500">Completed monthly statements will be archived here.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {visibleCompletedCycles.map((cycle, idx) => (
+                <div key={idx} className="p-5 rounded-3xl bg-white border border-slate-200 space-y-3 shadow-sm card-3d flex flex-col justify-between">
+                  <div>
                     <div className="flex items-start justify-between">
                       <div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-800 border border-indigo-200">
                           Completed Month Cycle
                         </span>
                         <h4 className="text-lg font-bold text-slate-900 mt-1">{cycle.customer.name}</h4>
                       </div>
                       <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold border ${
-                        cycle.isPaidInFull ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-rose-100 text-rose-800 border border-rose-200'
+                        cycle.isPaidInFull ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-amber-100 text-amber-800 border-amber-200'
                       }`}>
-                        {cycle.isPaidInFull ? '✅ PAID IN FULL' : `⚠️ UNPAID DUE: ${currency}${cycle.pendingBalanceDue}`}
+                        {cycle.isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${cycle.pendingBalanceDue}`}
                       </span>
                     </div>
 
-                    <div className="text-xs space-y-1 text-slate-600">
+                    <div className="text-xs space-y-1 text-slate-600 mt-2">
                       <p><span className="text-slate-500 font-medium">Cycle Period:</span> <strong className="text-slate-900">{cycle.startDateStr} to {cycle.endDateStr}</strong></p>
-                      <p><span className="text-slate-500 font-medium">Days Taken vs Off:</span> <strong className="text-emerald-700">{cycle.daysTakenCount} Taken</strong> / <strong className="text-rose-700">{cycle.daysNotTakenCount} Off</strong></p>
-                      <p><span className="text-slate-500 font-medium">Total Quantity:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
-                      <p><span className="text-slate-500 font-medium">Current Month Bill:</span> <strong className="text-slate-900">{currency}${(cycle.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
-                      {cycle.priorDueAmount > 0 && <p className="text-rose-700"><span className="text-slate-500 font-medium">Last Month Due:</span> + {currency}{cycle.priorDueAmount}</p>}
-                      {cycle.priorExtraPaidAdvance > 0 && <p className="text-emerald-700"><span className="text-slate-500 font-medium">Last Month Extra Paid:</span> - {currency}{cycle.priorExtraPaidAdvance}</p>}
-                      <p><span className="text-slate-500 font-medium">Amount Paid:</span> <strong className="text-emerald-700">{currency}${(cycle.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Milk Delivered:</span> <strong className="text-emerald-700">{cycle.totalLitersTaken} Liters</strong></p>
+                      <p><span className="text-slate-500 font-medium">Month Bill:</span> <strong className="text-slate-900">{currency}${(cycle.totalMonthBill || 0).toLocaleString('en-IN')}</strong></p>
+                      <p><span className="text-slate-500 font-medium">Payments Received:</span> <strong className="text-emerald-700">{currency}${(cycle.totalPaymentsReceived || 0).toLocaleString('en-IN')}</strong></p>
                     </div>
+                  </div>
 
-                    <div className="pt-2 border-t border-slate-100 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
-                          className="flex-1 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold flex items-center justify-center gap-1 border border-slate-200"
-                        >
-                          <FileText className="w-3.5 h-3.5" /> Statement
-                        </button>
-                        <button
-                          onClick={() => sendWhatsAppRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                          className="flex-1 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center justify-center gap-1"
-                        >
-                          <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-                        </button>
-                        <button
-                          onClick={() => downloadCustomerRangeCSV(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
-                          className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-emerald-700 border border-slate-200"
-                          title="Download CSV"
-                        >
-                          <FileSpreadsheet className="w-4 h-4" />
-                        </button>
+                  <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <button
+                      onClick={() => setSelectedBillCycle({ customer: cycle.customer, startDateStr: cycle.startDateStr, endDateStr: cycle.endDateStr })}
+                      className="flex-1 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1 shadow-sm"
+                    >
+                      <FileText className="w-3.5 h-3.5" /> Statement
+                    </button>
+                    <button
+                      onClick={() => downloadPDFRangeBill(cycle.customer.id, cycle.startDateStr, cycle.endDateStr)}
+                      className="flex-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center justify-center gap-1 border border-emerald-200"
+                    >
+                      <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" /> PDF
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* RENDER VIEW TAB 5: STOPPED CUSTOMERS (INDIVIDUAL STOPPED CUSTOMERS) */}
+      {customerTab === 'Stopped' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <Octagon className="w-5 h-5 text-rose-600" />
+              Stopped Milk Customers ({stoppedCustomers.length})
+            </h3>
+          </div>
+
+          {stoppedCustomers.length === 0 ? (
+            <div className="bg-white p-8 rounded-3xl border border-slate-200 card-3d text-center space-y-2">
+              <UserCheck className="w-8 h-8 text-emerald-600 mx-auto" />
+              <h4 className="text-base font-bold text-slate-800">No Stopped Customers</h4>
+              <p className="text-xs text-slate-500">All registered dairy customers are currently active milk buyers.</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {stoppedCustomers.map((customer) => {
+                const summary = getCustomerMonthlyData(customer.id);
+                if (!summary) return null;
+
+                const { startDateStr, endDateStr, daysTakenCount, daysNotTakenCount, totalMonthBill, pendingBalanceDue, isPaidInFull } = summary;
+
+                return (
+                  <div key={customer.id} className="p-6 rounded-3xl bg-white border border-rose-300 card-3d flex flex-col justify-between space-y-4 shadow-sm bg-rose-50/10">
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-800 border border-rose-200">
+                            🛑 Milk Delivery Stopped
+                          </span>
+                          <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{customer.name}</h3>
+                        </div>
+                        <div className="flex items-center space-x-1">
+                          <button 
+                            onClick={() => handleEditCustomer(customer)} 
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Edit Customer Profile"
+                          >
+                            <Edit3 className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => deleteRecord('dairyCustomers', customer.id)} 
+                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                            title="Delete Customer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
 
-                      {cycle.isPaidInFull ? (
-                        <button
-                          onClick={() => handleClearPaidCycle(cycleKey)}
-                          className="w-full py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 text-slate-600 hover:text-rose-700 border border-slate-200 hover:border-rose-200 text-[11px] font-bold flex items-center justify-center gap-1 transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete Paid Statement
-                        </button>
-                      ) : (
-                        <div className="w-full py-1.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-[11px] font-bold flex items-center justify-center gap-1">
-                          <Lock className="w-3.5 h-3.5 text-rose-600" /> Saved (Stays Back Until Bill Paid)
-                        </div>
-                      )}
+                      <div className="mt-3 space-y-1 text-xs text-slate-600">
+                        <p><span className="text-slate-500 font-medium">Phone:</span> {customer.phone || 'N/A'}</p>
+                        <p><span className="text-slate-500 font-medium">Stopped Date:</span> <span className="text-rose-700 font-bold">{customer.stoppedDate || endDateStr}</span></p>
+                      </div>
                     </div>
 
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                      <div className="flex justify-between font-bold">
+                        <span>Final Bill Balance:</span>
+                        <span className={isPaidInFull ? 'text-emerald-700' : 'text-rose-700'}>
+                          {isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${pendingBalanceDue}`}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => handleOpenPaymentForCustomer(customer.id, pendingBalanceDue > 0 ? pendingBalanceDue : '')}
+                        className="w-full mt-2 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                      >
+                        <Wallet className="w-4 h-4" /> Record Payment ({currency}{pendingBalanceDue > 0 ? pendingBalanceDue : 'Settled'})
+                      </button>
+
+                      <button
+                        onClick={() => setSelectedBillCycle({ customer, startDateStr, endDateStr })}
+                        className="w-full mt-1 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-sm"
+                      >
+                        <FileText className="w-4 h-4" /> View & Send Final Collection Bill
+                      </button>
+
+                      <button
+                        onClick={() => handleReactivateCustomer(customer)}
+                        className="w-full mt-1 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" /> 🟢 Reactivate Customer to Active
+                      </button>
+                    </div>
                   </div>
                 );
               })}
-            </div>
-          ) : (
-            <div className="text-center text-slate-400 text-xs py-12">
-              No completed month cycle archives present. Cleared paid statements or future completed months will appear here.
             </div>
           )}
         </div>
