@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { generateDairyBillPDF } from '../services/pdfGenerator';
 import { 
   Milk, 
@@ -42,6 +45,8 @@ import {
 
 export default function DairyModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   // Customer Filter Tab state: "Active", "Completed", "Stopped", "All"
@@ -109,11 +114,15 @@ export default function DairyModule() {
   };
 
   // Delete a Pending Bill Card (Deletes milk logs in that cycle and clears cycle)
-  const handleDeletePendingBill = (bill) => {
+  const handleDeletePendingBill = async (bill) => {
     const periodText = `${bill.startDateStr} to ${bill.endDateStr}`;
-    if (!window.confirm(`Are you sure you want to delete this pending bill for ${bill.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete Pending Bill',
+      description: `Are you sure you want to delete this pending bill for ${bill.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`,
+      confirmLabel: 'Delete Bill',
+      type: 'danger'
+    });
+    if (!ok) return;
 
     // 1. Delete milk delivery logs in this billing period for this customer
     const logsToDelete = (data?.dairyMilkLogs || []).filter(
@@ -130,15 +139,20 @@ export default function DairyModule() {
       try { localStorage.setItem('dairy_cleared_cycles', JSON.stringify(updated)); } catch {}
       return updated;
     });
+    toast.success(`Pending bill for ${bill.customer.name} deleted.`);
   };
 
   // Delete a Completed Month Cycle Card (Deletes milk logs in that cycle and clears cycle)
-  const handleDeleteCompletedCycle = (cycle) => {
+  const handleDeleteCompletedCycle = async (cycle) => {
     const cycleKey = `${cycle.customer.id}_${cycle.startDateStr}`;
     const periodText = `${cycle.startDateStr} to ${cycle.endDateStr}`;
-    if (!window.confirm(`Are you sure you want to delete this completed cycle record for ${cycle.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`)) {
-      return;
-    }
+    const ok = await confirm({
+      title: 'Delete Completed Cycle',
+      description: `Are you sure you want to delete this completed cycle record for ${cycle.customer.name} (${periodText})? This will delete the milk delivery logs for this cycle.`,
+      confirmLabel: 'Delete Cycle',
+      type: 'danger'
+    });
+    if (!ok) return;
 
     // Delete milk delivery logs in this billing period for this customer
     const logsToDelete = (data?.dairyMilkLogs || []).filter(
@@ -154,6 +168,20 @@ export default function DairyModule() {
       try { localStorage.setItem('dairy_cleared_cycles', JSON.stringify(updated)); } catch {}
       return updated;
     });
+    toast.success(`Completed cycle for ${cycle.customer.name} deleted.`);
+  };
+
+  // Delete Customer Profile
+  const handleDeleteCustomer = async (customerId, customerName) => {
+    const ok = await confirm({
+      title: 'Delete Customer',
+      description: `Are you sure you want to delete "${customerName}"? All their milk logs and bill history will be removed.`,
+      confirmLabel: 'Delete Customer',
+      type: 'danger'
+    });
+    if (!ok) return;
+    deleteRecord('dairyCustomers', customerId);
+    toast.success(`Customer "${customerName}" deleted.`);
   };
 
   // Modal visibility states
@@ -386,6 +414,7 @@ export default function DairyModule() {
     });
 
     setShowBulkMilkModal(false);
+    toast.success('Daily milk distribution logged for all customers!');
   };
 
   // Open Edit Customer Modal
@@ -452,8 +481,10 @@ export default function DairyModule() {
 
     if (editingCustomer) {
       updateRecord('dairyCustomers', { id: editingCustomer.id, ...payload });
+      toast.success(`Customer "${payload.name}" updated!`);
     } else {
       addRecord('dairyCustomers', payload);
+      toast.success(`Customer "${payload.name}" added successfully!`);
     }
 
     setCustomerForm({ 
@@ -494,14 +525,17 @@ export default function DairyModule() {
 
     if (editingMilkLog) {
       updateRecord('dairyMilkLogs', { id: editingMilkLog.id, ...payload });
+      toast.success('Milk delivery log updated!');
     } else {
       const existingLog = (data?.dairyMilkLogs || []).find(
         l => l.customerId === milkForm.customerId && l.date === milkForm.date && (l.shift || 'Morning') === (milkForm.shift || 'Morning')
       );
       if (existingLog) {
         updateRecord('dairyMilkLogs', { id: existingLog.id, ...payload });
+        toast.success('Milk delivery log updated!');
       } else {
         addRecord('dairyMilkLogs', payload);
+        toast.success('Milk delivery log saved!');
       }
     }
 
@@ -516,7 +550,7 @@ export default function DairyModule() {
     const amountVal = Number(paymentForm.amount) || 0;
 
     if (!targetCustId || amountVal <= 0) {
-      alert('Please select a customer and enter a valid payment amount!');
+      toast.error('Please select a customer and enter a valid payment amount!');
       return;
     }
 
@@ -528,8 +562,10 @@ export default function DairyModule() {
 
     if (editingDairyPayment) {
       updateRecord('dairyPayments', { id: editingDairyPayment.id, ...payload });
+      toast.success('Payment record updated!');
     } else {
       addRecord('dairyPayments', payload);
+      toast.success('Payment recorded successfully!');
     }
 
     setPaymentForm({ customerId: '', date: todayStr, amount: '', notes: 'Monthly Milk Bill Payment' });
@@ -545,6 +581,7 @@ export default function DairyModule() {
       ...cattleForm,
       dailyYieldLiters: Number(cattleForm.dailyYieldLiters) || 0
     });
+    toast.success('Cattle registered successfully!');
     setShowCattleModal(false);
   };
 
@@ -1235,7 +1272,7 @@ export default function DairyModule() {
                         <Edit3 className="w-4 h-4" />
                       </button>
                       <button 
-                        onClick={() => deleteRecord('dairyCustomers', customer.id)} 
+                        onClick={() => handleDeleteCustomer(customer.id, customer.name)} 
                         className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                         title="Delete Customer"
                       >
@@ -1313,9 +1350,16 @@ export default function DairyModule() {
                   </button>
 
                   <button
-                    onClick={() => {
-                      if (window.confirm(`Complete current month cycle (${startDateStr} to ${endDateStr}) for ${customer.name} and advance to next month?`)) {
+                    onClick={async () => {
+                      const ok = await confirm({
+                        title: 'Advance Billing Cycle',
+                        description: `Complete current month cycle (${startDateStr} to ${endDateStr}) for ${customer.name} and advance to next month?`,
+                        confirmLabel: 'Advance Cycle',
+                        type: 'warning'
+                      });
+                      if (ok) {
                         handleAdvanceCustomerCycle(customer);
+                        toast.success(`Advanced cycle for ${customer.name}`);
                       }
                     }}
                     className="w-full mt-1 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 text-[11px] font-bold flex items-center justify-center gap-1.5 transition-colors"
@@ -1637,7 +1681,7 @@ export default function DairyModule() {
                             <Edit3 className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => deleteRecord('dairyCustomers', customer.id)} 
+                            onClick={() => handleDeleteCustomer(customer.id, customer.name)} 
                             className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
                             title="Delete Customer"
                           >
@@ -1748,8 +1792,20 @@ export default function DairyModule() {
                               <Edit3 className="w-3 h-3" /> Edit
                             </button>
                             <button 
-                              onClick={() => deleteRecord('dairyMilkLogs', log.id)} 
+                              onClick={async () => {
+                                const ok = await confirm({
+                                  title: 'Delete Delivery Log',
+                                  description: `Are you sure you want to delete this milk log for ${log.date}?`,
+                                  confirmLabel: 'Delete Log',
+                                  type: 'danger'
+                                });
+                                if (ok) {
+                                  deleteRecord('dairyMilkLogs', log.id);
+                                  toast.success('Milk delivery log deleted.');
+                                }
+                              }}
                               className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                              title="Delete Log"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -1804,8 +1860,20 @@ export default function DairyModule() {
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
-                            onClick={() => deleteRecord('dairyPayments', pay.id)} 
+                            onClick={async () => {
+                              const ok = await confirm({
+                                title: 'Delete Payment Record',
+                                description: `Delete payment record of ${currency}${Number(pay.amount || 0).toLocaleString('en-IN')}?`,
+                                confirmLabel: 'Delete Payment',
+                                type: 'danger'
+                              });
+                              if (ok) {
+                                deleteRecord('dairyPayments', pay.id);
+                                toast.success('Payment record deleted.');
+                              }
+                            }}
                             className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            title="Delete Payment"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -2480,6 +2548,9 @@ export default function DairyModule() {
           </div>
         </div>
       )}
+
+      {/* Confirm-Before-Delete Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

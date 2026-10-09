@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FarmProvider, useFarm } from './context/FarmContext';
+import { ToastProvider } from './context/ToastContext';
 import ErrorBoundary from './components/ErrorBoundary';
 import LoginPage from './components/LoginPage';
 import Navbar from './components/Navbar';
@@ -113,13 +114,15 @@ export default function App() {
 
   return (
     <ErrorBoundary>
-      <FarmProvider>
-        {user ? (
-          <MainApp currentUser={user} onLogout={handleLogout} />
-        ) : (
-          <LoginPage onLoginSuccess={handleLoginSuccess} />
-        )}
-      </FarmProvider>
+      <ToastProvider>
+        <FarmProvider>
+          {user ? (
+            <MainApp currentUser={user} onLogout={handleLogout} />
+          ) : (
+            <LoginPage onLoginSuccess={handleLoginSuccess} />
+          )}
+        </FarmProvider>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

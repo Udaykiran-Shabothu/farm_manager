@@ -1,5 +1,8 @@
 import React, { useRef, useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { 
   Database, 
   Download, 
@@ -18,6 +21,8 @@ import { initGoogleOAuth, saveToGoogleDrive, loadFromGoogleDrive, DEFAULT_CLIENT
 
 export default function BackupModule() {
   const { data, resetToSampleData, clearAllData, importData } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const fileInputRef = useRef(null);
 
   // Google OAuth & Client ID state pre-filled with user's Client ID
@@ -310,9 +315,16 @@ export default function BackupModule() {
             <p className="text-xs text-rose-600">Wipes all stored records to start completely fresh with zero entries.</p>
           </div>
           <button
-            onClick={() => {
-              if (window.confirm('Are you sure you want to clear all farm records? Make sure you have exported a backup first!')) {
+            onClick={async () => {
+              const ok = await confirm({
+                title: 'Clear All Local Records',
+                description: 'Are you sure you want to clear all farm records? This will delete all stored crops, dairy, poultry, worker, and machine data. Make sure you have exported a backup first!',
+                confirmLabel: 'Clear All Data',
+                type: 'danger'
+              });
+              if (ok) {
                 clearAllData();
+                toast.success('Database reset to fresh state.');
               }
             }}
             className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap shadow-sm"
@@ -321,6 +333,9 @@ export default function BackupModule() {
           </button>
         </div>
       </div>
+
+      {/* Confirm-Before-Delete Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

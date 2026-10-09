@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { generateWorkerWagePDF } from '../services/pdfGenerator';
 import { 
   Users, 
@@ -23,6 +26,8 @@ import {
 
 export default function WorkersModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   // Search & Filter state
@@ -136,8 +141,10 @@ export default function WorkersModule() {
 
     if (editingWorker) {
       updateRecord('workers', { id: editingWorker.id, ...payload });
+      toast.success(`Worker "${payload.name}" updated successfully!`);
     } else {
       addRecord('workers', payload);
+      toast.success(`Worker "${payload.name}" added successfully!`);
     }
 
     setWorkerForm({ name: '', type: 'Individual', memberCount: 1, phone: '', role: 'Field Caretaker & Labor', dailyRate: 600 });
@@ -167,8 +174,10 @@ export default function WorkersModule() {
 
     if (editingAttendance) {
       updateRecord('attendance', { id: editingAttendance.id, ...payload });
+      toast.success('Attendance record updated successfully!');
     } else {
       addRecord('attendance', payload);
+      toast.success('Attendance and wage logged successfully!');
     }
 
     setEditingAttendance(null);
@@ -187,13 +196,49 @@ export default function WorkersModule() {
 
     if (editingPayment) {
       updateRecord('workerPayments', { id: editingPayment.id, ...payload });
+      toast.success('Wage payout record updated!');
     } else {
       addRecord('workerPayments', payload);
+      toast.success('Wage payout recorded successfully!');
     }
 
     setPaymentForm({ workerId: '', date: todayStr, type: 'Weekly Salary', amount: '', notes: 'Labor Wage Payout' });
     setEditingPayment(null);
     setShowPaymentModal(false);
+  };
+
+  // Delete Handlers with Custom Confirmation Modal
+  const handleDeleteWorker = async (worker) => {
+    const ok = await confirm({
+      title: 'Delete Worker Profile',
+      description: `Are you sure you want to delete worker "${worker.name}"? This action cannot be undone.`
+    });
+    if (ok) {
+      deleteRecord('workers', worker.id);
+      toast.success(`Worker "${worker.name}" deleted.`);
+    }
+  };
+
+  const handleDeleteAttendance = async (att) => {
+    const ok = await confirm({
+      title: 'Delete Attendance Log',
+      description: `Delete field work attendance entry for ${att.date}?`
+    });
+    if (ok) {
+      deleteRecord('attendance', att.id);
+      toast.success('Attendance record deleted.');
+    }
+  };
+
+  const handleDeletePayment = async (pay) => {
+    const ok = await confirm({
+      title: 'Delete Payout Record',
+      description: `Delete this payout record of ${currency}${Number(pay.amount || 0).toLocaleString('en-IN')}?`
+    });
+    if (ok) {
+      deleteRecord('workerPayments', pay.id);
+      toast.success('Wage payout deleted.');
+    }
   };
 
   // Download Itemized Wage Statement CSV
@@ -330,6 +375,52 @@ export default function WorkersModule() {
         </div>
       </div>
 
+      {/* Quick Stats Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 border border-amber-200">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Workers</span>
+            <span className="text-xl font-black text-slate-900">{(data?.workers || []).length}</span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200">
+            <UserCheck className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Today's Logs</span>
+            <span className="text-xl font-black text-emerald-700">
+              {(data?.attendance || []).filter(a => a.date === todayStr).length}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 border border-blue-200">
+            <ArrowDownRight className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Wages Owed</span>
+            <span className="text-xl font-black text-amber-700">
+              {currency}{((data?.attendance || []).reduce((acc, curr) => acc + Number(curr.wageEarned || 0), 0) || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 border border-rose-200">
+            <Wallet className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Outstanding Balance</span>
+            <span className="text-xl font-black text-rose-700">
+              {currency}{Math.max(0, (data?.attendance || []).reduce((acc, curr) => acc + Number(curr.wageEarned || 0), 0) - (data?.workerPayments || []).reduce((acc, curr) => acc + Number(curr.amount || 0), 0)).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Filter & Search Toolbar */}
       <div className="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="relative w-full sm:w-80">
@@ -354,7 +445,7 @@ export default function WorkersModule() {
             <button
               key={type}
               onClick={() => setTypeFilter(type)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 typeFilter === type
                   ? 'bg-amber-600 text-white shadow-sm'
                   : 'bg-slate-100 text-slate-600 hover:text-slate-900 hover:bg-slate-200'
@@ -367,8 +458,52 @@ export default function WorkersModule() {
       </div>
 
       {/* Workers Cards Directory */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredWorkers.map((worker) => {
+      {filteredWorkers.length === 0 ? (
+        (data?.workers || []).length === 0 ? (
+          <div className="bg-white p-12 rounded-3xl border border-slate-200 card-3d text-center space-y-4 shadow-sm">
+            <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+              <Users className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-extrabold text-slate-800">No Workers Added Yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Register individual laborers or group teams to track field work attendance, overtime wages, and advance payments.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingWorker(null);
+                setWorkerForm({ name: '', type: 'Individual', memberCount: 1, phone: '', role: 'Field Caretaker & Labor', dailyRate: 600 });
+                setShowWorkerModal(true);
+              }}
+              className="px-5 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-amber-600/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Your First Worker
+            </button>
+          </div>
+        ) : (
+          <div className="bg-white p-10 rounded-3xl border border-slate-200 card-3d text-center space-y-3 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <Filter className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">No Matching Workers Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              No workers match your current search query or filter. Try a different name or clear the search.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setTypeFilter('All');
+              }}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            >
+              Clear Search
+            </button>
+          </div>
+        )
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredWorkers.map((worker) => {
           const attendanceLogs = (data?.attendance || []).filter(a => a.workerId === worker.id);
           const paymentLogs = (data?.workerPayments || []).filter(p => p.workerId === worker.id);
 
@@ -393,14 +528,14 @@ export default function WorkersModule() {
                   <div className="flex items-center space-x-1">
                     <button 
                       onClick={() => handleEditWorker(worker)} 
-                      className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       title="Edit Worker Profile"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => deleteRecord('workers', worker.id)} 
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      onClick={() => handleDeleteWorker(worker)} 
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       title="Delete Worker"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -454,7 +589,8 @@ export default function WorkersModule() {
             </div>
           );
         })}
-      </div>
+        </div>
+      )}
 
       {/* Tables: Attendance Register & Payment Log with EDIT buttons */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -503,8 +639,9 @@ export default function WorkersModule() {
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
-                            onClick={() => deleteRecord('attendance', att.id)} 
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            onClick={() => handleDeleteAttendance(att)} 
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                            title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -527,7 +664,7 @@ export default function WorkersModule() {
             </h3>
             <button
               onClick={() => handleOpenPaymentForWorker()}
-              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-colors"
+              className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-xs font-bold flex items-center gap-1 shadow-sm transition-colors cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5 text-blue-600" /> Record Payout
             </button>
@@ -561,13 +698,14 @@ export default function WorkersModule() {
                         <div className="flex items-center space-x-1.5">
                           <button 
                             onClick={() => handleEditPayment(pay)} 
-                            className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors"
+                            className="px-2 py-1 rounded bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 font-bold flex items-center gap-1 text-[10px] transition-colors cursor-pointer"
                           >
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
-                            onClick={() => deleteRecord('workerPayments', pay.id)} 
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            onClick={() => handleDeletePayment(pay)} 
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                            title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -989,6 +1127,9 @@ export default function WorkersModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

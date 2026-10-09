@@ -6,6 +6,7 @@ import {
   downloadMasterFinancialCSV 
 } from '../services/financialAnalytics';
 import { generateMasterFinancialPDF } from '../services/pdfGenerator';
+import { useToast } from '../context/ToastContext';
 import WhatsAppDigestModal from './WhatsAppDigestModal';
 import { 
   TrendingUp, 
@@ -62,22 +63,85 @@ export default function Dashboard({ setActiveTab }) {
   // Global Date Range Filter State
   const [datePreset, setDatePreset] = useState('ALL');
   const [customStart, setCustomStart] = useState('');
+  const toast = useToast();
   const [customEnd, setCustomEnd] = useState('');
   const [showDigestModal, setShowDigestModal] = useState(false);
+  const [isExportingPDF, setIsExportingPDF] = useState(false);
+  const [isExportingCSV, setIsExportingCSV] = useState(false);
 
   // Compute Full Multi-Sector Analytics Engine
   const analytics = useMemo(() => {
     return computeFarmAnalytics(data, datePreset, customStart, customEnd);
   }, [data, datePreset, customStart, customEnd]);
 
-  // Handle PDF Export
-  const handleDownloadPDF = () => {
-    generateMasterFinancialPDF(analytics, data?.farmInfo || {});
+  // Compute Last Month Analytics for Trend Comparison
+  const lastMonthAnalytics = useMemo(() => {
+    return computeFarmAnalytics(data, 'LAST_MONTH');
+  }, [data]);
+
+  const thisMonthAnalytics = useMemo(() => {
+    return computeFarmAnalytics(data, 'THIS_MONTH');
+  }, [data]);
+
+  // Dynamic vs Last Month Delta Trends
+  const trends = useMemo(() => {
+    const currentIncome = datePreset === 'THIS_MONTH' ? thisMonthAnalytics.totalIncome : (analytics.totalIncome || 0);
+    const lastIncome = lastMonthAnalytics.totalIncome || 0;
+    let incomeDelta = 0;
+    if (lastIncome > 0) {
+      incomeDelta = Math.round(((currentIncome - lastIncome) / lastIncome) * 100);
+    } else if (currentIncome > 0) {
+      incomeDelta = 100;
+    }
+
+    const currentExpense = datePreset === 'THIS_MONTH' ? thisMonthAnalytics.totalExpenses : (analytics.totalExpenses || 0);
+    const lastExpense = lastMonthAnalytics.totalExpenses || 0;
+    let expenseDelta = 0;
+    if (lastExpense > 0) {
+      expenseDelta = Math.round(((currentExpense - lastExpense) / lastExpense) * 100);
+    } else if (currentExpense > 0) {
+      expenseDelta = 100;
+    }
+
+    const currentProfit = datePreset === 'THIS_MONTH' ? thisMonthAnalytics.netProfit : (analytics.netProfit || 0);
+    const lastProfit = lastMonthAnalytics.netProfit || 0;
+    let profitDelta = 0;
+    if (Math.abs(lastProfit) > 0) {
+      profitDelta = Math.round(((currentProfit - lastProfit) / Math.abs(lastProfit)) * 100);
+    } else if (currentProfit > 0) {
+      profitDelta = 100;
+    }
+
+    return { incomeDelta, expenseDelta, profitDelta };
+  }, [analytics, thisMonthAnalytics, lastMonthAnalytics, datePreset]);
+
+  // Handle PDF Export with feedback
+  const handleDownloadPDF = async () => {
+    try {
+      setIsExportingPDF(true);
+      toast.info('Generating Master Financial PDF Report...');
+      await generateMasterFinancialPDF(analytics, data?.farmInfo || {});
+      toast.success('Master PDF Report downloaded successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to generate PDF Report.');
+    } finally {
+      setIsExportingPDF(false);
+    }
   };
 
-  // Handle CSV Export
+  // Handle CSV Export with feedback
   const handleDownloadCSV = () => {
-    downloadMasterFinancialCSV(analytics, data?.farmInfo || {});
+    try {
+      setIsExportingCSV(true);
+      downloadMasterFinancialCSV(analytics, data?.farmInfo || {});
+      toast.success('Financial CSV exported successfully!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Failed to export CSV.');
+    } finally {
+      setIsExportingCSV(false);
+    }
   };
 
   // Quick Sector Productivities & Totals
@@ -272,11 +336,16 @@ export default function Dashboard({ setActiveTab }) {
               </h3>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Filtered Period Revenue</span>
-            <span className="text-emerald-700 font-bold flex items-center gap-0.5">
-              <TrendingUp className="w-3.5 h-3.5" /> Gross Income
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+              trends.incomeDelta >= 0
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>
+              {trends.incomeDelta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {trends.incomeDelta >= 0 ? `+${trends.incomeDelta}%` : `${trends.incomeDelta}%`}
             </span>
+            <span className="text-slate-400 font-medium">vs last month</span>
           </div>
         </div>
 
@@ -293,9 +362,16 @@ export default function Dashboard({ setActiveTab }) {
               </h3>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Filtered Period Costs</span>
-            <span className="text-rose-700 font-bold">Gross Expense</span>
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+              trends.expenseDelta <= 0
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
+            }`}>
+              {trends.expenseDelta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {trends.expenseDelta >= 0 ? `+${trends.expenseDelta}%` : `${trends.expenseDelta}%`}
+            </span>
+            <span className="text-slate-400 font-medium">vs last month</span>
           </div>
         </div>
 
@@ -318,13 +394,16 @@ export default function Dashboard({ setActiveTab }) {
               </h3>
             </div>
           </div>
-          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Net Financial Return</span>
-            <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-              (analytics?.netProfit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+          <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+            <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-extrabold border ${
+              trends.profitDelta >= 0
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                : 'bg-rose-50 text-rose-700 border-rose-200'
             }`}>
-              {(analytics?.netProfit || 0) >= 0 ? 'Profitable' : 'Deficit'}
+              {trends.profitDelta >= 0 ? <TrendingUp className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+              {trends.profitDelta >= 0 ? `+${trends.profitDelta}%` : `${trends.profitDelta}%`}
             </span>
+            <span className="text-slate-400 font-medium">vs last month</span>
           </div>
         </div>
 
@@ -342,8 +421,8 @@ export default function Dashboard({ setActiveTab }) {
             </div>
           </div>
           <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <span>Return Rate: <strong className="text-indigo-800">{analytics.roiPercent}% ROI</strong></span>
-            <span className="text-indigo-700 font-bold">Margin Rate</span>
+            <span className="font-bold text-indigo-700">{analytics.roiPercent}% ROI</span>
+            <span className="text-slate-400 font-medium">Filtered Return</span>
           </div>
         </div>
 

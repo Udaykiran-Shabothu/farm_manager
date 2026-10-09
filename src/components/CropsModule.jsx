@@ -1,5 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { generateCropReportPDF } from '../services/pdfGenerator';
 import { 
   Sprout, 
@@ -65,6 +68,8 @@ export const EXPENSE_UNITS = [
 
 export default function CropsModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   // Modal visibility states
@@ -196,8 +201,10 @@ export default function CropsModule() {
 
     if (editingCrop) {
       updateRecord('crops', { id: editingCrop.id, ...payload });
+      toast.success(`Crop "${payload.name}" updated successfully!`);
     } else {
       addRecord('crops', payload);
+      toast.success(`New crop "${payload.name}" added successfully!`);
     }
 
     setCropForm({ name: '', field: '', areaAcres: '', season: 'Kharif 2026', status: 'Growing' });
@@ -222,8 +229,10 @@ export default function CropsModule() {
 
     if (editingExpense) {
       updateRecord('cropExpenses', { id: editingExpense.id, ...payload });
+      toast.success('Crop expense updated successfully!');
     } else {
       addRecord('cropExpenses', payload);
+      toast.success('Crop expense logged successfully!');
     }
 
     setExpenseForm({ 
@@ -255,13 +264,49 @@ export default function CropsModule() {
 
     if (editingIncome) {
       updateRecord('cropIncomes', { id: editingIncome.id, ...payload });
+      toast.success('Harvest income updated successfully!');
     } else {
       addRecord('cropIncomes', payload);
+      toast.success('Harvest income logged successfully!');
     }
 
     setIncomeForm({ cropId: '', date: new Date().toISOString().split('T')[0], incomeType: CROP_INCOME_TYPES[0], buyer: '', quantityQuintals: '', ratePerQuintal: '' });
     setEditingIncome(null);
     setShowIncomeModal(false);
+  };
+
+  // Delete Handlers with Custom Confirmation Modal
+  const handleDeleteCrop = async (crop) => {
+    const ok = await confirm({
+      title: 'Delete Crop Field',
+      description: `Are you sure you want to delete crop "${crop.name}" (${crop.field})? This action cannot be undone.`
+    });
+    if (ok) {
+      deleteRecord('crops', crop.id);
+      toast.success(`Crop "${crop.name}" deleted successfully.`);
+    }
+  };
+
+  const handleDeleteExpense = async (exp) => {
+    const ok = await confirm({
+      title: 'Delete Crop Expense',
+      description: `Delete this ${exp.category || 'expense'} record of ${currency}${Number(exp.amount || 0).toLocaleString('en-IN')}?`
+    });
+    if (ok) {
+      deleteRecord('cropExpenses', exp.id);
+      toast.success('Crop expense deleted.');
+    }
+  };
+
+  const handleDeleteIncome = async (inc) => {
+    const ok = await confirm({
+      title: 'Delete Harvest Income',
+      description: `Delete this harvest income entry of ${currency}${Number(inc.totalIncome || 0).toLocaleString('en-IN')}?`
+    });
+    if (ok) {
+      deleteRecord('cropIncomes', inc.id);
+      toast.success('Harvest income entry deleted.');
+    }
   };
 
   // Download Complete Crop Report as CSV
@@ -478,25 +523,49 @@ export default function CropsModule() {
 
       {/* Crop Cards Grid */}
       {filteredCrops.length === 0 ? (
-        <div className="bg-white p-8 rounded-3xl border border-slate-200 card-3d text-center space-y-3 shadow-sm">
-          <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-            <Filter className="w-6 h-6" />
+        (data?.crops || []).length === 0 ? (
+          <div className="bg-white p-12 rounded-3xl border border-slate-200 card-3d text-center space-y-4 shadow-sm">
+            <div className="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-inner">
+              <Sprout className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h3 className="text-lg font-extrabold text-slate-800">No Crops Added Yet</h3>
+              <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                Start planning and tracking your crop fields, input expenses, and harvest sales for full profitability tracking.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setEditingCrop(null);
+                setCropForm({ name: '', field: '', areaAcres: '', season: 'Kharif 2026', status: 'Growing' });
+                setShowCropModal(true);
+              }}
+              className="px-5 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-emerald-600/20 transition-all cursor-pointer"
+            >
+              <Plus className="w-4 h-4" /> Add Your First Crop
+            </button>
           </div>
-          <h3 className="text-base font-bold text-slate-800">No Crops Found</h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto">
-            No crops match your current search query or filter criteria. Try adjusting your search term or resetting your filters.
-          </p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setStatusFilter('ALL');
-              setSeasonFilter('ALL');
-            }}
-            className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
-          >
-            Clear All Filters
-          </button>
-        </div>
+        ) : (
+          <div className="bg-white p-10 rounded-3xl border border-slate-200 card-3d text-center space-y-3 shadow-sm">
+            <div className="w-12 h-12 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
+              <Filter className="w-6 h-6" />
+            </div>
+            <h3 className="text-base font-bold text-slate-800">No Matching Crops Found</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              No crops match your current search query or filter criteria. Try adjusting your search term or resetting your filters.
+            </p>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setStatusFilter('ALL');
+                setSeasonFilter('ALL');
+              }}
+              className="px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors cursor-pointer"
+            >
+              Clear All Filters
+            </button>
+          </div>
+        )
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredCrops.map((crop) => {
@@ -534,14 +603,14 @@ export default function CropsModule() {
                   <div className="flex items-center space-x-1">
                     <button 
                       onClick={() => handleEditCrop(crop)}
-                      className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       title="Edit Crop Details"
                     >
                       <Edit3 className="w-4 h-4" />
                     </button>
                     <button 
-                      onClick={() => deleteRecord('crops', crop.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors"
+                      onClick={() => handleDeleteCrop(crop)}
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
                       title="Delete Crop"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -677,8 +746,8 @@ export default function CropsModule() {
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
-                            onClick={() => deleteRecord('cropExpenses', exp.id)} 
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            onClick={() => handleDeleteExpense(exp)} 
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -734,8 +803,8 @@ export default function CropsModule() {
                             <Edit3 className="w-3 h-3" /> Edit
                           </button>
                           <button 
-                            onClick={() => deleteRecord('cropIncomes', inc.id)} 
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            onClick={() => handleDeleteIncome(inc)} 
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                             title="Delete"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1218,6 +1287,9 @@ export default function CropsModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

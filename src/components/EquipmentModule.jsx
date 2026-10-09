@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { Tractor, Plus, Trash2, Edit3, Fuel, Wrench, DollarSign, Calendar, ShieldCheck, Clock } from 'lucide-react';
 
 export default function EquipmentModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   const [showEquipmentModal, setShowEquipmentModal] = useState(false);
@@ -24,6 +29,7 @@ export default function EquipmentModule() {
     e.preventDefault();
     if (!eqForm.name) return;
     addRecord('equipment', { ...eqForm });
+    toast.success(`Machinery "${eqForm.name}" registered successfully!`);
     setEqForm({ name: '', regNo: '', category: 'Tractor', modelYear: 2024, status: 'Operational' });
     setShowEquipmentModal(false);
   };
@@ -39,6 +45,7 @@ export default function EquipmentModule() {
       ratePerLiter: rate,
       totalCost: Math.round(liters * rate)
     });
+    toast.success(`Logged ${liters}L diesel consumption!`);
     setShowFuelModal(false);
   };
 
@@ -49,6 +56,7 @@ export default function EquipmentModule() {
       ...maintForm,
       cost: Number(maintForm.cost) || 0
     });
+    toast.success('Maintenance repair log recorded!');
     setShowMaintenanceModal(false);
   };
 
@@ -92,12 +100,59 @@ export default function EquipmentModule() {
 
     if (editingRental) {
       updateRecord('equipmentUsage', { ...editingRental, ...payload });
+      toast.success('Rental income record updated!');
     } else {
       addRecord('equipmentUsage', payload);
+      toast.success('Rental income recorded successfully!');
     }
 
     setEditingRental(null);
     setShowRentalModal(false);
+  };
+
+  // Custom Delete Confirm Handlers
+  const handleDeleteEquipment = async (eq) => {
+    const ok = await confirm({
+      title: 'Delete Machinery',
+      description: `Are you sure you want to delete ${eq.name} (${eq.regNo || eq.category})? This action cannot be undone.`
+    });
+    if (ok) {
+      deleteRecord('equipment', eq.id);
+      toast.success(`Equipment "${eq.name}" deleted.`);
+    }
+  };
+
+  const handleDeleteRental = async (usage) => {
+    const ok = await confirm({
+      title: 'Delete Rental Record',
+      description: `Delete this rental income entry of ${currency}${Number(usage.rentalIncome || 0).toLocaleString('en-IN')}?`
+    });
+    if (ok) {
+      deleteRecord('equipmentUsage', usage.id);
+      toast.success('Rental record deleted.');
+    }
+  };
+
+  const handleDeleteFuel = async (f) => {
+    const ok = await confirm({
+      title: 'Delete Diesel Entry',
+      description: `Delete this diesel fill record of ${f.liters}L (${currency}${Number(f.totalCost || 0).toLocaleString('en-IN')})?`
+    });
+    if (ok) {
+      deleteRecord('equipmentFuel', f.id);
+      toast.success('Diesel log deleted.');
+    }
+  };
+
+  const handleDeleteMaintenance = async (m) => {
+    const ok = await confirm({
+      title: 'Delete Repair Record',
+      description: `Delete this service repair entry of ${currency}${Number(m.cost || 0).toLocaleString('en-IN')}?`
+    });
+    if (ok) {
+      deleteRecord('equipmentMaintenance', m.id);
+      toast.success('Maintenance record deleted.');
+    }
   };
 
   return (
@@ -149,57 +204,127 @@ export default function EquipmentModule() {
         </div>
       </div>
 
-      {/* Machinery Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {(data?.equipment || []).map((eq) => {
-          const fuelLogs = (data?.equipmentFuel || []).filter(f => f.equipmentId === eq.id);
-          const maintLogs = (data?.equipmentMaintenance || []).filter(m => m.equipmentId === eq.id);
-          const usageLogs = (data?.equipmentUsage || []).filter(u => u.equipmentId === eq.id);
-
-          const totalFuelCost = fuelLogs.reduce((acc, curr) => acc + Number(curr.totalCost || 0), 0);
-          const totalMaintCost = maintLogs.reduce((acc, curr) => acc + Number(curr.cost || 0), 0);
-          const totalRentalEarned = usageLogs.reduce((acc, curr) => acc + Number(curr.rentalIncome || 0), 0);
-
-          return (
-            <div key={eq.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
-              <div>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                      {eq.category}
-                    </span>
-                    <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{eq.name}</h3>
-                  </div>
-                  <button onClick={() => deleteRecord('equipment', eq.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-
-                <div className="mt-3 space-y-1 text-xs text-slate-600">
-                  <p><span className="text-slate-500 font-medium">Reg No:</span> <span className="text-slate-900 font-bold">{eq.regNo || 'N/A'}</span></p>
-                  <p><span className="text-slate-500 font-medium">Model Year:</span> <span className="font-semibold text-slate-700">{eq.modelYear}</span></p>
-                </div>
-              </div>
-
-              {/* Machinery P&L Box */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Diesel/Fuel Cost:</span>
-                  <span className="text-amber-700 font-bold">{currency}${(totalFuelCost || 0).toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500 font-medium">Service & Repairs:</span>
-                  <span className="text-rose-700 font-bold">{currency}${(totalMaintCost || 0).toLocaleString('en-IN')}</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
-                  <span className="text-slate-700">Rental Income Earned:</span>
-                  <span className="text-emerald-700 font-extrabold">{currency}${(totalRentalEarned || 0).toLocaleString('en-IN')}</span>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+      {/* Quick Stats Strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-blue-100 text-blue-700 border border-blue-200">
+            <Tractor className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Machines</span>
+            <span className="text-xl font-black text-slate-900">{(data?.equipment || []).length}</span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 border border-amber-200">
+            <Fuel className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Total Diesel</span>
+            <span className="text-xl font-black text-amber-700">
+              {currency}{((data?.equipmentFuel || []).reduce((acc, curr) => acc + Number(curr.totalCost || 0), 0) || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 border border-rose-200">
+            <Wrench className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Repairs Cost</span>
+            <span className="text-xl font-black text-rose-700">
+              {currency}{((data?.equipmentMaintenance || []).reduce((acc, curr) => acc + Number(curr.cost || 0), 0) || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
+        <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+          <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200">
+            <DollarSign className="w-5 h-5" />
+          </div>
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Rental Income</span>
+            <span className="text-xl font-black text-emerald-700">
+              {currency}{((data?.equipmentUsage || []).reduce((acc, curr) => acc + Number(curr.rentalIncome || 0), 0) || 0).toLocaleString('en-IN')}
+            </span>
+          </div>
+        </div>
       </div>
+
+      {/* Machinery Cards */}
+      {(data?.equipment || []).length === 0 ? (
+        <div className="bg-white p-12 rounded-3xl border border-slate-200 card-3d text-center space-y-4 shadow-sm">
+          <div className="w-16 h-16 rounded-3xl bg-blue-100 text-blue-600 flex items-center justify-center mx-auto shadow-inner">
+            <Tractor className="w-8 h-8" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-lg font-extrabold text-slate-800">No Equipment Added Yet</h3>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
+              Register your tractors, implements, and farm machinery to track diesel consumption, repairs, and rental earnings.
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEquipmentModal(true)}
+            className="px-5 py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-blue-600/20 transition-all cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> Add Your First Machine
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {(data?.equipment || []).map((eq) => {
+            const fuelLogs = (data?.equipmentFuel || []).filter(f => f.equipmentId === eq.id);
+            const maintLogs = (data?.equipmentMaintenance || []).filter(m => m.equipmentId === eq.id);
+            const usageLogs = (data?.equipmentUsage || []).filter(u => u.equipmentId === eq.id);
+
+            const totalFuelCost = fuelLogs.reduce((acc, curr) => acc + Number(curr.totalCost || 0), 0);
+            const totalMaintCost = maintLogs.reduce((acc, curr) => acc + Number(curr.cost || 0), 0);
+            const totalRentalEarned = usageLogs.reduce((acc, curr) => acc + Number(curr.rentalIncome || 0), 0);
+
+            return (
+              <div key={eq.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
+                <div>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
+                        {eq.category}
+                      </span>
+                      <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{eq.name}</h3>
+                    </div>
+                    <button 
+                      onClick={() => handleDeleteEquipment(eq)} 
+                      className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                      title="Delete Equipment"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <div className="mt-3 space-y-1 text-xs text-slate-600">
+                    <p><span className="text-slate-500 font-medium">Reg No:</span> <span className="text-slate-900 font-bold">{eq.regNo || 'N/A'}</span></p>
+                    <p><span className="text-slate-500 font-medium">Model Year:</span> <span className="font-semibold text-slate-700">{eq.modelYear}</span></p>
+                  </div>
+                </div>
+
+                {/* Machinery P&L Box */}
+                <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Diesel/Fuel Cost:</span>
+                    <span className="text-amber-700 font-bold">{currency}${(totalFuelCost || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-500 font-medium">Service & Repairs:</span>
+                    <span className="text-rose-700 font-bold">{currency}${(totalMaintCost || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                  <div className="flex justify-between border-t border-slate-200 pt-2 font-bold">
+                    <span className="text-slate-700">Rental Income Earned:</span>
+                    <span className="text-emerald-700 font-extrabold">{currency}${(totalRentalEarned || 0).toLocaleString('en-IN')}</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Equipment Rental Income Register Table */}
       <div className="bg-white p-6 rounded-3xl border border-slate-200 card-3d shadow-sm">
@@ -258,9 +383,9 @@ export default function EquipmentModule() {
                             <Edit3 className="w-3.5 h-3.5" /> Edit
                           </button>
                           <button
-                            onClick={() => deleteRecord('equipmentUsage', usage.id)}
+                            onClick={() => handleDeleteRental(usage)}
                             title="Delete Rental Record"
-                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -305,7 +430,11 @@ export default function EquipmentModule() {
                       <td className="p-3">{fuel.liters} L (@ {currency}{fuel.ratePerLiter}/L)</td>
                       <td className="p-3 font-bold text-amber-700">{currency}{Number(fuel.totalCost || 0).toLocaleString('en-IN')}</td>
                       <td className="p-3">
-                        <button onClick={() => deleteRecord('equipmentFuel', fuel.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
+                        <button 
+                          onClick={() => handleDeleteFuel(fuel)} 
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                          title="Delete Diesel Log"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -344,7 +473,11 @@ export default function EquipmentModule() {
                       <td className="p-3">{maint.description} ({maint.mechanic})</td>
                       <td className="p-3 font-bold text-rose-700">{currency}{Number(maint.cost || 0).toLocaleString('en-IN')}</td>
                       <td className="p-3">
-                        <button onClick={() => deleteRecord('equipmentMaintenance', maint.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
+                        <button 
+                          onClick={() => handleDeleteMaintenance(maint)} 
+                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                          title="Delete Maintenance Log"
+                        >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </td>
@@ -622,6 +755,9 @@ export default function EquipmentModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

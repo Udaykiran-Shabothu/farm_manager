@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { 
   Package, 
   Plus, 
@@ -51,6 +54,8 @@ const UNITS = [
 
 export default function InventoryModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   const inventoryItems = data?.inventoryItems || [];
@@ -130,8 +135,10 @@ export default function InventoryModule() {
 
     if (editingItem) {
       await updateRecord('inventoryItems', { ...editingItem, ...payload });
+      toast.success(`Updated "${payload.name}" in warehouse!`);
     } else {
       const newItem = await addRecord('inventoryItems', payload);
+      toast.success(`Added "${payload.name}" to warehouse catalog!`);
 
       // Log initial stock arrival
       if (payload.quantity > 0) {
@@ -184,6 +191,7 @@ export default function InventoryModule() {
     };
 
     await updateRecord('inventoryItems', updatedItem);
+    toast.success(stockActionType === 'ADD' ? `Restocked ${qty} ${stockActionItem.unit || ''} for ${stockActionItem.name}!` : `Recorded consumption of ${qty} ${stockActionItem.unit || ''} of ${stockActionItem.name}!`);
 
     // Log movement in ledger
     const totalVal = qty * (Number(stockActionItem.unitCost) || 0);
@@ -203,10 +211,15 @@ export default function InventoryModule() {
     setShowStockModal(false);
   };
 
-  // Delete Item
-  const handleDeleteItem = async (id) => {
-    if (window.confirm('Are you sure you want to delete this item from your warehouse inventory?')) {
-      await deleteRecord('inventoryItems', id);
+  // Delete Item with Custom Confirm Dialog
+  const handleDeleteItem = async (item) => {
+    const ok = await confirm({
+      title: 'Delete Warehouse Item',
+      description: `Are you sure you want to delete "${item.name}" from warehouse stock? Historical stock logs will be preserved.`
+    });
+    if (ok) {
+      await deleteRecord('inventoryItems', item.id);
+      toast.success(`"${item.name}" removed from warehouse.`);
     }
   };
 
@@ -436,19 +449,25 @@ export default function InventoryModule() {
 
           {/* ITEM CARDS GRID */}
           {filteredItems.length === 0 ? (
-            <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-3">
-              <Package className="w-12 h-12 text-slate-300 mx-auto" />
-              <h3 className="text-base font-bold text-slate-700">No Warehouse Items Found</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto">
-                {searchTerm || selectedCategory !== 'All' 
-                  ? 'No items match your selected filter or search keyword.' 
-                  : 'Start by adding your farm seeds, fertilizers, pesticides, diesel, and feed bags.'}
-              </p>
+            <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 card-3d space-y-4 shadow-sm">
+              <div className="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto shadow-inner">
+                <Package className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-extrabold text-slate-800">
+                  {searchTerm || selectedCategory !== 'All' ? 'No Matching Items Found' : 'No Warehouse Items Yet'}
+                </h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  {searchTerm || selectedCategory !== 'All' 
+                    ? 'No supplies match your selected filter or search term. Try resetting your category.' 
+                    : 'Start cataloging your farm inputs — seeds, fertilizers, pesticides, diesel, and feed bags.'}
+                </p>
+              </div>
               <button
                 onClick={() => openItemModal()}
-                className="px-4 py-2 bg-emerald-600 text-white rounded-2xl text-xs font-bold shadow-sm"
+                className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl text-xs font-bold shadow-md shadow-emerald-600/20 inline-flex items-center gap-1.5 transition-all cursor-pointer"
               >
-                Add First Warehouse Item
+                <Plus className="w-4 h-4" /> Add First Warehouse Item
               </button>
             </div>
           ) : (
@@ -478,14 +497,14 @@ export default function InventoryModule() {
                           <button
                             onClick={() => openItemModal(item)}
                             title="Edit Item"
-                            className="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-xl"
+                            className="p-1.5 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-xl cursor-pointer"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                           <button
-                            onClick={() => handleDeleteItem(item.id)}
+                            onClick={() => handleDeleteItem(item)}
                             title="Delete Item"
-                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl"
+                            className="p-1.5 hover:bg-rose-50 text-slate-400 hover:text-rose-600 rounded-xl cursor-pointer"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -849,6 +868,9 @@ export default function InventoryModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

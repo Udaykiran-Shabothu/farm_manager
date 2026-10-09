@@ -1,9 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useFarm } from '../context/FarmContext';
+import { useToast } from '../context/ToastContext';
+import ConfirmModal from './ConfirmModal';
+import { useConfirm } from '../hooks/useConfirm';
 import { Egg, Plus, Trash2, Calendar, HeartPulse, DollarSign, Activity, Edit2, ArrowDownLeft, ArrowUpRight, Search, Filter, TrendingUp, TrendingDown, Users, ShoppingCart, Package } from 'lucide-react';
 
 export default function PoultryModule() {
   const { data, addRecord, updateRecord, deleteRecord } = useFarm();
+  const toast = useToast();
+  const { confirm, confirmState } = useConfirm();
   const currency = data?.farmInfo?.currency || '₹';
 
   // Sub-section tab
@@ -46,6 +51,7 @@ export default function PoultryModule() {
       ...batchForm,
       initialBirdCount: Number(batchForm.initialBirdCount) || 0
     });
+    toast.success(`Poultry batch "${batchForm.batchName}" registered!`);
     setShowBatchModal(false);
   };
 
@@ -59,6 +65,7 @@ export default function PoultryModule() {
       feedCost: Number(dailyForm.feedCost) || 0,
       eggCount: Number(dailyForm.eggCount) || 0
     });
+    toast.success('Flock mortality & feed log saved!');
     setShowDailyLogModal(false);
   };
 
@@ -70,6 +77,7 @@ export default function PoultryModule() {
       medicineCost: Number(healthForm.medicineCost) || 0,
       doctorFee: Number(healthForm.doctorFee) || 0
     });
+    toast.success('Vaccination & health record logged!');
     setShowHealthModal(false);
   };
 
@@ -84,6 +92,7 @@ export default function PoultryModule() {
       ratePerUnit: rate,
       totalIncome: qty * rate
     });
+    toast.success('Flock harvest sales recorded!');
     setShowSalesModal(false);
   };
 
@@ -149,11 +158,58 @@ export default function PoultryModule() {
 
     if (editingTrade) {
       updateRecord('poultryHenTrades', { ...record, id: editingTrade.id });
+      toast.success('Hen transaction record updated!');
     } else {
       addRecord('poultryHenTrades', record);
+      toast.success('Hen transaction logged successfully!');
     }
     setShowTradeModal(false);
     resetTradeForm();
+  };
+
+  // Delete Handlers with Custom Confirmation Modal
+  const handleDeleteBatch = async (batch) => {
+    const ok = await confirm({
+      title: 'Delete Poultry Batch',
+      description: `Are you sure you want to delete flock "${batch.batchName}"? Associated records will remain.`
+    });
+    if (ok) {
+      deleteRecord('poultryBatches', batch.id);
+      toast.success(`Batch "${batch.batchName}" deleted.`);
+    }
+  };
+
+  const handleDeleteTrade = async (trade) => {
+    const ok = await confirm({
+      title: 'Delete Hen Transaction',
+      description: `Delete this ${trade.type} transaction for ${trade.customerName} (${currency}${Number(trade.totalAmount || 0).toLocaleString('en-IN')})?`
+    });
+    if (ok) {
+      deleteRecord('poultryHenTrades', trade.id);
+      toast.success('Hen trade record deleted.');
+    }
+  };
+
+  const handleDeleteDailyLog = async (log) => {
+    const ok = await confirm({
+      title: 'Delete Flock Daily Log',
+      description: `Delete daily mortality and feed entry for ${log.date}?`
+    });
+    if (ok) {
+      deleteRecord('poultryDailyLogs', log.id);
+      toast.success('Daily log deleted.');
+    }
+  };
+
+  const handleDeleteHealthLog = async (h) => {
+    const ok = await confirm({
+      title: 'Delete Health Entry',
+      description: `Delete vaccination record for ${h.date}?`
+    });
+    if (ok) {
+      deleteRecord('poultryHealthLogs', h.id);
+      toast.success('Health log deleted.');
+    }
   };
 
   const handleTradeFieldChange = (field, value) => {
@@ -314,79 +370,149 @@ export default function PoultryModule() {
             </button>
           </div>
 
-          {/* Poultry Batches Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {(data?.poultryBatches || []).map((batch) => {
-              const dailyLogs = (data?.poultryDailyLogs || []).filter(l => l.batchId === batch.id);
-              const healthLogs = (data?.poultryHealthLogs || []).filter(h => h.batchId === batch.id);
-              const salesLogs = (data?.poultrySales || []).filter(s => s.batchId === batch.id);
-
-              const totalDead = dailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
-              const totalAlive = Math.max(0, batch.initialBirdCount - totalDead);
-              const mortalityRate = Math.round((totalDead / (batch.initialBirdCount || 1)) * 100);
-
-              const totalFeedCost = dailyLogs.reduce((acc, curr) => acc + Number(curr.feedCost || 0), 0);
-              const totalHealthCost = healthLogs.reduce((acc, curr) => acc + Number(curr.medicineCost || 0) + Number(curr.doctorFee || 0), 0);
-              const totalIncome = salesLogs.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
-              const totalEggs = dailyLogs.reduce((acc, curr) => acc + Number(curr.eggCount || 0), 0);
-
-              return (
-                <div key={batch.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
-                  <div>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
-                          {batch.breed}
-                        </span>
-                        <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{batch.batchName}</h3>
-                      </div>
-                      <button onClick={() => deleteRecord('poultryBatches', batch.id)} className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-
-                    {/* Mortality Visual Widget */}
-                    <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-3 text-center gap-2">
-                      <div>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Initial</p>
-                        <p className="text-base font-extrabold text-slate-900">{batch.initialBirdCount}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Alive</p>
-                        <p className="text-base font-extrabold text-emerald-700">{totalAlive}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] text-slate-500 uppercase font-bold">Dead</p>
-                        <p className="text-base font-extrabold text-rose-700">{totalDead}</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Financial & Production Box */}
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Mortality Loss Rate:</span>
-                      <span className="text-rose-700 font-bold">{mortalityRate}%</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Total Feed & Health Cost:</span>
-                      <span className="text-amber-700 font-bold">{currency}${((totalFeedCost || 0) + (totalHealthCost || 0)).toLocaleString('en-IN')}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Total Sales Revenue:</span>
-                      <span className="text-emerald-700 font-bold">{currency}${(totalIncome || 0).toLocaleString('en-IN')}</span>
-                    </div>
-                    {totalEggs > 0 && (
-                      <div className="flex justify-between">
-                        <span className="text-slate-500 font-medium">Egg Collection Total:</span>
-                        <span className="text-cyan-700 font-bold">{totalEggs} Eggs</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+          {/* Quick Stats Strip */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+              <div className="p-2.5 rounded-xl bg-rose-100 text-rose-700 border border-rose-200">
+                <Egg className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Flock Batches</span>
+                <span className="text-xl font-black text-slate-900">{(data?.poultryBatches || []).length}</span>
+              </div>
+            </div>
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+              <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-200">
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Alive Birds</span>
+                <span className="text-xl font-black text-emerald-700">
+                  {Math.max(0, (data?.poultryBatches || []).reduce((acc, b) => acc + Number(b.initialBirdCount || 0), 0) - (data?.poultryDailyLogs || []).reduce((acc, l) => acc + Number(l.deadCount || 0), 0)).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+              <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700 border border-amber-200">
+                <TrendingDown className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Feed Cost</span>
+                <span className="text-xl font-black text-amber-700">
+                  {currency}{((data?.poultryDailyLogs || []).reduce((acc, l) => acc + Number(l.feedCost || 0), 0) || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
+            <div className="p-4 sm:p-5 rounded-3xl bg-white border border-slate-200 card-3d flex items-center space-x-3 shadow-sm">
+              <div className="p-2.5 rounded-xl bg-teal-100 text-teal-700 border border-teal-200">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">Poultry Revenue</span>
+                <span className="text-xl font-black text-teal-700">
+                  {currency}{(((data?.poultrySales || []).reduce((acc, s) => acc + Number(s.totalIncome || 0), 0) + (data?.poultryHenTrades || []).filter(t => t.type === 'Sale').reduce((acc, t) => acc + Number(t.totalAmount || 0), 0)) || 0).toLocaleString('en-IN')}
+                </span>
+              </div>
+            </div>
           </div>
+
+          {/* Poultry Batches Cards */}
+          {(data?.poultryBatches || []).length === 0 ? (
+            <div className="bg-white p-12 rounded-3xl border border-slate-200 card-3d text-center space-y-4 shadow-sm">
+              <div className="w-16 h-16 rounded-3xl bg-rose-100 text-rose-600 flex items-center justify-center mx-auto shadow-inner">
+                <Egg className="w-8 h-8" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="text-lg font-extrabold text-slate-800">No Flock Batches Yet</h3>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  Start your first poultry flock to track daily mortality, feed consumption bags, health checkups, and harvest bird sales.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBatchModal(true)}
+                className="px-5 py-2.5 rounded-2xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs inline-flex items-center gap-2 shadow-md shadow-rose-600/20 transition-all cursor-pointer"
+              >
+                <Plus className="w-4 h-4" /> Start First Flock Batch
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(data?.poultryBatches || []).map((batch) => {
+                const dailyLogs = (data?.poultryDailyLogs || []).filter(l => l.batchId === batch.id);
+                const healthLogs = (data?.poultryHealthLogs || []).filter(h => h.batchId === batch.id);
+                const salesLogs = (data?.poultrySales || []).filter(s => s.batchId === batch.id);
+
+                const totalDead = dailyLogs.reduce((acc, curr) => acc + Number(curr.deadCount || 0), 0);
+                const totalAlive = Math.max(0, batch.initialBirdCount - totalDead);
+                const mortalityRate = Math.round((totalDead / (batch.initialBirdCount || 1)) * 100);
+
+                const totalFeedCost = dailyLogs.reduce((acc, curr) => acc + Number(curr.feedCost || 0), 0);
+                const totalHealthCost = healthLogs.reduce((acc, curr) => acc + Number(curr.medicineCost || 0) + Number(curr.doctorFee || 0), 0);
+                const totalIncome = salesLogs.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0);
+                const totalEggs = dailyLogs.reduce((acc, curr) => acc + Number(curr.eggCount || 0), 0);
+
+                return (
+                  <div key={batch.id} className="bg-white p-6 rounded-3xl border border-slate-200 card-3d flex flex-col justify-between space-y-4 shadow-sm">
+                    <div>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200">
+                            {batch.breed}
+                          </span>
+                          <h3 className="text-xl font-extrabold text-slate-900 mt-1.5">{batch.batchName}</h3>
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteBatch(batch)} 
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                          title="Delete Batch"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Mortality Visual Widget */}
+                      <div className="mt-4 p-3 rounded-2xl bg-slate-50 border border-slate-200 grid grid-cols-3 text-center gap-2">
+                        <div>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Initial</p>
+                          <p className="text-base font-extrabold text-slate-900">{batch.initialBirdCount}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Alive</p>
+                          <p className="text-base font-extrabold text-emerald-700">{totalAlive}</p>
+                        </div>
+                        <div>
+                          <p className="text-[10px] text-slate-500 uppercase font-bold">Dead</p>
+                          <p className="text-base font-extrabold text-rose-700">{totalDead}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Financial & Production Box */}
+                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Mortality Loss Rate:</span>
+                        <span className="text-rose-700 font-bold">{mortalityRate}%</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Total Feed & Health Cost:</span>
+                        <span className="text-amber-700 font-bold">{currency}${((totalFeedCost || 0) + (totalHealthCost || 0)).toLocaleString('en-IN')}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-500 font-medium">Total Sales Revenue:</span>
+                        <span className="text-emerald-700 font-bold">{currency}${(totalIncome || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      {totalEggs > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-slate-500 font-medium">Egg Collection Total:</span>
+                          <span className="text-cyan-700 font-bold">{totalEggs} Eggs</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
 
           {/* Daily Poultry Log & Health Tracker Tables */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -421,7 +547,11 @@ export default function PoultryModule() {
                           </td>
                           <td className="p-3">{log.feedBagsCount} Bags ({currency}{log.feedCost})</td>
                           <td className="p-3">
-                            <button onClick={() => deleteRecord('poultryDailyLogs', log.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
+                            <button 
+                              onClick={() => handleDeleteDailyLog(log)} 
+                              className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                              title="Delete Log"
+                            >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </td>
@@ -459,7 +589,11 @@ export default function PoultryModule() {
                         </td>
                         <td className="p-3 font-bold text-rose-700">{currency}{((h.medicineCost || 0) + (h.doctorFee || 0)).toLocaleString('en-IN')}</td>
                         <td className="p-3">
-                          <button onClick={() => deleteRecord('poultryHealthLogs', h.id)} className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors">
+                          <button 
+                            onClick={() => handleDeleteHealthLog(h)} 
+                            className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
+                            title="Delete Record"
+                          >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         </td>
@@ -641,8 +775,8 @@ export default function PoultryModule() {
                                 <Edit2 className="w-3.5 h-3.5" />
                               </button>
                               <button
-                                onClick={() => deleteRecord('poultryHenTrades', trade.id)}
-                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors"
+                                onClick={() => handleDeleteTrade(trade)}
+                                className="p-1 text-slate-400 hover:text-rose-600 hover:bg-slate-100 rounded transition-colors cursor-pointer"
                                 title="Delete"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
@@ -1195,6 +1329,9 @@ export default function PoultryModule() {
           </div>
         </div>
       )}
+
+      {/* Custom Confirmation Modal */}
+      <ConfirmModal {...confirmState} />
 
     </div>
   );

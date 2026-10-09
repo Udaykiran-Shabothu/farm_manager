@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Sprout, 
   CloudSun,
@@ -13,9 +13,11 @@ import {
   X,
   UserCheck,
   LogOut,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import GlobalSearchModal from './GlobalSearchModal';
 
 const NAV_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard, gradient: 'from-emerald-600 to-teal-700' },
@@ -34,6 +36,19 @@ const YOUTUBE_CHANNEL_LOGO = "https://yt3.googleusercontent.com/IMyirpYgGQFylcAY
 
 export default function Navbar({ activeTab, setActiveTab, farmName, currency, currentUser = 'Uday', onLogout }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
+
+  // Global Ctrl+K / Cmd+K search shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchModalOpen(prev => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   const triggerCelebration = () => {
     confetti({
@@ -108,6 +123,19 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
 
             {/* Right Controls: User Profile & Logout */}
             <div className="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+              {/* Global Search Button */}
+              <button
+                onClick={() => setSearchModalOpen(true)}
+                title="Search records across all modules (Ctrl+K)"
+                className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 text-xs font-bold transition-all shadow-xs cursor-pointer group"
+              >
+                <Search className="w-3.5 h-3.5 text-emerald-600 group-hover:scale-110 transition-transform" />
+                <span className="hidden sm:inline">Search</span>
+                <kbd className="hidden md:inline-block px-1.5 py-0.2 bg-white border border-slate-300 rounded text-[9px] text-slate-500 font-extrabold shadow-xs">
+                  ⌘K
+                </kbd>
+              </button>
+
               <div className="hidden sm:flex items-center space-x-1.5 px-2.5 py-1.5 bg-slate-100 rounded-xl border border-slate-200 text-xs font-bold text-slate-700">
                 <UserCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                 <span>{currentUser}</span>
@@ -159,6 +187,21 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
                 </button>
               )}
             </div>
+
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => {
+                setMobileMenuOpen(false);
+                setSearchModalOpen(true);
+              }}
+              className="w-full flex items-center justify-between px-3.5 py-2.5 mb-2 bg-slate-100 hover:bg-slate-200/80 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-emerald-600" />
+                <span>Search all records...</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">Ctrl+K</span>
+            </button>
 
             {NAV_ITEMS.map((item) => {
               const Icon = item.icon;
@@ -229,6 +272,13 @@ export default function Navbar({ activeTab, setActiveTab, farmName, currency, cu
           );
         })}
       </div>
+
+      {/* Global Spotlight Search Modal */}
+      <GlobalSearchModal 
+        isOpen={searchModalOpen} 
+        onClose={() => setSearchModalOpen(false)} 
+        setActiveTab={setActiveTab} 
+      />
     </>
   );
 }
