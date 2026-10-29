@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from './ConfirmModal';
+import Modal from './common/Modal';
 import { useConfirm } from '../hooks/useConfirm';
 import { Tractor, Plus, Trash2, Edit3, Fuel, Wrench, DollarSign, Calendar, ShieldCheck, Clock } from 'lucide-react';
 
@@ -493,267 +494,292 @@ export default function EquipmentModule() {
 
       {/* Add Equipment Modal */}
       {showEquipmentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">Add Equipment / Machinery</h3>
-            <form onSubmit={handleAddEquipment} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showEquipmentModal}
+          onClose={() => setShowEquipmentModal(false)}
+          title="Add Equipment / Machinery"
+          subtitle="Register farm machinery, registration numbers, and operational status"
+          icon={Tractor}
+          iconColor="text-blue-700 bg-blue-50 border-blue-200"
+          badge={eqForm.category}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleAddEquipment} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Equipment Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Mahindra 575 DI Tractor"
+                value={eqForm.name}
+                onChange={(e) => setEqForm({ ...eqForm, name: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-blue-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Equipment Name</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Registration #</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. Mahindra 575 DI Tractor"
-                  value={eqForm.name}
-                  onChange={(e) => setEqForm({ ...eqForm, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-blue-600 focus:outline-none"
+                  placeholder="KA-51-FA-4291"
+                  value={eqForm.regNo}
+                  onChange={(e) => setEqForm({ ...eqForm, regNo: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-blue-600 focus:outline-none shadow-2xs"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Registration #</label>
-                  <input
-                    type="text"
-                    placeholder="KA-51-FA-4291"
-                    value={eqForm.regNo}
-                    onChange={(e) => setEqForm({ ...eqForm, regNo: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-blue-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Category</label>
-                  <select
-                    value={eqForm.category}
-                    onChange={(e) => setEqForm({ ...eqForm, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-blue-600 focus:outline-none"
-                  >
-                    <option value="Tractor">Tractor</option>
-                    <option value="Rotavator">Rotavator</option>
-                    <option value="Harvester">Harvester</option>
-                    <option value="Irrigation Pump">Irrigation Pump</option>
-                    <option value="Sprayer">Sprayer</option>
-                  </select>
-                </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Category</label>
+                <select
+                  value={eqForm.category}
+                  onChange={(e) => setEqForm({ ...eqForm, category: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-blue-600 focus:outline-none shadow-2xs"
+                >
+                  <option value="Tractor">Tractor</option>
+                  <option value="Rotavator">Rotavator</option>
+                  <option value="Harvester">Harvester</option>
+                  <option value="Irrigation Pump">Irrigation Pump</option>
+                  <option value="Sprayer">Sprayer</option>
+                </select>
               </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowEquipmentModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm">Save Machine</button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowEquipmentModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs shadow-blue-600/20 transition-colors">Save Machine</button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log Fuel Modal */}
       {showFuelModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">Log Diesel / Fuel Fill</h3>
-            <form onSubmit={handleAddFuel} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showFuelModal}
+          onClose={() => setShowFuelModal(false)}
+          title="Log Diesel / Fuel Fill"
+          subtitle="Record diesel quantities, machine consumed, and refueling dates"
+          icon={Fuel}
+          iconColor="text-amber-700 bg-amber-50 border-amber-200"
+          badge="Fuel Fill"
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleAddFuel} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Machine</label>
+              <select
+                value={fuelForm.equipmentId}
+                onChange={(e) => setFuelForm({ ...fuelForm, equipmentId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
+              >
+                {(data?.equipment || []).map(eq => (
+                  <option key={eq.id} value={eq.id}>{eq.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Machine</label>
-                <select
-                  value={fuelForm.equipmentId}
-                  onChange={(e) => setFuelForm({ ...fuelForm, equipmentId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
-                >
-                  {(data?.equipment || []).map(eq => (
-                    <option key={eq.id} value={eq.id}>{eq.name}</option>
-                  ))}
-                </select>
+                <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={fuelForm.date}
+                  onChange={(e) => setFuelForm({ ...fuelForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={fuelForm.date}
-                    onChange={(e) => setFuelForm({ ...fuelForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Liters Filled</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="35"
-                    value={fuelForm.liters}
-                    onChange={(e) => setFuelForm({ ...fuelForm, liters: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Liters Filled</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="35"
+                  value={fuelForm.liters}
+                  onChange={(e) => setFuelForm({ ...fuelForm, liters: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
               </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowFuelModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm">Save Fuel Log</button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowFuelModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs shadow-amber-600/20 transition-colors">Save Fuel Log</button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log Maintenance Modal */}
       {showMaintenanceModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">Log Service & Repairs</h3>
-            <form onSubmit={handleAddMaintenance} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showMaintenanceModal}
+          onClose={() => setShowMaintenanceModal(false)}
+          title="Log Service & Repairs"
+          subtitle="Track servicing costs, oil replacements, and workshop repairs"
+          icon={Wrench}
+          iconColor="text-rose-700 bg-rose-50 border-rose-200"
+          badge="Maintenance"
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleAddMaintenance} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Machine</label>
+              <select
+                value={maintForm.equipmentId}
+                onChange={(e) => setMaintForm({ ...maintForm, equipmentId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-rose-600 focus:outline-none shadow-2xs"
+              >
+                {(data?.equipment || []).map(eq => (
+                  <option key={eq.id} value={eq.id}>{eq.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Machine</label>
-                <select
-                  value={maintForm.equipmentId}
-                  onChange={(e) => setMaintForm({ ...maintForm, equipmentId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
-                >
-                  {(data?.equipment || []).map(eq => (
-                    <option key={eq.id} value={eq.id}>{eq.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-rose-600" /> Select Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={maintForm.date}
-                    onChange={(e) => setMaintForm({ ...maintForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Mechanic / Workshop</label>
-                  <input
-                    type="text"
-                    placeholder="Authorized Center"
-                    value={maintForm.mechanic}
-                    onChange={(e) => setMaintForm({ ...maintForm, mechanic: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
-                  />
-                </div>
+                <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-rose-600" /> Select Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={maintForm.date}
+                  onChange={(e) => setMaintForm({ ...maintForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-rose-600 focus:outline-none shadow-2xs"
+                />
               </div>
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Service Details</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Mechanic / Workshop</label>
                 <input
                   type="text"
-                  placeholder="e.g. Engine oil change & filter replacement"
-                  value={maintForm.description}
-                  onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
+                  placeholder="Authorized Center"
+                  value={maintForm.mechanic}
+                  onChange={(e) => setMaintForm({ ...maintForm, mechanic: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-rose-600 focus:outline-none shadow-2xs"
                 />
               </div>
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Cost ({currency})</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="3500"
-                  value={maintForm.cost}
-                  onChange={(e) => setMaintForm({ ...maintForm, cost: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-rose-700 font-bold focus:bg-white focus:border-rose-600 focus:outline-none"
-                />
-              </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowMaintenanceModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-sm">Save Repair Log</button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Service Details</label>
+              <input
+                type="text"
+                placeholder="e.g. Engine oil change & filter replacement"
+                value={maintForm.description}
+                onChange={(e) => setMaintForm({ ...maintForm, description: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-rose-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Cost ({currency})</label>
+              <input
+                type="number"
+                required
+                placeholder="3500"
+                value={maintForm.cost}
+                onChange={(e) => setMaintForm({ ...maintForm, cost: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-rose-700 font-bold focus:border-rose-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowMaintenanceModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-xs shadow-rose-600/20 transition-colors">Save Repair Log</button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log / Edit Rental Income Modal */}
       {showRentalModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">
-              {editingRental ? 'Edit Equipment Rental Income' : 'Log Rental Income (Hired Out)'}
-            </h3>
-            <form onSubmit={handleSaveRental} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showRentalModal}
+          onClose={() => {
+            setEditingRental(null);
+            setShowRentalModal(false);
+          }}
+          title={editingRental ? 'Edit Equipment Rental Income' : 'Log Rental Income (Hired Out)'}
+          subtitle="Record custom hiring revenue, hours leased, and farmer contacts"
+          icon={DollarSign}
+          iconColor="text-emerald-700 bg-emerald-50 border-emerald-200"
+          badge="Rental Income"
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSaveRental} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Machine</label>
+              <select
+                value={rentalForm.equipmentId}
+                onChange={(e) => setRentalForm({ ...rentalForm, equipmentId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none shadow-2xs"
+              >
+                {(data?.equipment || []).map(eq => (
+                  <option key={eq.id} value={eq.id}>{eq.name}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Hired Farmer / Client Name</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Verma Neighbor Farm"
+                value={rentalForm.clientName}
+                onChange={(e) => setRentalForm({ ...rentalForm, clientName: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Machine</label>
-                <select
-                  value={rentalForm.equipmentId}
-                  onChange={(e) => setRentalForm({ ...rentalForm, equipmentId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                >
-                  {(data?.equipment || []).map(eq => (
-                    <option key={eq.id} value={eq.id}>{eq.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Hired Farmer / Client Name</label>
+                <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
+                </label>
                 <input
-                  type="text"
+                  type="date"
                   required
-                  placeholder="e.g. Verma Neighbor Farm"
-                  value={rentalForm.clientName}
-                  onChange={(e) => setRentalForm({ ...rentalForm, clientName: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
+                  value={rentalForm.date}
+                  onChange={(e) => setRentalForm({ ...rentalForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none shadow-2xs"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={rentalForm.date}
-                    onChange={(e) => setRentalForm({ ...rentalForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Hours Worked</label>
-                  <input
-                    type="number"
-                    placeholder="6"
-                    value={rentalForm.hours}
-                    onChange={(e) => setRentalForm({ ...rentalForm, hours: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Rental Income ({currency})</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Hours Worked</label>
                 <input
                   type="number"
-                  required
-                  placeholder="4500"
-                  value={rentalForm.rentalIncome}
-                  onChange={(e) => setRentalForm({ ...rentalForm, rentalIncome: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
+                  placeholder="6"
+                  value={rentalForm.hours}
+                  onChange={(e) => setRentalForm({ ...rentalForm, hours: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none shadow-2xs"
                 />
               </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingRental(null);
-                    setShowRentalModal(false);
-                  }}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm"
-                >
-                  {editingRental ? 'Update Rental Income' : 'Save Rental'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Rental Income ({currency})</label>
+              <input
+                type="number"
+                required
+                placeholder="4500"
+                value={rentalForm.rentalIncome}
+                onChange={(e) => setRentalForm({ ...rentalForm, rentalIncome: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-emerald-700 font-bold focus:border-emerald-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingRental(null);
+                  setShowRentalModal(false);
+                }}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs shadow-emerald-600/20 transition-colors"
+              >
+                {editingRental ? 'Update Rental Income' : 'Save Rental'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Custom Confirmation Modal */}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { computeFarmAnalytics } from '../services/financialAnalytics';
+import Modal from './common/Modal';
 import { 
   MessageCircle, 
   Share2, 
@@ -116,28 +117,17 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
-      <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-xl w-full max-h-[85vh] overflow-y-auto shadow-2xl space-y-5">
-        
-        {/* Modal Header */}
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div className="flex items-center space-x-2.5">
-            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-2xl border border-emerald-200">
-              <MessageCircle className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="text-lg font-extrabold text-slate-900">Daily WhatsApp Executive Digest</h3>
-              <p className="text-xs text-slate-500">Generate 1-click formatted daily farm summary for management</p>
-            </div>
-          </div>
-          <button 
-            onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-700 rounded-xl"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Daily WhatsApp Executive Digest"
+      subtitle="Generate 1-click formatted daily farm summary for partners and management"
+      icon={MessageCircle}
+      iconColor="text-emerald-700 bg-emerald-50 border-emerald-200"
+      badge="Executive Brief"
+      maxWidth="max-w-xl"
+    >
+      <div className="space-y-4">
         {/* Date & Phone Form Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div>
@@ -146,7 +136,7 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
               type="date"
               value={digestDate}
               onChange={(e) => setDigestDate(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs cursor-pointer"
             />
           </div>
 
@@ -157,13 +147,13 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
               placeholder="e.g. 9876543210"
               value={phoneNo}
               onChange={(e) => setPhoneNo(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
             />
           </div>
         </div>
 
         {/* Include Section Checkboxes */}
-        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2 text-xs">
+        <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2 text-xs">
           <p className="font-bold text-slate-700 uppercase tracking-wider text-[10px]">Include Sections in Report:</p>
           <div className="grid grid-cols-2 gap-2">
             <label className="flex items-center space-x-2 cursor-pointer font-semibold text-slate-700">
@@ -221,29 +211,28 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
             </button>
           </div>
 
-          <pre className="font-mono bg-slate-900 text-slate-200 p-4 rounded-2xl text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-48 border border-slate-800">
+          <pre className="font-mono bg-slate-900 text-slate-200 p-3.5 rounded-2xl text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed max-h-48 border border-slate-800">
             {digestText}
           </pre>
         </div>
 
         {/* Modal Action Buttons */}
-        <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-200">
           <button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100"
+            className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition-colors"
           >
             Close
           </button>
 
           <button
             onClick={handleSendWhatsApp}
-            className="flex-1 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md shadow-emerald-700/20 flex items-center justify-center gap-1.5"
+            className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs shadow-emerald-700/20 flex items-center justify-center gap-1.5 transition-colors"
           >
             <Share2 className="w-4 h-4" /> Send via WhatsApp
           </button>
         </div>
-
       </div>
-    </div>
+    </Modal>
   );
 }

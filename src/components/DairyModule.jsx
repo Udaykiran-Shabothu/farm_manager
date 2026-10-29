@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from './ConfirmModal';
+import Modal from './common/Modal';
 import { useConfirm } from '../hooks/useConfirm';
 import { generateDairyBillPDF } from '../services/pdfGenerator';
 import { 
@@ -2175,138 +2176,127 @@ export default function DairyModule() {
       </div>
 
       {/* BULK MILK LOG MODAL */}
-      {showBulkMilkModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-3xl w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-xl bg-emerald-100 text-emerald-700">
-                  <Zap className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Log Daily Milk for ALL Active Customers (Bulk Sheet)</h3>
-                  <p className="text-xs text-slate-500">Record daily milk quantities for every active buyer in a single form.</p>
-                </div>
-              </div>
-              <button onClick={() => setShowBulkMilkModal(false)} className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100">
-                <X className="w-5 h-5" />
-              </button>
+      <Modal
+        isOpen={showBulkMilkModal}
+        onClose={() => setShowBulkMilkModal(false)}
+        title="Log Daily Milk for ALL Active Customers"
+        subtitle="Record daily morning/evening milk quota fulfillment across buyers in one batch"
+        icon={Zap}
+        iconColor="text-amber-700 bg-amber-50 border-amber-200"
+        badge="Bulk Sheet"
+        maxWidth="max-w-3xl"
+      >
+        <form onSubmit={handleSaveBulkMilkLogs} className="space-y-4 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
+              </label>
+              <input
+                type="date"
+                required
+                value={bulkMilkForm.date}
+                onChange={(e) => setBulkMilkForm({ ...bulkMilkForm, date: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-semibold cursor-pointer focus:border-emerald-600 focus:outline-none shadow-xs"
+              />
             </div>
-
-            <form onSubmit={handleSaveBulkMilkLogs} className="space-y-4 text-xs">
-              <div className="grid grid-cols-2 gap-4 p-4 rounded-2xl bg-slate-50 border border-slate-200">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={bulkMilkForm.date}
-                    onChange={(e) => setBulkMilkForm({ ...bulkMilkForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Select Shift</label>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Morning' })}
-                      className={`py-2 rounded-xl font-bold border transition-all ${
-                        bulkMilkForm.shift === 'Morning' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300'
-                      }`}
-                    >
-                      Morning Shift
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Evening' })}
-                      className={`py-2 rounded-xl font-bold border transition-all ${
-                        bulkMilkForm.shift === 'Evening' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-white text-slate-600 border-slate-300'
-                      }`}
-                    >
-                      Evening Shift
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                {(data?.dairyCustomers || []).filter(c => c.status !== 'Stopped & Bill Pending').map(customer => {
-                  const entry = bulkMilkForm.entries[customer.id] || { status: 'Taken', liters: customer.defaultQuotaLiters || 5, fatPercent: 4.5, notes: '' };
-                  const isTaken = entry.status === 'Taken';
-                  const rowAmount = isTaken ? (Number(entry.liters) || 0) * customer.ratePerLiter : 0;
-
-                  return (
-                    <div key={customer.id} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                      <div className="sm:w-1/3">
-                        <h4 className="font-bold text-slate-900 text-sm">{customer.name}</h4>
-                        <p className="text-[11px] text-slate-500">
-                          Quota: {customer.defaultQuotaLiters}L @ <strong className="text-emerald-700">{currency}{customer.ratePerLiter}/L</strong>
-                        </p>
-                      </div>
-
-                      <div className="flex items-center space-x-2 sm:w-2/3 justify-end">
-                        <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200">
-                          <button
-                            type="button"
-                            onClick={() => handleBulkEntryChange(customer.id, 'status', 'Taken')}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                              isTaken ? 'bg-emerald-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            Taken
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleBulkEntryChange(customer.id, 'status', 'Not Taken')}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all ${
-                              !isTaken ? 'bg-rose-600 text-white' : 'text-slate-600 hover:text-slate-900'
-                            }`}
-                          >
-                            Off
-                          </button>
-                        </div>
-
-                        {isTaken ? (
-                          <>
-                            <div className="w-20">
-                              <input
-                                type="number"
-                                step="0.5"
-                                placeholder="Liters"
-                                value={entry.liters}
-                                onChange={(e) => handleBulkEntryChange(customer.id, 'liters', e.target.value)}
-                                className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-center focus:border-emerald-600 focus:outline-none"
-                              />
-                            </div>
-                            <span className="font-mono text-emerald-700 font-bold text-xs min-w-[65px] text-right">
-                              {currency}{rowAmount}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-rose-600 font-bold text-xs min-w-[120px] text-right">
-                            ❌ Off (0 L)
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-200">
-                <button type="button" onClick={() => setShowBulkMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm">
-                  <Zap className="w-4 h-4" /> Save ALL Active Customer Logs
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Shift</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Morning' })}
+                  className={`py-2 rounded-xl font-bold border transition-all text-xs ${
+                    bulkMilkForm.shift === 'Morning' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Morning Shift
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBulkMilkForm({ ...bulkMilkForm, shift: 'Evening' })}
+                  className={`py-2 rounded-xl font-bold border transition-all text-xs ${
+                    bulkMilkForm.shift === 'Evening' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Evening Shift
                 </button>
               </div>
-
-            </form>
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2.5 max-h-[45vh] overflow-y-auto pr-1">
+            {(data?.dairyCustomers || []).filter(c => c.status !== 'Stopped & Bill Pending').map(customer => {
+              const entry = bulkMilkForm.entries[customer.id] || { status: 'Taken', liters: customer.defaultQuotaLiters || 5, fatPercent: 4.5, notes: '' };
+              const isTaken = entry.status === 'Taken';
+              const rowAmount = isTaken ? (Number(entry.liters) || 0) * customer.ratePerLiter : 0;
+
+              return (
+                <div key={customer.id} className="p-3 rounded-2xl bg-slate-50/80 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                  <div className="sm:w-1/3">
+                    <h4 className="font-bold text-slate-900 text-xs">{customer.name}</h4>
+                    <p className="text-[11px] text-slate-500">
+                      Quota: {customer.defaultQuotaLiters}L @ <strong className="text-emerald-700">{currency}{customer.ratePerLiter}/L</strong>
+                    </p>
+                  </div>
+
+                  <div className="flex items-center space-x-2 sm:w-2/3 justify-end">
+                    <div className="flex items-center space-x-1 bg-white p-1 rounded-xl border border-slate-200 shadow-2xs">
+                      <button
+                        type="button"
+                        onClick={() => handleBulkEntryChange(customer.id, 'status', 'Taken')}
+                        className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                          isTaken ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Taken
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleBulkEntryChange(customer.id, 'status', 'Not Taken')}
+                        className={`px-3 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                          !isTaken ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'
+                        }`}
+                      >
+                        Off
+                      </button>
+                    </div>
+
+                    {isTaken ? (
+                      <>
+                        <div className="w-20">
+                          <input
+                            type="number"
+                            step="0.5"
+                            placeholder="Liters"
+                            value={entry.liters}
+                            onChange={(e) => handleBulkEntryChange(customer.id, 'liters', e.target.value)}
+                            className="w-full p-2 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold text-center focus:border-emerald-600 focus:outline-none shadow-2xs"
+                          />
+                        </div>
+                        <span className="font-mono text-emerald-700 font-bold text-xs min-w-[70px] text-right">
+                          {currency}{rowAmount.toLocaleString('en-IN')}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-rose-600 font-bold text-xs min-w-[120px] text-right">
+                        ❌ Off (0 L)
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+            <button type="button" onClick={() => setShowBulkMilkModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors">Cancel</button>
+            <button type="submit" className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/20 transition-colors">
+              <Zap className="w-4 h-4" /> Save ALL Active Customer Logs
+            </button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Monthly Bill Statement & Day-by-Day Pop-Up Modal */}
       {selectedBillCycle && (() => {
@@ -2316,52 +2306,41 @@ export default function DairyModule() {
         const { customer, startDateStr, endDateStr, totalDaysInCycle, daysTakenCount, daysNotTakenCount, totalLitersTaken, totalMonthBill, priorDueAmount, priorExtraPaidAdvance, grossTotalPayable, totalPaymentsReceived, pendingBalanceDue, isPaidInFull, dayList } = summary;
 
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-            <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 max-w-2xl w-full my-auto space-y-6 max-h-[85vh] overflow-y-auto shadow-2xl">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-emerald-100 text-emerald-700">
-                    <Milk className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-extrabold text-slate-900">Monthly Milk Billing Statement</h3>
-                    <p className="text-xs text-slate-500">{customer.name} ({startDateStr} to {endDateStr})</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setSelectedBillCycle(null)} 
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
+          <Modal
+            isOpen={Boolean(selectedBillCycle)}
+            onClose={() => setSelectedBillCycle(null)}
+            title="Monthly Milk Billing Statement"
+            subtitle={`${customer.name} • Period: ${startDateStr} to ${endDateStr}`}
+            icon={Milk}
+            iconColor="text-emerald-700 bg-emerald-50 border-emerald-200"
+            badge={`${totalDaysInCycle} Days`}
+            maxWidth="max-w-2xl"
+          >
+            <div className="space-y-4">
               {/* Customer Financial Summary Ledger */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
                 <div>
-                  <span className="text-slate-500 block">Phone</span>
+                  <span className="text-slate-500 block text-[11px]">Phone</span>
                   <span className="font-bold text-slate-900">{customer.phone || 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Milk Rate</span>
-                  <span className="font-bold text-emerald-700">{currency}{customer.ratePerLiter} / Liter</span>
+                  <span className="text-slate-500 block text-[11px]">Milk Rate</span>
+                  <span className="font-bold text-emerald-700">{currency}{customer.ratePerLiter} / L</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Total Quantity</span>
+                  <span className="text-slate-500 block text-[11px]">Total Volume</span>
                   <span className="font-bold text-emerald-700">{totalLitersTaken} Liters</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Payment Status</span>
+                  <span className="text-slate-500 block text-[11px]">Payment Status</span>
                   <span className={`font-bold ${isPaidInFull ? 'text-emerald-700' : 'text-amber-700'}`}>
-                    {isPaidInFull ? '✅ PAID IN FULL' : `⚠️ DUE: ${currency}${pendingBalanceDue}`}
+                    {isPaidInFull ? '✅ PAID' : `⚠️ DUE: ${currency}${pendingBalanceDue}`}
                   </span>
                 </div>
               </div>
 
               {/* Carryover Calculation Box */}
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-2 text-xs">
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-1.5 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500 font-medium">Current Month Bill Amount:</span>
                   <span className="text-slate-900 font-bold">{currency}${(totalMonthBill || 0).toLocaleString('en-IN')}</span>
@@ -2386,7 +2365,7 @@ export default function DairyModule() {
                   <span className="text-slate-500 font-medium">Payments Paid in Cycle:</span>
                   <span className="text-emerald-700 font-bold">{currency}${(totalPaymentsReceived || 0).toLocaleString('en-IN')}</span>
                 </div>
-                <div className="flex justify-between text-sm font-extrabold border-t border-slate-200 pt-2">
+                <div className="flex justify-between text-sm font-extrabold border-t border-slate-200 pt-1.5">
                   <span className="text-slate-700">Net Remaining Balance Due:</span>
                   <span className={pendingBalanceDue > 0 ? 'text-amber-700' : 'text-emerald-700'}>
                     {currency}${(pendingBalanceDue || 0).toLocaleString('en-IN')}
@@ -2398,7 +2377,7 @@ export default function DairyModule() {
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-slate-700 flex justify-between">
                   <span>Day-by-Day Milk Delivery Ledger</span>
-                  <span>Total: {totalLitersTaken} Liters</span>
+                  <span className="text-emerald-700 font-bold">{totalLitersTaken} Liters</span>
                 </h4>
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
                   <div className="divide-y divide-slate-200 max-h-48 overflow-y-auto">
@@ -2428,549 +2407,613 @@ export default function DairyModule() {
               </div>
 
               {/* Action Buttons */}
-              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-3">
+              <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => {
                     setSelectedBillCycle(null);
                     handleOpenPaymentForCustomer(customer.id, pendingBalanceDue > 0 ? pendingBalanceDue : '');
                   }}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-colors"
                 >
                   <Wallet className="w-4 h-4" /> Record Payment
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadCustomerRangeCSV(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> CSV
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadPDFRangeBill(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                 >
                   <FileText className="w-4 h-4 text-rose-600" /> Download PDF
                 </button>
                 <button
                   type="button"
                   onClick={() => sendWhatsAppRangeBill(customer.id, startDateStr, endDateStr)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-sm"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs shadow-emerald-600/20 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" /> Send via WhatsApp
                 </button>
               </div>
 
             </div>
-          </div>
+          </Modal>
         );
       })()}
 
       {/* Add / Edit Customer Modal */}
       {showCustomerModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-lg w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">{editingCustomer ? 'Edit Customer Profile & Active Cycle' : 'Add New Milk Buyer'}</h3>
-              <button onClick={() => setShowCustomerModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100">
-                <X className="w-5 h-5" />
-              </button>
+        <Modal
+          isOpen={showCustomerModal}
+          onClose={() => setShowCustomerModal(false)}
+          title={editingCustomer ? 'Edit Customer Profile & Active Cycle' : 'Add New Milk Buyer'}
+          subtitle="Configure default daily quota, liter rate, and automatic monthly cycle rollover"
+          icon={Users}
+          iconColor="text-teal-700 bg-teal-50 border-teal-200"
+          maxWidth="max-w-lg"
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowCustomerModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200"
+            >
+              Cancel
+            </button>
+          }
+          primaryAction={
+            <button
+              type="submit"
+              form="customer-form"
+              className="px-5 py-2.5 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-bold shadow-md shadow-teal-600/20"
+            >
+              {editingCustomer ? 'Update Profile & Cycle' : 'Save Buyer Profile'}
+            </button>
+          }
+        >
+          <form id="customer-form" onSubmit={handleSaveCustomer} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Customer / Buyer Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Venkatesh Dairy Depot / Sharma Household"
+                value={customerForm.name}
+                onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-teal-600 focus:outline-none"
+              />
             </div>
 
-            <form onSubmit={handleSaveCustomer} className="space-y-4 text-xs">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Customer / Buyer Name</label>
+                <label className="block text-slate-700 mb-1 font-bold">Phone Number</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. Venkatesh Dairy Depot / Sharma Household"
-                  value={customerForm.name}
-                  onChange={(e) => setCustomerForm({ ...customerForm, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
+                  placeholder="9448123456"
+                  value={customerForm.phone}
+                  onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-teal-600 focus:outline-none"
                 />
               </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Milk Rate ({currency}/Liter) *</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="50"
+                  value={customerForm.ratePerLiter}
+                  onChange={(e) => setCustomerForm({ ...customerForm, ratePerLiter: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-teal-600 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Default Quota (Liters / Day)</label>
+              <input
+                type="number"
+                placeholder="5"
+                value={customerForm.defaultQuotaLiters}
+                onChange={(e) => setCustomerForm({ ...customerForm, defaultQuotaLiters: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-teal-600 focus:outline-none"
+              />
+            </div>
+
+            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+              <h4 className="font-extrabold text-teal-800 flex items-center gap-1.5 text-xs">
+                <Calendar className="w-4 h-4 text-teal-600" /> Active Monthly Billing Cycle Range
+              </h4>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Phone Number</label>
+                  <label className="block text-slate-600 mb-1 font-semibold">Cycle Start Date</label>
                   <input
-                    type="text"
-                    placeholder="9448123456"
-                    value={customerForm.phone}
-                    onChange={(e) => setCustomerForm({ ...customerForm, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Milk Rate ({currency}/Liter)</label>
-                  <input
-                    type="number"
+                    type="date"
                     required
-                    placeholder="50"
-                    value={customerForm.ratePerLiter}
-                    onChange={(e) => setCustomerForm({ ...customerForm, ratePerLiter: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
+                    value={customerForm.cycleStartDate}
+                    onChange={(e) => {
+                      const newStart = e.target.value;
+                      setCustomerForm({ 
+                        ...customerForm, 
+                        cycleStartDate: newStart,
+                        cycleEndDate: getDefaultCycleEndDate(newStart)
+                      });
+                    }}
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-teal-600 focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-slate-600 mb-1 font-semibold">Cycle End Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={customerForm.cycleEndDate}
+                    onChange={(e) => setCustomerForm({ ...customerForm, cycleEndDate: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-teal-600 focus:outline-none"
                   />
                 </div>
               </div>
-
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Default Quota (Liters/Day)</label>
-                <input
-                  type="number"
-                  placeholder="5"
-                  value={customerForm.defaultQuotaLiters}
-                  onChange={(e) => setCustomerForm({ ...customerForm, defaultQuotaLiters: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-                <h4 className="font-bold text-emerald-800 flex items-center gap-1.5 text-xs">
-                  <Calendar className="w-4 h-4 text-emerald-600" /> Set Active Monthly Billing Cycle Range
-                </h4>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">Cycle Start Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={customerForm.cycleStartDate}
-                      onChange={(e) => {
-                        const newStart = e.target.value;
-                        setCustomerForm({ 
-                          ...customerForm, 
-                          cycleStartDate: newStart,
-                          cycleEndDate: getDefaultCycleEndDate(newStart)
-                        });
-                      }}
-                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">Cycle End Date</label>
-                    <input
-                      type="date"
-                      required
-                      value={customerForm.cycleEndDate}
-                      onChange={(e) => setCustomerForm({ ...customerForm, cycleEndDate: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-200">
-                <button type="button" onClick={() => setShowCustomerModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm">
-                  {editingCustomer ? 'Update Profile & Cycle' : 'Save Buyer Profile'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log / Edit Single Milk Entry Modal */}
       {showMilkModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">{editingMilkLog ? 'Edit Daily Milk Entry' : 'Log Single Customer Milk Entry'}</h3>
-            <form onSubmit={handleSaveMilkLog} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Customer</label>
-                <select
-                  value={milkForm.customerId}
-                  onChange={(e) => setMilkForm({ ...milkForm, customerId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                >
-                  {(data?.dairyCustomers || []).map(c => (
-                    <option key={c.id} value={c.id}>{c.name} ({currency}{c.ratePerLiter}/L)</option>
-                  ))}
-                </select>
-              </div>
+        <Modal
+          isOpen={showMilkModal}
+          onClose={() => setShowMilkModal(false)}
+          title={editingMilkLog ? 'Edit Daily Milk Entry' : 'Log Single Customer Milk Entry'}
+          subtitle="Record morning/evening milk quota delivery or mark an off day"
+          icon={Milk}
+          iconColor="text-emerald-700 bg-emerald-50 border-emerald-200"
+          maxWidth="max-w-md"
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowMilkModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200"
+            >
+              Cancel
+            </button>
+          }
+          primaryAction={
+            <button
+              type="submit"
+              form="milk-form"
+              className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md shadow-emerald-600/20"
+            >
+              {editingMilkLog ? 'Update Entry' : 'Save Milk Log'}
+            </button>
+          }
+        >
+          <form id="milk-form" onSubmit={handleSaveMilkLog} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Select Customer *</label>
+              <select
+                value={milkForm.customerId}
+                onChange={(e) => setMilkForm({ ...milkForm, customerId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none cursor-pointer"
+              >
+                {(data?.dairyCustomers || []).map(c => (
+                  <option key={c.id} value={c.id}>{c.name} ({currency}{c.ratePerLiter}/L)</option>
+                ))}
+              </select>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={milkForm.date}
+                  onChange={(e) => setMilkForm({ ...milkForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Shift</label>
+                <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setMilkForm({ ...milkForm, shift: 'Morning' })}
+                    className={`py-1.5 rounded-lg font-bold text-xs transition-all ${
+                      milkForm.shift === 'Morning' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Morning
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setMilkForm({ ...milkForm, shift: 'Evening' })}
+                    className={`py-1.5 rounded-lg font-bold text-xs transition-all ${
+                      milkForm.shift === 'Evening' ? 'bg-white text-emerald-700 shadow-xs' : 'text-slate-600 hover:text-slate-900'
+                    }`}
+                  >
+                    Evening
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Daily Milk Status</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMilkForm({ ...milkForm, status: 'Taken' })}
+                  className={`py-2 rounded-xl font-bold border transition-all ${
+                    milkForm.status === 'Taken' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  ✅ Milk Taken
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMilkForm({ ...milkForm, status: 'Not Taken', liters: 0 })}
+                  className={`py-2 rounded-xl font-bold border transition-all ${
+                    milkForm.status === 'Not Taken' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                  }`}
+                >
+                  ❌ Milk NOT Taken (Off)
+                </button>
+              </div>
+            </div>
+
+            {milkForm.status === 'Taken' && (
+              <div className="grid grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                 <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date
-                  </label>
+                  <label className="block text-slate-700 mb-1 font-bold">Quantity (Liters) *</label>
                   <input
-                    type="date"
+                    type="number"
+                    step="0.5"
                     required
-                    value={milkForm.date}
-                    onChange={(e) => setMilkForm({ ...milkForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
+                    placeholder="5"
+                    value={milkForm.liters}
+                    onChange={(e) => setMilkForm({ ...milkForm, liters: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-emerald-700 font-extrabold focus:border-emerald-600 focus:outline-none"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Shift</label>
-                  <select
-                    value={milkForm.shift}
-                    onChange={(e) => setMilkForm({ ...milkForm, shift: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  >
-                    <option value="Morning">Morning Shift</option>
-                    <option value="Evening">Evening Shift</option>
-                  </select>
+                  <label className="block text-slate-700 mb-1 font-semibold">Fat % (Optional)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    placeholder="4.5"
+                    value={milkForm.fatPercent}
+                    onChange={(e) => setMilkForm({ ...milkForm, fatPercent: e.target.value })}
+                    className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none"
+                  />
                 </div>
               </div>
+            )}
 
-              <div>
-                <label className="block text-slate-600 mb-1 font-bold">Daily Milk Status</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setMilkForm({ ...milkForm, status: 'Taken' })}
-                    className={`py-2 rounded-xl font-bold border transition-all ${
-                      milkForm.status === 'Taken' ? 'bg-emerald-600 text-white border-emerald-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    ✅ Milk Taken
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setMilkForm({ ...milkForm, status: 'Not Taken', liters: 0 })}
-                    className={`py-2 rounded-xl font-bold border transition-all ${
-                      milkForm.status === 'Not Taken' ? 'bg-rose-600 text-white border-rose-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    ❌ Milk NOT Taken (Off)
-                  </button>
-                </div>
-              </div>
-
-              {milkForm.status === 'Taken' && (
-                <div className="grid grid-cols-2 gap-3 p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">Quantity (Liters)</label>
-                    <input
-                      type="number"
-                      step="0.5"
-                      required
-                      placeholder="5"
-                      value={milkForm.liters}
-                      onChange={(e) => setMilkForm({ ...milkForm, liters: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-emerald-700 font-bold focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-600 mb-1 font-semibold">Fat % (Optional)</label>
-                    <input
-                      type="number"
-                      step="0.1"
-                      placeholder="4.5"
-                      value={milkForm.fatPercent}
-                      onChange={(e) => setMilkForm({ ...milkForm, fatPercent: e.target.value })}
-                      className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-emerald-600 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Notes / Reason (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Vacation day / Customer requested off"
-                  value={milkForm.notes}
-                  onChange={(e) => setMilkForm({ ...milkForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowMilkModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-sm">
-                  {editingMilkLog ? 'Update Entry' : 'Save Milk Log'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Notes / Reason (Optional)</label>
+              <input
+                type="text"
+                placeholder="e.g. Vacation day / Customer requested off"
+                value={milkForm.notes}
+                onChange={(e) => setMilkForm({ ...milkForm, notes: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
+              />
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Record Customer Bill Payment Received Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">{editingDairyPayment ? 'Edit Payment Record' : 'Record Customer Payment Received'}</h3>
-            <form onSubmit={handleSaveDairyPayment} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Customer</label>
-                <select
-                  value={paymentForm.customerId}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, customerId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
-                >
-                  {(data?.dairyCustomers || []).map(c => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
+        <Modal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          title={editingDairyPayment ? 'Edit Payment Record' : 'Record Customer Payment Received'}
+          subtitle="Record customer cash, UPI, or bank milk bill payments"
+          icon={Wallet}
+          iconColor="text-amber-700 bg-amber-50 border-amber-200"
+          maxWidth="max-w-md"
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowPaymentModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200"
+            >
+              Cancel
+            </button>
+          }
+          primaryAction={
+            <button
+              type="submit"
+              form="payment-form"
+              className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md shadow-amber-600/20"
+            >
+              {editingDairyPayment ? 'Update Payment' : 'Save Payment'}
+            </button>
+          }
+        >
+          <form id="payment-form" onSubmit={handleSaveDairyPayment} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Select Customer *</label>
+              <select
+                value={paymentForm.customerId}
+                onChange={(e) => setPaymentForm({ ...paymentForm, customerId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-amber-600 focus:outline-none cursor-pointer"
+              >
+                {(data?.dairyCustomers || []).map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-emerald-600" /> Select Date Paid
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={paymentForm.date}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Amount Received ({currency})</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="2000"
-                    value={paymentForm.amount}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-bold focus:bg-white focus:border-emerald-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Notes / Payment Method</label>
+                <label className="block text-slate-700 mb-1 font-bold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date Paid
+                </label>
                 <input
-                  type="text"
-                  placeholder="e.g. Monthly Settlement / UPI Transfer"
-                  value={paymentForm.notes}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-emerald-600 focus:outline-none"
+                  type="date"
+                  required
+                  value={paymentForm.date}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-amber-600 focus:outline-none"
                 />
               </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm">
-                  {editingDairyPayment ? 'Update Payment' : 'Save Payment'}
-                </button>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Amount Received ({currency}) *</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="2000"
+                  value={paymentForm.amount}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-emerald-700 font-black text-sm focus:bg-white focus:border-amber-600 focus:outline-none"
+                />
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Notes / Payment Method</label>
+              <input
+                type="text"
+                placeholder="e.g. Monthly Settlement / UPI Transfer / Cash"
+                value={paymentForm.notes}
+                onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
+              />
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Add Cattle Modal */}
       {showCattleModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">Add New Cattle to Herd</h3>
-            <form onSubmit={handleAddCattle} className="space-y-3 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Tag Number</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="COW-104"
-                    value={cattleForm.tagNo}
-                    onChange={(e) => setCattleForm({ ...cattleForm, tagNo: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Cattle Name</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="Kamadhenu"
-                    value={cattleForm.name}
-                    onChange={(e) => setCattleForm({ ...cattleForm, name: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Breed</label>
-                  <input
-                    type="text"
-                    placeholder="Jersey / HF / Murrah"
-                    value={cattleForm.breed}
-                    onChange={(e) => setCattleForm({ ...cattleForm, breed: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Daily Yield (Liters)</label>
-                  <input
-                    type="number"
-                    placeholder="15"
-                    value={cattleForm.dailyYieldLiters}
-                    onChange={(e) => setCattleForm({ ...cattleForm, dailyYieldLiters: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none"
-                  />
-                </div>
+        <Modal
+          isOpen={showCattleModal}
+          onClose={() => setShowCattleModal(false)}
+          title="Add New Cattle to Herd"
+          subtitle="Register milking cow or buffalo with tag number and breed details"
+          icon={Award}
+          iconColor="text-indigo-700 bg-indigo-50 border-indigo-200"
+          maxWidth="max-w-md"
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowCattleModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200"
+            >
+              Cancel
+            </button>
+          }
+          primaryAction={
+            <button
+              type="submit"
+              form="cattle-form"
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md shadow-indigo-600/20"
+            >
+              Add Cattle
+            </button>
+          }
+        >
+          <form id="cattle-form" onSubmit={handleAddCattle} className="space-y-3.5 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Tag Number *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="COW-104"
+                  value={cattleForm.tagNo}
+                  onChange={(e) => setCattleForm({ ...cattleForm, tagNo: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
+                />
               </div>
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Status</label>
-                <select
-                  value={cattleForm.status}
-                  onChange={(e) => setCattleForm({ ...cattleForm, status: e.target.value })}
+                <label className="block text-slate-700 mb-1 font-bold">Cattle Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Kamadhenu"
+                  value={cattleForm.name}
+                  onChange={(e) => setCattleForm({ ...cattleForm, name: e.target.value })}
                   className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
-                >
-                  <option value="Milking">Milking</option>
-                  <option value="Dry">Dry</option>
-                  <option value="Pregnant">Pregnant</option>
-                  <option value="Calf">Calf</option>
-                </select>
+                />
               </div>
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowCattleModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-sm">Add Cattle</button>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Breed</label>
+                <input
+                  type="text"
+                  placeholder="Jersey / HF / Murrah"
+                  value={cattleForm.breed}
+                  onChange={(e) => setCattleForm({ ...cattleForm, breed: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-indigo-600 focus:outline-none"
+                />
               </div>
-            </form>
-          </div>
-        </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Daily Yield (Liters)</label>
+                <input
+                  type="number"
+                  placeholder="15"
+                  value={cattleForm.dailyYieldLiters}
+                  onChange={(e) => setCattleForm({ ...cattleForm, dailyYieldLiters: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Status</label>
+              <select
+                value={cattleForm.status}
+                onChange={(e) => setCattleForm({ ...cattleForm, status: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-indigo-600 focus:outline-none cursor-pointer"
+              >
+                <option value="Milking">🥛 Milking</option>
+                <option value="Dry">🌾 Dry</option>
+                <option value="Pregnant">🤰 Pregnant</option>
+                <option value="Calf">🐮 Calf</option>
+              </select>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log Dairy Expense Modal */}
       {showExpenseModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <div className="flex items-center space-x-2">
-                <div className="p-2 rounded-xl bg-rose-100 text-rose-700">
-                  <ArrowDownLeft className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    {editingDairyExpense ? 'Edit Dairy Expense' : 'Log Dairy Operating Expense'}
-                  </h3>
-                  <p className="text-xs text-slate-500">Record cattle feed, medicine, cattle care, or labor costs</p>
-                </div>
+        <Modal
+          isOpen={showExpenseModal}
+          onClose={() => setShowExpenseModal(false)}
+          title={editingDairyExpense ? 'Edit Dairy Expense' : 'Log Dairy Operating Expense'}
+          subtitle="Record cattle feed, medicine, breed care, or labor costs"
+          icon={ArrowDownLeft}
+          iconColor="text-rose-700 bg-rose-50 border-rose-200"
+          maxWidth="max-w-md"
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowExpenseModal(false)}
+              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 font-bold border border-slate-200"
+            >
+              Cancel
+            </button>
+          }
+          primaryAction={
+            <button
+              type="submit"
+              form="dairy-expense-form"
+              className="px-5 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-md shadow-rose-600/20"
+            >
+              {editingDairyExpense ? 'Update Expense' : 'Save Expense'}
+            </button>
+          }
+        >
+          <form id="dairy-expense-form" onSubmit={handleSaveDairyExpense} className="space-y-3.5 text-xs">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-rose-600" /> Date
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={expenseForm.date}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
+                />
               </div>
-              <button onClick={() => setShowExpenseModal(false)} className="p-1 rounded-xl text-slate-400 hover:text-slate-700">
-                <X className="w-5 h-5" />
-              </button>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Expense Category</label>
+                <select
+                  value={expenseForm.category}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-rose-600 focus:outline-none cursor-pointer"
+                >
+                  <option value="Feed & Fodder">🌾 Feed & Fodder</option>
+                  <option value="Medicine & Veterinary">💉 Medicine & Veterinary</option>
+                  <option value="Cattle Purchase & Breed Care">🐄 Cattle Expense & Breed Care</option>
+                  <option value="Labor & Milking Wages">🧑‍🌾 Labor & Milking Wages</option>
+                  <option value="Shed Maintenance & Electricity">🏠 Shed Maintenance & Power</option>
+                  <option value="Other Dairy Expenses">📦 Other Dairy Expenses</option>
+                </select>
+              </div>
             </div>
 
-            <form onSubmit={handleSaveDairyExpense} className="space-y-3.5 text-xs">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-rose-600" /> Date
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={expenseForm.date}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-rose-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Expense Category</label>
-                  <select
-                    value={expenseForm.category}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, category: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-rose-600 focus:outline-none"
-                  >
-                    <option value="Feed & Fodder">🌾 Feed & Fodder</option>
-                    <option value="Medicine & Veterinary">💉 Medicine & Veterinary</option>
-                    <option value="Cattle Purchase & Breed Care">🐄 Cattle Expense & Breed Care</option>
-                    <option value="Labor & Milking Wages">🧑‍🌾 Labor & Milking Wages</option>
-                    <option value="Shed Maintenance & Electricity">🏠 Shed Maintenance & Power</option>
-                    <option value="Other Dairy Expenses">📦 Other Dairy Expenses</option>
-                  </select>
-                </div>
-              </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Item / Expense Details *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g. Dry Fodder / Deworming Injection / Milking Worker Weekly Wage"
+                value={expenseForm.item}
+                onChange={(e) => setExpenseForm({ ...expenseForm, item: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
+              />
+            </div>
 
+            <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Item / Expense Details</label>
+                <label className="block text-slate-700 mb-1 font-semibold">Quantity (Opt.)</label>
                 <input
-                  type="text"
+                  type="number"
+                  min="0"
+                  step="any"
+                  placeholder="10"
+                  value={expenseForm.quantity}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Unit</label>
+                <select
+                  value={expenseForm.unit}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, unit: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none cursor-pointer"
+                >
+                  <option value="Bags">Bags</option>
+                  <option value="Kg">Kg</option>
+                  <option value="Tons">Tons</option>
+                  <option value="Liters">Liters</option>
+                  <option value="Bottles">Bottles</option>
+                  <option value="Doses">Doses</option>
+                  <option value="Days / Shifts">Days / Shifts</option>
+                  <option value="Units">Units</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-bold">Total Amount ({currency}) *</label>
+                <input
+                  type="number"
                   required
-                  placeholder="e.g. Dry Fodder / Deworming Injection / Milking Worker Weekly Wage"
-                  value={expenseForm.item}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, item: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
+                  min="1"
+                  placeholder="1500"
+                  value={expenseForm.amount}
+                  onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-rose-700 font-extrabold focus:bg-white focus:border-rose-600 focus:outline-none"
                 />
               </div>
+            </div>
 
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Quantity (Opt.)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="any"
-                    placeholder="10"
-                    value={expenseForm.quantity}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, quantity: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Unit</label>
-                  <select
-                    value={expenseForm.unit}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, unit: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
-                  >
-                    <option value="Bags">Bags</option>
-                    <option value="Kg">Kg</option>
-                    <option value="Tons">Tons</option>
-                    <option value="Liters">Liters</option>
-                    <option value="Bottles">Bottles</option>
-                    <option value="Doses">Doses</option>
-                    <option value="Days / Shifts">Days / Shifts</option>
-                    <option value="Units">Units</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Total Amount ({currency}) *</label>
-                  <input
-                    type="number"
-                    required
-                    min="1"
-                    placeholder="1500"
-                    value={expenseForm.amount}
-                    onChange={(e) => setExpenseForm({ ...expenseForm, amount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-rose-700 font-bold focus:bg-white focus:border-rose-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Notes / Vendor Info</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Paid cash to local feed dealer, 50kg bags"
-                  value={expenseForm.notes}
-                  onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowExpenseModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold shadow-sm transition-all"
-                >
-                  {editingDairyExpense ? 'Update Expense' : 'Save Expense'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Notes / Vendor Info</label>
+              <input
+                type="text"
+                placeholder="e.g. Paid cash to local feed dealer, 50kg bags"
+                value={expenseForm.notes}
+                onChange={(e) => setExpenseForm({ ...expenseForm, notes: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-rose-600 focus:outline-none"
+              />
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Confirm-Before-Delete Modal */}

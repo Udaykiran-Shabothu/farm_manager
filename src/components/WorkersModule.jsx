@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from './ConfirmModal';
+import Modal from './common/Modal';
 import { useConfirm } from '../hooks/useConfirm';
 import { generateWorkerWagePDF } from '../services/pdfGenerator';
 import { 
@@ -731,45 +732,34 @@ export default function WorkersModule() {
         const pendingBalance = totalEarned - totalPaid;
 
         return (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-            <div className="bg-white p-5 sm:p-8 rounded-3xl border border-slate-200 max-w-2xl w-full my-auto space-y-6 max-h-[85vh] overflow-y-auto shadow-2xl">
-              
-              {/* Header */}
-              <div className="flex items-center justify-between border-b border-slate-200 pb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2.5 rounded-xl bg-amber-100 text-amber-700">
-                    <FileText className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-extrabold text-slate-900">Farm Owner to Laborer Wage Voucher</h3>
-                    <p className="text-xs text-slate-500">{selectedStatementWorker.name} ({selectedStatementWorker.type || 'Individual'})</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setSelectedStatementWorker(null)} 
-                  className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
+          <Modal
+            isOpen={Boolean(selectedStatementWorker)}
+            onClose={() => setSelectedStatementWorker(null)}
+            title="Farm Owner to Laborer Wage Voucher"
+            subtitle={`${selectedStatementWorker.name} (${selectedStatementWorker.type || 'Individual'}) • Role: ${selectedStatementWorker.role || 'Laborer'}`}
+            icon={FileText}
+            iconColor="text-amber-700 bg-amber-50 border-amber-200"
+            badge="Wage Voucher"
+            maxWidth="max-w-2xl"
+          >
+            <div className="space-y-4">
               {/* Profile Details */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200 text-xs">
                 <div>
-                  <span className="text-slate-500 block">Work Role</span>
+                  <span className="text-slate-500 block text-[11px]">Work Role</span>
                   <span className="font-bold text-slate-900">{selectedStatementWorker.role || 'Laborer'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Phone</span>
+                  <span className="text-slate-500 block text-[11px]">Phone</span>
                   <span className="font-bold text-blue-700">{selectedStatementWorker.phone || 'N/A'}</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Daily Rate</span>
+                  <span className="text-slate-500 block text-[11px]">Daily Rate</span>
                   <span className="font-bold text-amber-700">{currency}{selectedStatementWorker.dailyRate}/day</span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Net Wage Owed</span>
-                  <span className={`font-bold ${pendingBalance > 0 ? 'text-rose-700' : 'text-slate-700'}`}>
+                  <span className="text-slate-500 block text-[11px]">Net Wage Owed</span>
+                  <span className={`font-bold text-sm ${pendingBalance > 0 ? 'text-rose-600' : 'text-slate-700'}`}>
                     {currency}{(pendingBalance || 0).toLocaleString('en-IN')}
                   </span>
                 </div>
@@ -778,7 +768,7 @@ export default function WorkersModule() {
               {/* Itemized Dates Worked */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-700 flex justify-between">
-                  <span>1. Field Work Logged & Daily Wages Owed by Owner</span>
+                  <span>1. Field Work Logged & Daily Wages Owed</span>
                   <span>Total Owed: {currency}{(totalEarned || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
@@ -803,7 +793,7 @@ export default function WorkersModule() {
               {/* Itemized Dates Paid */}
               <div className="space-y-2">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 flex justify-between">
-                  <span>2. Wage Payouts & Advance Payments Made by Owner</span>
+                  <span>2. Wage Payouts & Advance Payments</span>
                   <span>Total Paid: {currency}{(totalPaid || 0).toLocaleString('en-IN')}</span>
                 </h4>
                 <div className="bg-slate-50 rounded-2xl border border-slate-200 overflow-hidden text-xs">
@@ -826,306 +816,321 @@ export default function WorkersModule() {
               </div>
 
               {/* Voucher Action Buttons */}
-              <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-3">
+              <div className="pt-3 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => downloadWorkerCSV(selectedStatementWorker)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 text-xs font-bold flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                 >
-                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Download CSV Voucher
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-600" /> Download CSV
                 </button>
                 <button
                   type="button"
                   onClick={() => downloadPDFWorkerVoucher(selectedStatementWorker)}
-                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-2 transition-all"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-bold flex items-center justify-center gap-2 transition-colors"
                 >
-                  <FileText className="w-4 h-4 text-rose-600" /> Download PDF Voucher
+                  <FileText className="w-4 h-4 text-rose-600" /> Download PDF
                 </button>
                 <button
                   type="button"
                   onClick={() => sendWhatsAppStatement(selectedStatementWorker)}
-                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20"
+                  className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs shadow-emerald-600/20 transition-colors"
                 >
                   <MessageCircle className="w-4 h-4" /> Send via WhatsApp
                 </button>
               </div>
 
             </div>
-          </div>
+          </Modal>
         );
       })()}
 
       {/* Add / Edit Worker Modal */}
       {showWorkerModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">{editingWorker ? 'Edit Worker / Group Profile' : 'Add Worker / Group Team'}</h3>
-            <form onSubmit={handleSaveWorker} className="space-y-3 text-xs">
-              
-              {/* Type Toggle: Individual vs Group */}
-              <div>
-                <label className="block text-slate-600 mb-1 font-bold">Worker Category</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setWorkerForm({ ...workerForm, type: 'Individual', memberCount: 1 })}
-                    className={`py-2 rounded-xl font-bold border transition-all ${
-                      workerForm.type === 'Individual' ? 'bg-amber-600 text-white border-amber-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    Individual Laborer
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setWorkerForm({ ...workerForm, type: 'Group', memberCount: 5 })}
-                    className={`py-2 rounded-xl font-bold border transition-all ${
-                      workerForm.type === 'Group' ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm' : 'bg-slate-50 text-slate-600 border-slate-200'
-                    }`}
-                  >
-                    Group Work Team
-                  </button>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">{workerForm.type === 'Group' ? 'Group / Team Name' : 'Worker Name'}</label>
-                <input
-                  type="text"
-                  required
-                  placeholder={workerForm.type === 'Group' ? 'e.g. Sugarcane Harvest Gang Alpha' : 'e.g. Ramesh Kumar'}
-                  value={workerForm.name}
-                  onChange={(e) => setWorkerForm({ ...workerForm, name: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-amber-600 focus:outline-none"
-                />
-              </div>
-
-              {workerForm.type === 'Group' && (
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Number of Members in Group</label>
-                  <input
-                    type="number"
-                    min="1"
-                    required
-                    placeholder="5"
-                    value={workerForm.memberCount}
-                    onChange={(e) => setWorkerForm({ ...workerForm, memberCount: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Phone Number</label>
-                  <input
-                    type="text"
-                    placeholder="9448123456"
-                    value={workerForm.phone}
-                    onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Daily Wage Rate ({currency}/day)</label>
-                  <input
-                    type="number"
-                    required
-                    placeholder="600"
-                    value={workerForm.dailyRate}
-                    onChange={(e) => setWorkerForm({ ...workerForm, dailyRate: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Work Role / Assignment</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Sugarcane Cutting / Tractor Operator / Field Weeding"
-                  value={workerForm.role}
-                  onChange={(e) => setWorkerForm({ ...workerForm, role: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 focus:bg-white focus:border-amber-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowWorkerModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm">
-                  {editingWorker ? 'Update Profile' : 'Save Worker Profile'}
+        <Modal
+          isOpen={showWorkerModal}
+          onClose={() => setShowWorkerModal(false)}
+          title={editingWorker ? 'Edit Worker / Group Profile' : 'Add Worker / Group Team'}
+          subtitle="Configure worker contact details, labor category, and daily wage structure"
+          icon={Users}
+          iconColor="text-amber-700 bg-amber-50 border-amber-200"
+          badge={workerForm.type}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSaveWorker} className="space-y-3.5 text-xs">
+            {/* Type Toggle: Individual vs Group */}
+            <div>
+              <label className="block text-slate-700 mb-1 font-bold">Worker Category</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setWorkerForm({ ...workerForm, type: 'Individual', memberCount: 1 })}
+                  className={`py-2 rounded-xl font-bold border transition-all text-xs ${
+                    workerForm.type === 'Individual' ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Individual Laborer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setWorkerForm({ ...workerForm, type: 'Group', memberCount: 5 })}
+                  className={`py-2 rounded-xl font-bold border transition-all text-xs ${
+                    workerForm.type === 'Group' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+                  }`}
+                >
+                  Group Work Team
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">{workerForm.type === 'Group' ? 'Group / Team Name' : 'Worker Name'}</label>
+              <input
+                type="text"
+                required
+                placeholder={workerForm.type === 'Group' ? 'e.g. Sugarcane Harvest Gang Alpha' : 'e.g. Ramesh Kumar'}
+                value={workerForm.name}
+                onChange={(e) => setWorkerForm({ ...workerForm, name: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-amber-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+
+            {workerForm.type === 'Group' && (
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Number of Members in Group</label>
+                <input
+                  type="number"
+                  min="1"
+                  required
+                  placeholder="5"
+                  value={workerForm.memberCount}
+                  onChange={(e) => setWorkerForm({ ...workerForm, memberCount: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Phone Number</label>
+                <input
+                  type="text"
+                  placeholder="9448123456"
+                  value={workerForm.phone}
+                  onChange={(e) => setWorkerForm({ ...workerForm, phone: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Daily Wage Rate ({currency}/day)</label>
+                <input
+                  type="number"
+                  required
+                  placeholder="600"
+                  value={workerForm.dailyRate}
+                  onChange={(e) => setWorkerForm({ ...workerForm, dailyRate: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-bold focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Work Role / Assignment</label>
+              <input
+                type="text"
+                placeholder="e.g. Sugarcane Cutting / Tractor Operator / Field Weeding"
+                value={workerForm.role}
+                onChange={(e) => setWorkerForm({ ...workerForm, role: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 focus:border-amber-600 focus:outline-none shadow-2xs"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowWorkerModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs shadow-amber-600/20 transition-colors">
+                {editingWorker ? 'Update Profile' : 'Save Worker Profile'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Log Labor Field Work Modal */}
       {showAttendanceModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">{editingAttendance ? 'Edit Field Work Log' : 'Log Labor Field Work Attendance'}</h3>
-            <form onSubmit={handleSaveAttendance} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showAttendanceModal}
+          onClose={() => setShowAttendanceModal(false)}
+          title={editingAttendance ? 'Edit Field Work Log' : 'Log Labor Field Work Attendance'}
+          subtitle="Record daily labor attendance, hours worked, and calculate wages earned"
+          icon={UserCheck}
+          iconColor="text-amber-700 bg-amber-50 border-amber-200"
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSaveAttendance} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Worker / Group Team</label>
+              <select
+                value={attendanceForm.workerId}
+                onChange={(e) => {
+                  const wid = e.target.value;
+                  const w = (data?.workers || []).find(item => item.id === wid);
+                  setAttendanceForm({ 
+                    ...attendanceForm, 
+                    workerId: wid,
+                    wageEarned: w ? w.dailyRate : 600
+                  });
+                }}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
+              >
+                {(data?.workers || []).map(w => (
+                  <option key={w.id} value={w.id}>{w.name} ({w.type === 'Group' ? `${w.memberCount} Members` : w.role}) - {currency}{w.dailyRate}/day</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Worker / Group Team</label>
+                <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date Worked
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={attendanceForm.date}
+                  onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Attendance Status</label>
                 <select
-                  value={attendanceForm.workerId}
-                  onChange={(e) => {
-                    const wid = e.target.value;
-                    const w = (data?.workers || []).find(item => item.id === wid);
-                    setAttendanceForm({ 
-                      ...attendanceForm, 
-                      workerId: wid,
-                      wageEarned: w ? w.dailyRate : 600
-                    });
-                  }}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
+                  value={attendanceForm.status}
+                  onChange={(e) => setAttendanceForm({ ...attendanceForm, status: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
                 >
-                  {(data?.workers || []).map(w => (
-                    <option key={w.id} value={w.id}>{w.name} ({w.type === 'Group' ? `${w.memberCount} Members` : w.role}) - {currency}{w.dailyRate}/day</option>
-                  ))}
+                  <option value="Present">Full Day Present</option>
+                  <option value="Half Day">Half Day</option>
                 </select>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-amber-600" /> Select Date Worked
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={attendanceForm.date}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Attendance Status</label>
-                  <select
-                    value={attendanceForm.status}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, status: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
-                  >
-                    <option value="Present">Full Day Present</option>
-                    <option value="Half Day">Half Day</option>
-                  </select>
-                </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Overtime (Hours)</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={attendanceForm.overtimeHours}
+                  onChange={(e) => setAttendanceForm({ ...attendanceForm, overtimeHours: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
               </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Wage Owed ({currency})</label>
+                <input
+                  type="number"
+                  required
+                  value={attendanceForm.wageEarned}
+                  onChange={(e) => setAttendanceForm({ ...attendanceForm, wageEarned: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-amber-700 font-bold focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Overtime (Hours)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={attendanceForm.overtimeHours}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, overtimeHours: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Wage Owed by Owner ({currency})</label>
-                  <input
-                    type="number"
-                    required
-                    value={attendanceForm.wageEarned}
-                    onChange={(e) => setAttendanceForm({ ...attendanceForm, wageEarned: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-amber-700 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowAttendanceModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-sm">
-                  {editingAttendance ? 'Update Work Log' : 'Save Field Work Log'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowAttendanceModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-xs shadow-amber-600/20 transition-colors">
+                {editingAttendance ? 'Update Work Log' : 'Save Field Work Log'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Record Labor Wage Payout Modal */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 bg-slate-900/60 backdrop-blur-md  animate-fadeIn">
-          <div className="bg-white p-5 sm:p-7 rounded-3xl border border-slate-200 max-w-md w-full my-auto space-y-4 max-h-[85vh] overflow-y-auto shadow-2xl">
-            <h3 className="text-lg font-bold text-slate-900">{editingPayment ? 'Edit Wage Payout' : 'Pay Laborer / Record Payout'}</h3>
-            <form onSubmit={handleSavePayment} className="space-y-3 text-xs">
+        <Modal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          title={editingPayment ? 'Edit Wage Payout' : 'Pay Laborer / Record Payout'}
+          subtitle="Record wage settlements, advance pay, or contract payments"
+          icon={Wallet}
+          iconColor="text-blue-700 bg-blue-50 border-blue-200"
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleSavePayment} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Select Worker / Group Team</label>
+              <select
+                value={paymentForm.workerId}
+                onChange={(e) => setPaymentForm({ ...paymentForm, workerId: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
+              >
+                {(data?.workers || []).map(w => (
+                  <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Select Worker / Group Team</label>
+                <label className="block text-slate-700 mb-1 font-semibold flex items-center gap-1">
+                  <Calendar className="w-3.5 h-3.5 text-blue-600" /> Select Date Paid
+                </label>
+                <input
+                  type="date"
+                  required
+                  value={paymentForm.date}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium cursor-pointer focus:border-amber-600 focus:outline-none shadow-2xs"
+                />
+              </div>
+              <div>
+                <label className="block text-slate-700 mb-1 font-semibold">Payout Type</label>
                 <select
-                  value={paymentForm.workerId}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, workerId: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
+                  value={paymentForm.type}
+                  onChange={(e) => setPaymentForm({ ...paymentForm, type: e.target.value })}
+                  className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
                 >
-                  {(data?.workers || []).map(w => (
-                    <option key={w.id} value={w.id}>{w.name} ({w.role})</option>
-                  ))}
+                  <option value="Weekly Settlement">Weekly Settlement</option>
+                  <option value="Daily Wage Payment">Daily Wage Payment</option>
+                  <option value="Advance Payment">Advance Payment</option>
+                  <option value="Contract Final Settlement">Contract Final Settlement</option>
                 </select>
               </div>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5 text-blue-600" /> Select Date Paid
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={paymentForm.date}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, date: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium cursor-pointer focus:bg-white focus:border-amber-600 focus:outline-none"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-600 mb-1 font-semibold">Payout Type</label>
-                  <select
-                    value={paymentForm.type}
-                    onChange={(e) => setPaymentForm({ ...paymentForm, type: e.target.value })}
-                    className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
-                  >
-                    <option value="Weekly Settlement">Weekly Settlement</option>
-                    <option value="Daily Wage Payment">Daily Wage Payment</option>
-                    <option value="Advance Payment">Advance Payment</option>
-                    <option value="Contract Final Settlement">Contract Final Settlement</option>
-                  </select>
-                </div>
-              </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Amount Paid ({currency})</label>
+              <input
+                type="number"
+                required
+                placeholder="3000"
+                value={paymentForm.amount}
+                onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-blue-700 font-bold focus:border-amber-600 focus:outline-none shadow-2xs"
+              />
+            </div>
 
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Amount Paid ({currency})</label>
-                <input
-                  type="number"
-                  required
-                  placeholder="3000"
-                  value={paymentForm.amount}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, amount: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-blue-700 font-bold focus:bg-white focus:border-amber-600 focus:outline-none"
-                />
-              </div>
+            <div>
+              <label className="block text-slate-700 mb-1 font-semibold">Notes / Receipt Remarks</label>
+              <input
+                type="text"
+                placeholder="e.g. Field weeding payout / Advance for festival"
+                value={paymentForm.notes}
+                onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
+                className="w-full p-2.5 rounded-xl bg-white border border-slate-300 text-slate-900 font-medium focus:border-amber-600 focus:outline-none shadow-2xs"
+              />
+            </div>
 
-              <div>
-                <label className="block text-slate-600 mb-1 font-semibold">Notes / Receipt Remarks</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Field weeding payout / Advance for festival"
-                  value={paymentForm.notes}
-                  onChange={(e) => setPaymentForm({ ...paymentForm, notes: e.target.value })}
-                  className="w-full p-2.5 rounded-xl bg-slate-50 border border-slate-300 text-slate-900 font-medium focus:bg-white focus:border-amber-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="flex justify-end space-x-2 pt-2">
-                <button type="button" onClick={() => setShowPaymentModal(false)} className="px-4 py-2 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200">Cancel</button>
-                <button type="submit" className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-sm">
-                  {editingPayment ? 'Update Payout' : 'Save Payout'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button type="button" onClick={() => setShowPaymentModal(false)} className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold hover:bg-slate-200 transition-colors">Cancel</button>
+              <button type="submit" className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-xs shadow-blue-600/20 transition-colors">
+                {editingPayment ? 'Update Payout' : 'Save Payout'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Custom Confirmation Modal */}

@@ -194,7 +194,10 @@ export default function GlobalSearchModal({ isOpen, onClose, setActiveTab }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-20 p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn">
+    <div 
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-20 p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
+      onClick={onClose}
+    >
       <div 
         className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}

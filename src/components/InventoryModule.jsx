@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useFarm } from '../context/FarmContext';
 import { useToast } from '../context/ToastContext';
 import ConfirmModal from './ConfirmModal';
+import Modal from './common/Modal';
 import { useConfirm } from '../hooks/useConfirm';
 import { 
   Package, 
@@ -622,251 +623,227 @@ export default function InventoryModule() {
 
       {/* MODAL 1: ADD / EDIT ITEM FORM */}
       {showItemModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 space-y-5 shadow-2xl max-h-[85vh] overflow-y-auto animate-fadeIn">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900">
-                {editingItem ? 'Edit Warehouse Item' : 'Add New Warehouse Item'}
-              </h3>
-              <button 
-                onClick={() => setShowItemModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <Modal
+          isOpen={showItemModal}
+          onClose={() => setShowItemModal(false)}
+          title={editingItem ? 'Edit Warehouse Item' : 'Add New Warehouse Item'}
+          subtitle="Configure item name, measurement unit, alert threshold, and shed location"
+          icon={Package}
+          iconColor="text-emerald-700 bg-emerald-50 border-emerald-200"
+          badge={itemCategory}
+          maxWidth="max-w-lg"
+        >
+          <form onSubmit={handleItemSubmit} className="space-y-3.5 text-xs">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Item Name *</label>
+              <input
+                type="text"
+                required
+                placeholder="e.g., Urea Fertilizer, Paddy Seed BPT-5204"
+                value={itemName}
+                onChange={(e) => setItemName(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+              />
             </div>
 
-            <form onSubmit={handleItemSubmit} className="space-y-4">
-              
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Item Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g., Urea Fertilizer, Paddy Seed BPT-5204"
-                  value={itemName}
-                  onChange={(e) => setItemName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
-                  <select
-                    value={itemCategory}
-                    onChange={(e) => setItemCategory(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    {CATEGORIES.filter(c => c !== 'All').map(c => (
-                      <option key={c} value={c}>{c}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Measurement Unit</label>
-                  <select
-                    value={itemUnit}
-                    onChange={(e) => setItemUnit(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    {UNITS.map(u => (
-                      <option key={u} value={u}>{u}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Stock Qty</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={itemQuantity}
-                    onChange={(e) => setItemQuantity(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Alert Min Qty</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="5"
-                    value={itemMinAlert}
-                    onChange={(e) => setItemMinAlert(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Unit Cost ({currency})</label>
-                  <input
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={itemUnitCost}
-                    onChange={(e) => setItemUnitCost(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Storage Shed Location</label>
-                <input
-                  type="text"
-                  placeholder="e.g., Main Barn Shed A, Feed Store Room"
-                  value={itemStorage}
-                  onChange={(e) => setItemStorage(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Notes / Specifications</label>
-                <textarea
-                  rows="2"
-                  placeholder="e.g., Purchased from IFFCO dealer, 45kg bags"
-                  value={itemNotes}
-                  onChange={(e) => setItemNotes(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowItemModal(false)}
-                  className="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100"
+                <label className="block text-xs font-bold text-slate-700 mb-1">Category</label>
+                <select
+                  value={itemCategory}
+                  onChange={(e) => setItemCategory(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
                 >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className="flex-1 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md"
-                >
-                  {editingItem ? 'Save Changes' : 'Add Item'}
-                </button>
+                  {CATEGORIES.filter(c => c !== 'All').map(c => (
+                    <option key={c} value={c}>{c}</option>
+                  ))}
+                </select>
               </div>
 
-            </form>
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Measurement Unit</label>
+                <select
+                  value={itemUnit}
+                  onChange={(e) => setItemUnit(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                >
+                  {UNITS.map(u => (
+                    <option key={u} value={u}>{u}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
 
-          </div>
-        </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Stock Qty</label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={itemQuantity}
+                  onChange={(e) => setItemQuantity(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Alert Min Qty</label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="5"
+                  value={itemMinAlert}
+                  onChange={(e) => setItemMinAlert(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Unit Cost ({currency})</label>
+                <input
+                  type="number"
+                  min="0"
+                  placeholder="0"
+                  value={itemUnitCost}
+                  onChange={(e) => setItemUnitCost(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Storage Shed Location</label>
+              <input
+                type="text"
+                placeholder="e.g., Main Barn Shed A, Feed Store Room"
+                value={itemStorage}
+                onChange={(e) => setItemStorage(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Notes / Specifications</label>
+              <textarea
+                rows="2"
+                placeholder="e.g., Purchased from IFFCO dealer, 45kg bags"
+                value={itemNotes}
+                onChange={(e) => setItemNotes(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+              />
+            </div>
+
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setShowItemModal(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs shadow-emerald-600/20 transition-colors"
+              >
+                {editingItem ? 'Save Changes' : 'Add Item'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* MODAL 2: ADD / CONSUME STOCK ACTION */}
       {showStockModal && stockActionItem && (
-        <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-5 shadow-2xl max-h-[85vh] overflow-y-auto animate-fadeIn">
-            
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                {stockActionType === 'ADD' ? (
-                  <><PlusCircle className="w-5 h-5 text-emerald-600" /> Add Stock ({stockActionItem.name})</>
-                ) : (
-                  <><MinusCircle className="w-5 h-5 text-amber-600" /> Consume Stock ({stockActionItem.name})</>
-                )}
-              </h3>
-              <button 
-                onClick={() => setShowStockModal(false)}
-                className="p-1 text-slate-400 hover:text-slate-700 rounded-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <Modal
+          isOpen={showStockModal && Boolean(stockActionItem)}
+          onClose={() => setShowStockModal(false)}
+          title={stockActionType === 'ADD' ? `Restock ${stockActionItem.name}` : `Consume ${stockActionItem.name}`}
+          subtitle={`Current In-Stock: ${stockActionItem.quantity} ${stockActionItem.unit} • ${stockActionItem.category}`}
+          icon={stockActionType === 'ADD' ? PlusCircle : MinusCircle}
+          iconColor={stockActionType === 'ADD' ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-amber-700 bg-amber-50 border-amber-200'}
+          badge={stockActionType === 'ADD' ? 'Restock' : 'Consume'}
+          maxWidth="max-w-md"
+        >
+          <form onSubmit={handleStockActionSubmit} className="space-y-3.5 text-xs">
+            <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs flex justify-between items-center">
+              <span className="text-slate-600 font-medium">Available Warehouse Inventory:</span>
+              <span className="font-extrabold text-slate-900 text-sm">{stockActionItem.quantity} {stockActionItem.unit}</span>
             </div>
 
-            <form onSubmit={handleStockActionSubmit} className="space-y-4">
-              
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs flex justify-between">
-                <span className="text-slate-600">Current Stock:</span>
-                <span className="font-extrabold text-slate-900">{stockActionItem.quantity} {stockActionItem.unit}</span>
-              </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Quantity to {stockActionType === 'ADD' ? 'Add' : 'Deduct'} ({stockActionItem.unit}) *
+              </label>
+              <input
+                type="number"
+                min="1"
+                required
+                placeholder="Enter quantity"
+                value={actionQty}
+                onChange={(e) => setActionQty(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+              />
+            </div>
 
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Date</label>
+              <input
+                type="date"
+                required
+                value={actionDate}
+                onChange={(e) => setActionDate(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs cursor-pointer"
+              />
+            </div>
+
+            {stockActionType === 'USE' && (
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Quantity to {stockActionType === 'ADD' ? 'Add' : 'Deduct'} ({stockActionItem.unit}) *
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  required
-                  placeholder="Enter quantity"
-                  value={actionQty}
-                  onChange={(e) => setActionQty(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Date</label>
-                <input
-                  type="date"
-                  required
-                  value={actionDate}
-                  onChange={(e) => setActionDate(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              {stockActionType === 'USE' && (
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Farm Enterprise Sector</label>
-                  <select
-                    value={actionSector}
-                    onChange={(e) => setActionSector(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  >
-                    <option value="Crops">Crops & Fields</option>
-                    <option value="Poultry">Poultry & Hen Farm</option>
-                    <option value="Dairy">Dairy Farm & Cattle</option>
-                    <option value="Equipment">Tractors & Machinery</option>
-                    <option value="General">General Maintenance</option>
-                  </select>
-                </div>
-              )}
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Reason / Notes</label>
-                <input
-                  type="text"
-                  placeholder={stockActionType === 'ADD' ? 'e.g., Purchase from dealer' : 'e.g., Applied on Cotton Field Block 2'}
-                  value={actionReason}
-                  onChange={(e) => setActionReason(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-3 py-2 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
-                <button
-                  type="button"
-                  onClick={() => setShowStockModal(false)}
-                  className="flex-1 px-4 py-2.5 rounded-2xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100"
+                <label className="block text-xs font-bold text-slate-700 mb-1">Farm Enterprise Sector</label>
+                <select
+                  value={actionSector}
+                  onChange={(e) => setActionSector(e.target.value)}
+                  className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
                 >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  className={`flex-1 px-4 py-2.5 rounded-2xl text-white font-bold text-xs shadow-md ${
-                    stockActionType === 'ADD' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-amber-600 hover:bg-amber-700'
-                  }`}
-                >
-                  {stockActionType === 'ADD' ? 'Confirm Restock' : 'Confirm Consumption'}
-                </button>
+                  <option value="Crops">Crops & Fields</option>
+                  <option value="Poultry">Poultry & Hen Farm</option>
+                  <option value="Dairy">Dairy Farm & Cattle</option>
+                  <option value="Equipment">Tractors & Machinery</option>
+                  <option value="General">General Maintenance</option>
+                </select>
               </div>
+            )}
 
-            </form>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Reason / Notes</label>
+              <input
+                type="text"
+                placeholder={stockActionType === 'ADD' ? 'e.g., Purchase from dealer' : 'e.g., Applied on Cotton Field Block 2'}
+                value={actionReason}
+                onChange={(e) => setActionReason(e.target.value)}
+                className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-900 focus:outline-none focus:border-emerald-600 shadow-2xs"
+              />
+            </div>
 
-          </div>
-        </div>
+            <div className="flex justify-end space-x-2 pt-3 border-t border-slate-200">
+              <button
+                type="button"
+                onClick={() => setShowStockModal(false)}
+                className="px-4 py-2.5 rounded-xl bg-slate-100 text-slate-700 font-bold text-xs hover:bg-slate-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className={`px-5 py-2.5 rounded-xl text-white font-bold text-xs shadow-xs transition-colors ${
+                  stockActionType === 'ADD' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20'
+                }`}
+              >
+                {stockActionType === 'ADD' ? 'Confirm Restock' : 'Confirm Consumption'}
+              </button>
+            </div>
+          </form>
+        </Modal>
       )}
 
       {/* Custom Confirmation Modal */}

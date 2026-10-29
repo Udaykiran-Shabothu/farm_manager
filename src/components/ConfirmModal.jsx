@@ -1,60 +1,100 @@
-import React from 'react';
-import { Trash2, AlertTriangle, X } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { Trash2, AlertTriangle, AlertCircle, X, Check } from 'lucide-react';
 
-export default function ConfirmModal({ isOpen, onClose, onConfirm, title, description, confirmLabel = 'Delete', type = 'danger' }) {
+export default function ConfirmModal({ 
+  isOpen, 
+  onClose, 
+  onConfirm, 
+  title, 
+  description, 
+  confirmLabel = 'Delete', 
+  type = 'danger' 
+}) {
+  // ESC key listener
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   if (!isOpen) return null;
 
   const colorMap = {
     danger: {
-      header: 'bg-rose-50 border-rose-100',
-      icon: 'bg-rose-100 text-rose-600',
-      btn: 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20',
+      header: 'bg-rose-50/80 border-rose-100',
+      icon: 'bg-rose-100 text-rose-600 border border-rose-200',
+      btn: 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/25',
+      badge: 'bg-rose-100 text-rose-800',
       IconComp: Trash2
     },
     warning: {
-      header: 'bg-amber-50 border-amber-100',
-      icon: 'bg-amber-100 text-amber-600',
-      btn: 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/20',
+      header: 'bg-amber-50/80 border-amber-100',
+      icon: 'bg-amber-100 text-amber-600 border border-amber-200',
+      btn: 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/25',
+      badge: 'bg-amber-100 text-amber-800',
       IconComp: AlertTriangle
     },
+    info: {
+      header: 'bg-blue-50/80 border-blue-100',
+      icon: 'bg-blue-100 text-blue-600 border border-blue-200',
+      btn: 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25',
+      badge: 'bg-blue-100 text-blue-800',
+      IconComp: AlertCircle
+    }
   };
+
   const c = colorMap[type] || colorMap.danger;
   const IconComp = c.IconComp;
 
   return (
-    <div className="fixed inset-0 z-[9998] flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs animate-fadeIn">
+    <div 
+      className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn"
+      onClick={onClose}
+    >
       <div 
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-sm animate-scaleIn overflow-hidden"
+        className="bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-sm animate-scaleIn overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Mobile Pull-Down Indicator */}
+        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-2.5 sm:hidden" />
+
         {/* Header */}
-        <div className={`flex items-center justify-between p-4 border-b ${c.header}`}>
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-xl ${c.icon}`}>
-              <IconComp className="w-4 h-4" />
+        <div className={`flex items-center justify-between p-4 sm:p-5 border-b ${c.header}`}>
+          <div className="flex items-center gap-3">
+            <div className={`p-2.5 rounded-2xl ${c.icon}`}>
+              <IconComp className="w-5 h-5" />
             </div>
-            <span className="font-extrabold text-slate-900 text-sm">{title}</span>
+            <div>
+              <span className="font-extrabold text-slate-900 text-sm sm:text-base block">{title}</span>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Confirmation Required</span>
+            </div>
           </div>
           <button 
             type="button"
             onClick={onClose} 
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-white/80 rounded-xl transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Body */}
-        <div className="p-5">
-          <p className="text-xs text-slate-600 leading-relaxed font-medium">{description}</p>
+        <div className="p-5 sm:p-6 space-y-2">
+          <p className="text-xs text-slate-600 leading-relaxed font-semibold">{description}</p>
+          <div className="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-[11px] text-slate-500 font-medium">
+            💡 This action will immediately update your farm records and database.
+          </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2.5 px-5 pb-5">
+        <div className="flex items-center gap-2.5 px-5 sm:px-6 pb-5 pt-1 bg-slate-50/50">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-colors border border-slate-200 cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all border border-slate-200 shadow-xs cursor-pointer"
           >
             Cancel
           </button>
