@@ -359,10 +359,10 @@ export const generateMasterFinancialPDF = (summaryData, farmInfo = {}) => {
   // Sector Breakdown Table
   const sectorRows = [
     ['Crops & Fields Enterprise', `${currency}${(crops?.income || 0).toLocaleString('en-IN')}`, `${currency}${(crops?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(crops?.profit || 0).toLocaleString('en-IN')}`],
-    ['Workers & Field Labor', `${currency}0`, `${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`, `-${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`],
     ['Tractors & Equipment Hired', `${currency}${(equipment?.income || 0).toLocaleString('en-IN')}`, `${currency}${(equipment?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(equipment?.profit || 0).toLocaleString('en-IN')}`],
     ['Dairy Farm & Milk Sales', `${currency}${(dairy?.income || 0).toLocaleString('en-IN')}`, `${currency}${(dairy?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(dairy?.profit || 0).toLocaleString('en-IN')}`],
     ['Poultry & Hen Trading', `${currency}${(poultry?.income || 0).toLocaleString('en-IN')}`, `${currency}${(poultry?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(poultry?.profit || 0).toLocaleString('en-IN')}`],
+    ['Workers & Field Labor (Included in Sectors)', `${currency}0`, `${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`, `${currency}${(workers?.expense || 0).toLocaleString('en-IN')}`],
     ['TOTAL CONSOLIDATED P&L', `${currency}${(totalIncome || 0).toLocaleString('en-IN')}`, `${currency}${(totalExpenses || 0).toLocaleString('en-IN')}`, `${currency}${(netProfit || 0).toLocaleString('en-IN')}`]
   ];
 

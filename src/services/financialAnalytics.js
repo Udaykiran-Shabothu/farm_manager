@@ -189,8 +189,10 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const poultryNetProfit = poultryIncome - poultryExpense;
 
   // MASTER TOTALS
+  // Note: workersExpense is tracking labor/wages, which is already budgeted/entered within the individual sectors
+  // (Crops sowing/weeding labor, Dairy labor, etc.). We exclude it from totalExpenses to avoid double-counting.
   const totalIncome = cropsIncome + equipmentIncome + dairyIncome + poultryIncome;
-  const totalExpenses = cropsExpense + workersExpense + equipmentExpense + dairyExpense + poultryExpense;
+  const totalExpenses = cropsExpense + equipmentExpense + dairyExpense + poultryExpense;
   const netProfit = totalIncome - totalExpenses;
   const profitMarginPercent = totalIncome > 0 ? Number(((netProfit / totalIncome) * 100).toFixed(1)) : 0;
   const roiPercent = totalExpenses > 0 ? Number(((netProfit / totalExpenses) * 100).toFixed(1)) : 0;
@@ -198,7 +200,6 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   // SECTOR COMPARISON FOR BAR & PIE CHARTS
   const sectorBreakdown = [
     { name: 'Crops', income: cropsIncome, expense: cropsExpense, profit: cropsNetProfit, color: '#16a34a' },
-    { name: 'Workers', income: 0, expense: workersExpense, profit: -workersExpense, color: '#d97706' },
     { name: 'Equipment', income: equipmentIncome, expense: equipmentExpense, profit: equipmentNetProfit, color: '#2563eb' },
     { name: 'Dairy', income: dairyIncome, expense: dairyExpense, profit: dairyNetProfit, color: '#0891b2' },
     { name: 'Poultry', income: poultryIncome, expense: poultryExpense, profit: poultryNetProfit, color: '#e11d48' }
@@ -214,8 +215,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
 
   // EXPENSE DISTRIBUTION DONUT DATA
   const expenseDistribution = [
-    { name: 'Worker Wages', value: workersExpense, color: '#d97706' },
-    { name: 'Crop Seeds/Inputs', value: cropsExpense, color: '#16a34a' },
+    { name: 'Crop Seeds/Inputs/Labor', value: cropsExpense, color: '#16a34a' },
     { name: 'Equipment Fuel & Repairs', value: equipmentExpense, color: '#2563eb' },
     { name: 'Dairy Expenses', value: dairyExpense, color: '#0891b2' },
     { name: 'Poultry Feed & Health', value: poultryExpense, color: '#e11d48' }
@@ -237,7 +237,6 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
 
   filteredCropIncomes.forEach(i => i && i.date && addMonthlyRecord(i.date, Number(i.totalIncome || 0), 0));
   filteredCropExpenses.forEach(e => e && e.date && addMonthlyRecord(e.date, 0, Number(e.amount || 0)));
-  filteredAttendance.forEach(a => a && a.date && addMonthlyRecord(a.date, 0, Number(a.wageEarned || 0)));
   filteredEquipmentUsage.forEach(u => u && u.date && addMonthlyRecord(u.date, Number(u.rentalIncome || 0), 0));
   filteredEquipmentFuel.forEach(f => f && f.date && addMonthlyRecord(f.date, 0, Number(f.totalCost || 0)));
   filteredEquipmentMaint.forEach(m => m && m.date && addMonthlyRecord(m.date, 0, Number(m.cost || 0)));
@@ -305,10 +304,10 @@ export const downloadMasterFinancialCSV = (summaryData, farmInfo = {}) => {
 
   csvContent += `2. MULTI-SECTOR P&L BREAKDOWN LEDGER\nSector Enterprise,Total Income (${currency}),Total Expense (${currency}),Net Profit / Loss (${currency})\n`;
   csvContent += `"Crops & Fields",${crops.income},${crops.expense},${crops.profit}\n`;
-  csvContent += `"Workers & Labor",0,${workers.expense},${-workers.expense}\n`;
   csvContent += `"Tractors & Machinery",${equipment.income},${equipment.expense},${equipment.profit}\n`;
   csvContent += `"Dairy Farm & Milk",${dairy.income},${dairy.expense},${dairy.profit}\n`;
   csvContent += `"Poultry & Hen Trading",${poultry.income},${poultry.expense},${poultry.profit}\n`;
+  csvContent += `"Workers & Labor (Informational - Included in Sectors)",0,${workers.expense},${-workers.expense}\n`;
   csvContent += `TOTALS,${totalIncome},${totalExpenses},${netProfit}\n\n`;
 
   csvContent += `3. DETAILED SECTOR METRICS\n`;

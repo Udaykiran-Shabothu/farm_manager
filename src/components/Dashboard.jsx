@@ -475,12 +475,12 @@ export default function Dashboard({ setActiveTab }) {
                 </td>
                 <td className="p-3 text-right text-slate-400">{currency}0</td>
                 <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.workers?.expense) || 0).toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right font-extrabold text-rose-700">
-                  -{currency}{(Number(analytics?.workers?.expense) || 0).toLocaleString('en-IN')}
+                <td className="p-3 text-right font-semibold text-slate-500">
+                  {currency}{(Number(analytics?.workers?.expense) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                    Labor Expense
+                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200" title="Labor wages are already booked under Crops & Dairy field expenses">
+                    Included in Sectors
                   </span>
                 </td>
               </tr>
