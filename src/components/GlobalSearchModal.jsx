@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { useFarm } from '../context/FarmContext';
 import { 
   Search, 
@@ -193,13 +194,15 @@ export default function GlobalSearchModal({ isOpen, onClose, setActiveTab }) {
     onClose();
   };
 
-  return (
+  if (!isOpen) return null;
+
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-20 p-4 bg-slate-900/60 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-20 p-4 bg-black/25 backdrop-blur-2xs animate-fadeIn"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[85vh]"
+        className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl w-full max-w-2xl overflow-hidden animate-scaleIn flex flex-col max-h-[85vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header Input */}
@@ -333,6 +336,7 @@ export default function GlobalSearchModal({ isOpen, onClose, setActiveTab }) {
         </div>
 
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

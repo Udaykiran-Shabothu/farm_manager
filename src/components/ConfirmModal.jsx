@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2, AlertTriangle, AlertCircle, X, Check } from 'lucide-react';
 
 export default function ConfirmModal({ 
@@ -49,18 +50,15 @@ export default function ConfirmModal({
   const c = colorMap[type] || colorMap.danger;
   const IconComp = c.IconComp;
 
-  return (
+  return createPortal(
     <div 
-      className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/25 backdrop-blur-2xs animate-fadeIn"
       onClick={onClose}
     >
       <div 
-        className="bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200/90 shadow-2xl w-full max-w-sm animate-scaleIn overflow-hidden"
+        className="bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl w-full max-w-sm animate-scaleIn overflow-hidden my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Mobile Pull-Down Indicator */}
-        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-2.5 sm:hidden" />
-
         {/* Header */}
         <div className={`flex items-center justify-between p-4 sm:p-5 border-b ${c.header}`}>
           <div className="flex items-center gap-3">
@@ -90,11 +88,11 @@ export default function ConfirmModal({
         </div>
 
         {/* Actions */}
-        <div className="flex items-center gap-2.5 px-5 sm:px-6 pb-5 pt-1 bg-slate-50/50">
+        <div className="flex items-center gap-2.5 px-5 sm:px-6 pb-5 pt-1 bg-white">
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold transition-all border border-slate-200 shadow-xs cursor-pointer"
+            className="flex-1 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition-all border border-slate-200 shadow-xs cursor-pointer"
           >
             Cancel
           </button>
@@ -108,6 +106,7 @@ export default function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

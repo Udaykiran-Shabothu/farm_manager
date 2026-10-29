@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 export default function Modal({
@@ -28,23 +29,11 @@ export default function Modal({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
-  // Lock body scroll while modal is open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-900/50 backdrop-blur-xs animate-fadeIn"
+      className="fixed inset-0 z-[9999] flex items-center justify-center p-3 sm:p-4 bg-black/25 backdrop-blur-2xs animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -52,12 +41,9 @@ export default function Modal({
       <div
         ref={modalRef}
         onClick={(e) => e.stopPropagation()}
-        className={`w-full ${maxWidth} bg-white rounded-t-3xl sm:rounded-3xl border border-slate-200/90 shadow-2xl flex flex-col max-h-[92vh] sm:max-h-[86vh] animate-scaleIn overflow-hidden text-slate-900`}
+        className={`w-full ${maxWidth} bg-white rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[86vh] animate-scaleIn overflow-hidden text-slate-900 my-auto`}
       >
-        {/* Mobile Pull-Down Drag Bar */}
-        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mt-2.5 sm:hidden shrink-0" />
-
-        {/* Sticky Header */}
+        {/* Modal Header */}
         <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 shrink-0 bg-white">
           <div className="flex items-center space-x-3 min-w-0 pr-2">
             {Icon && (
@@ -95,18 +81,19 @@ export default function Modal({
         </div>
 
         {/* Scrollable Form / Content Body */}
-        <div className="px-5 sm:px-6 py-5 overflow-y-auto space-y-4 text-xs font-semibold flex-1">
+        <div className="px-5 sm:px-6 py-5 overflow-y-auto space-y-4 text-xs font-semibold flex-1 bg-white">
           {children}
         </div>
 
-        {/* Sticky Action Footer */}
+        {/* Action Footer */}
         {(primaryAction || secondaryAction) && (
-          <div className="flex items-center justify-end gap-2.5 px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/90 backdrop-blur-xs shrink-0">
+          <div className="flex items-center justify-end gap-2.5 px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-white shrink-0">
             {secondaryAction}
             {primaryAction}
           </div>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
