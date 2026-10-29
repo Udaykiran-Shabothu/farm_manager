@@ -198,7 +198,7 @@ export default function GlobalSearchModal({ isOpen, onClose, setActiveTab }) {
 
   return createPortal(
     <div 
-      className="fixed inset-0 z-[9999] flex items-start justify-center pt-12 sm:pt-20 p-4 bg-black/25 backdrop-blur-2xs animate-fadeIn"
+      className="fixed inset-0 z-[9999] overflow-y-auto flex items-start justify-center pt-12 sm:pt-20 p-4 bg-black/30 backdrop-blur-2xs animate-fadeIn"
       onClick={onClose}
     >
       <div 
