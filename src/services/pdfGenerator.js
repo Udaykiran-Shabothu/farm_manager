@@ -393,6 +393,7 @@ export const generateMasterFinancialPDF = (summaryData, farmInfo = {}) => {
     ['Equipment Fuel Expense', `${currency}${(equipment?.fuel || 0).toLocaleString('en-IN')}`, 'Diesel fuel cost for tractors & pumps'],
     ['Equipment Service & Repairs', `${currency}${(equipment?.maint || 0).toLocaleString('en-IN')}`, 'Mechanic & workshop maintenance cost'],
     ['Dairy Milk Volume Delivered', `${(dairy?.liters || 0).toLocaleString('en-IN')} Liters`, 'Total morning & evening milk yield'],
+    ['Dairy Operating Expenses', `${currency}${(dairy?.expense || 0).toLocaleString('en-IN')}`, 'Feed, medicine, cattle care & dairy labor'],
     ['Dairy Payments Collected', `${currency}${(dairy?.cashReceived || 0).toLocaleString('en-IN')}`, 'Actual customer payment receipts'],
     ['Poultry Feed Expense', `${currency}${(poultry?.feed || 0).toLocaleString('en-IN')}`, 'Feed bags purchase cost'],
     ['Poultry Health & Doctor Fee', `${currency}${(poultry?.health || 0).toLocaleString('en-IN')}`, 'Vaccinations and vet doctor fees']

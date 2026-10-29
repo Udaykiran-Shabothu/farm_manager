@@ -127,7 +127,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
 
   const cropsIncome = Math.round(filteredCropIncomes.reduce((acc, curr) => acc + Number(curr.totalIncome || 0), 0));
   const cropsExpense = Math.round(filteredCropExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
-  const cropsSelfWorkAmount = Math.round(filteredCropExpenses.reduce((acc, curr) => acc + Number(curr.selfWorkAmount || 0), 0));
+  const cropsSelfWorkAmount = Math.round(filteredCropExpenses.filter(e => e.category === 'Self Work').reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
   const cropsNetProfit = cropsIncome - cropsExpense;
 
   // 2. WORKERS / LABOR SECTOR
@@ -152,6 +152,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   // 4. DAIRY SECTOR
   const filteredMilkLogs = (safeData?.dairyMilkLogs || []).filter(l => l && l.date && l.date >= startStr && l.date <= endStr);
   const filteredDairyPayments = (safeData?.dairyPayments || []).filter(p => p && p.date && p.date >= startStr && p.date <= endStr);
+  const filteredDairyExpenses = (safeData?.dairyExpenses || []).filter(e => e && e.date && e.date >= startStr && e.date <= endStr);
 
   const uniqueMilkLogsMap = {};
   filteredMilkLogs.forEach(l => {
@@ -164,7 +165,11 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   const dairyIncome = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.totalAmount || (Number(curr.liters || 0) * 50) || 0), 0));
   const dairyLitersTotal = Math.round(uniqueMilkLogs.reduce((acc, curr) => acc + Number(curr.liters || 0), 0));
   const dairyCashReceived = Math.round(filteredDairyPayments.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
-  const dairyExpense = 0;
+  const dairyExpense = Math.round(filteredDairyExpenses.reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+  const dairyFeedExpense = Math.round(filteredDairyExpenses.filter(e => e.category === 'Feed & Fodder').reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+  const dairyMedicineExpense = Math.round(filteredDairyExpenses.filter(e => e.category === 'Medicine & Veterinary').reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+  const dairyCattleExpense = Math.round(filteredDairyExpenses.filter(e => e.category === 'Cattle Purchase & Breed Care').reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
+  const dairyLaborExpense = Math.round(filteredDairyExpenses.filter(e => e.category === 'Labor & Milking Wages').reduce((acc, curr) => acc + Number(curr.amount || 0), 0));
   const dairyNetProfit = dairyIncome - dairyExpense;
 
   // 5. POULTRY SECTOR
@@ -185,7 +190,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
 
   // MASTER TOTALS
   const totalIncome = cropsIncome + equipmentIncome + dairyIncome + poultryIncome;
-  const totalExpenses = cropsExpense + workersExpense + equipmentExpense + poultryExpense;
+  const totalExpenses = cropsExpense + workersExpense + equipmentExpense + dairyExpense + poultryExpense;
   const netProfit = totalIncome - totalExpenses;
   const profitMarginPercent = totalIncome > 0 ? Number(((netProfit / totalIncome) * 100).toFixed(1)) : 0;
   const roiPercent = totalExpenses > 0 ? Number(((netProfit / totalExpenses) * 100).toFixed(1)) : 0;
@@ -212,6 +217,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
     { name: 'Worker Wages', value: workersExpense, color: '#d97706' },
     { name: 'Crop Seeds/Inputs', value: cropsExpense, color: '#16a34a' },
     { name: 'Equipment Fuel & Repairs', value: equipmentExpense, color: '#2563eb' },
+    { name: 'Dairy Expenses', value: dairyExpense, color: '#0891b2' },
     { name: 'Poultry Feed & Health', value: poultryExpense, color: '#e11d48' }
   ].filter(item => item.value > 0);
 
@@ -236,6 +242,7 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
   filteredEquipmentFuel.forEach(f => f && f.date && addMonthlyRecord(f.date, 0, Number(f.totalCost || 0)));
   filteredEquipmentMaint.forEach(m => m && m.date && addMonthlyRecord(m.date, 0, Number(m.cost || 0)));
   uniqueMilkLogs.forEach(l => l && l.date && addMonthlyRecord(l.date, Number(l.totalAmount || (Number(l.liters || 0) * 50) || 0), 0));
+  filteredDairyExpenses.forEach(e => e && e.date && addMonthlyRecord(e.date, 0, Number(e.amount || 0)));
   filteredPoultrySales.forEach(s => s && s.date && addMonthlyRecord(s.date, Number(s.totalIncome || 0), 0));
   filteredPoultryDaily.forEach(d => d && d.date && addMonthlyRecord(d.date, 0, Number(d.feedCost || 0)));
   filteredPoultryHealth.forEach(h => h && h.date && addMonthlyRecord(h.date, 0, Number(h.medicineCost || 0) + Number(h.doctorFee || 0)));
@@ -265,7 +272,17 @@ export const computeFarmAnalytics = (data, preset = 'ALL', customStart = '', cus
     crops: { income: cropsIncome, expense: cropsExpense, profit: cropsNetProfit, selfWork: cropsSelfWorkAmount },
     workers: { expense: workersExpense, accrued: workersWagesAccrued, paid: workersPaymentsPaid },
     equipment: { income: equipmentIncome, expense: equipmentExpense, fuel: equipmentFuelCost, maint: equipmentMaintCost, profit: equipmentNetProfit },
-    dairy: { income: dairyIncome, liters: dairyLitersTotal, cashReceived: dairyCashReceived, profit: dairyNetProfit },
+    dairy: { 
+      income: dairyIncome, 
+      expense: dairyExpense, 
+      feed: dairyFeedExpense, 
+      medicine: dairyMedicineExpense, 
+      cattle: dairyCattleExpense, 
+      labor: dairyLaborExpense, 
+      liters: dairyLitersTotal, 
+      cashReceived: dairyCashReceived, 
+      profit: dairyNetProfit 
+    },
     poultry: { income: poultryIncome, expense: poultryExpense, feed: poultryFeedCost, health: poultryHealthCost, trades: poultryTradeSales - poultryTradePurchases, profit: poultryNetProfit }
   };
 };
@@ -301,6 +318,11 @@ export const downloadMasterFinancialCSV = (summaryData, farmInfo = {}) => {
   csvContent += `Equipment Fuel Expense,${currency}${equipment.fuel}\n`;
   csvContent += `Equipment Repair Cost,${currency}${equipment.maint}\n`;
   csvContent += `Dairy Milk Volume Delivered,${dairy.liters} Liters\n`;
+  csvContent += `Dairy Total Expenses,${currency}${dairy.expense}\n`;
+  csvContent += `Dairy Feed & Fodder,${currency}${dairy.feed}\n`;
+  csvContent += `Dairy Medicine & Vet,${currency}${dairy.medicine}\n`;
+  csvContent += `Dairy Cattle Purchase/Breed Care,${currency}${dairy.cattle}\n`;
+  csvContent += `Dairy Labor & Milking Wages,${currency}${dairy.labor}\n`;
   csvContent += `Dairy Cash Collected,${currency}${dairy.cashReceived}\n`;
   csvContent += `Poultry Feed Expense,${currency}${poultry.feed}\n`;
   csvContent += `Poultry Health & Vet Expense,${currency}${poultry.health}\n`;

@@ -42,7 +42,9 @@ const INITIAL_DATA = {
   poultryDailyLogs: [],
   poultryHealthLogs: [],
   poultrySales: [],
-  poultryHenTrades: []
+  poultryHenTrades: [],
+  inventoryItems: [],
+  inventoryLogs: []
 };
 
 // Ensure data directory exists
@@ -144,7 +146,7 @@ app.post('/api/clear', (req, res) => {
     equipment: [], equipmentMaintenance: [], equipmentFuel: [], equipmentUsage: [],
     dairyCustomers: [], dairyMilkLogs: [], dairyPayments: [], cattleHerd: [], dairyExpenses: [],
     poultryBatches: [], poultryDailyLogs: [], poultryHealthLogs: [], poultrySales: [],
-    poultryHenTrades: []
+    poultryHenTrades: [], inventoryItems: [], inventoryLogs: []
   };
   db = emptyData;
   writeDB(db);

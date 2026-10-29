@@ -163,6 +163,7 @@ export default function Dashboard({ setActiveTab }) {
     ...(data?.cropIncomes || []).map(i => ({ type: 'Crop Sale', title: `Harvest Sale: ${i?.buyer || 'Produce'}`, date: i?.date || '', amount: i?.totalIncome || 0, isExpense: false, sector: 'crops' })),
     ...(data?.workerPayments || []).map(p => ({ type: 'Worker Payout', title: `Worker Payout (${p?.type || 'Wage'})`, date: p?.date || '', amount: p?.amount || 0, isExpense: true, sector: 'workers' })),
     ...(data?.equipmentFuel || []).map(f => ({ type: 'Diesel Fill', title: `Diesel Fill (${f?.liters || 0}L)`, date: f?.date || '', amount: f?.totalCost || 0, isExpense: true, sector: 'equipment' })),
+    ...(data?.dairyExpenses || []).map(d => ({ type: 'Dairy Expense', title: `Dairy: ${d?.category || 'Expense'}${d?.notes ? ` - ${d.notes}` : ''}`, date: d?.date || '', amount: d?.amount || 0, isExpense: true, sector: 'dairy' })),
     ...(data?.dairyMilkLogs || []).map(m => ({ type: 'Milk Entry', title: `Milk Delivered (${m?.liters || 0}L)`, date: m?.date || '', amount: m?.totalAmount || 0, isExpense: false, sector: 'dairy' })),
     ...(data?.poultrySales || []).map(s => ({ type: 'Poultry Sale', title: `Poultry Sale (${s?.category || 'Birds'})`, date: s?.date || '', amount: s?.totalIncome || 0, isExpense: false, sector: 'poultry' })),
     ...(henTrades || []).filter(t => t?.type === 'Sale').map(t => ({ type: 'Hen Sale', title: `Hen Sale to ${t?.customerName || 'Customer'} (${t?.henCount || 0} hens)`, date: t?.date || '', amount: t?.totalAmount || 0, isExpense: false, sector: 'poultry' })),
@@ -506,12 +507,12 @@ export default function Dashboard({ setActiveTab }) {
                 </td>
                 <td className="p-3 text-right font-bold text-emerald-700">{currency}{(Number(analytics?.dairy?.income) || 0).toLocaleString('en-IN')}</td>
                 <td className="p-3 text-right text-slate-600">{currency}{(Number(analytics?.dairy?.expense) || 0).toLocaleString('en-IN')}</td>
-                <td className="p-3 text-right font-extrabold text-emerald-700">
+                <td className={`p-3 text-right font-extrabold ${(analytics?.dairy?.profit || 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                   {currency}{(Number(analytics?.dairy?.profit) || 0).toLocaleString('en-IN')}
                 </td>
                 <td className="p-3 text-center">
-                  <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                    Profit
+                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${(analytics?.dairy?.profit || 0) >= 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
+                    {(analytics?.dairy?.profit || 0) >= 0 ? 'Profit' : 'Loss'}
                   </span>
                 </td>
               </tr>

@@ -67,6 +67,25 @@ export default function GlobalSearchModal({ isOpen, onClose, setActiveTab }) {
       }
     });
 
+    // 1b. Dairy Expenses
+    (data?.dairyExpenses || []).forEach(de => {
+      if (
+        (de.category || '').toLowerCase().includes(q) ||
+        (de.notes || '').toLowerCase().includes(q) ||
+        (de.date || '').includes(q)
+      ) {
+        matches.push({
+          id: `dairy_exp_${de.id}`,
+          title: `Dairy Expense: ${de.category}`,
+          subtitle: `Date: ${de.date} • Amount: ₹${de.amount} • Notes: ${de.notes || '-'}`,
+          category: 'Dairy Expense',
+          tab: 'dairy',
+          icon: Milk,
+          color: 'text-rose-600 bg-rose-50 border-rose-200'
+        });
+      }
+    });
+
     // 2. Workers
     (data?.workers || []).forEach(w => {
       if (

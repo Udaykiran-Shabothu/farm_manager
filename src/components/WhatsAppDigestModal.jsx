@@ -45,6 +45,8 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
   const milkLogsForDate = (data?.dairyMilkLogs || []).filter(l => l.date === digestDate);
   const totalLitersDate = milkLogsForDate.reduce((acc, curr) => acc + Number(curr.liters || 0), 0);
   const milkIncomeDate = milkLogsForDate.reduce((acc, curr) => acc + Number(curr.totalAmount || (Number(curr.liters || 0) * 50) || 0), 0);
+  const dairyExpForDate = (data?.dairyExpenses || []).filter(e => e.date === digestDate);
+  const dairyExpenseDate = dairyExpForDate.reduce((acc, curr) => acc + Number(curr.amount || 0), 0);
 
   // 2. Labor Details for Date
   const attForDate = (data?.attendance || []).filter(a => a.date === digestDate);
@@ -69,7 +71,11 @@ export default function WhatsAppDigestModal({ isOpen, onClose }) {
     if (includeDairy) {
       text += `🥛 *DAIRY & MILK ENTERPRISE:*\n`;
       text += `  • Total Yield Today: ${totalLitersDate} Liters\n`;
-      text += `  • Today's Milk Revenue: ${currency}${(Number(milkIncomeDate) || 0).toLocaleString('en-IN')}\n\n`;
+      text += `  • Today's Milk Revenue: ${currency}${(Number(milkIncomeDate) || 0).toLocaleString('en-IN')}\n`;
+      if (dairyExpenseDate > 0) {
+        text += `  • Today's Dairy Expenses: ${currency}${(Number(dairyExpenseDate) || 0).toLocaleString('en-IN')}\n`;
+      }
+      text += `\n`;
     }
 
     if (includeLabor) {
